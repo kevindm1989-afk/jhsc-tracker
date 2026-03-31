@@ -3,6 +3,8 @@ import cors from "cors";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import pinoHttp from "pino-http";
+import path from "path";
+import { existsSync } from "fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
@@ -56,6 +58,18 @@ app.use(
 );
 
 app.use("/api", router);
+
+// In production, serve the JHSC tracker frontend static build
+if (process.env.NODE_ENV === "production") {
+  const staticDir = path.join(process.cwd(), "artifacts/jhsc-tracker/dist/public");
+  if (existsSync(staticDir)) {
+    app.use(express.static(staticDir));
+    // SPA fallback — all non-API routes return index.html
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(staticDir, "index.html"));
+    });
+  }
+}
 
 export async function ensureSessionTable(): Promise<void> {
   const client = await pool.connect();
