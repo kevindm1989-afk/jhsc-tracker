@@ -23,7 +23,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const parsed = parseMinutesFile(req.file.buffer);
+    const parsed = await parseMinutesFile(req.file.buffer);
     const preview = req.query.preview === "true";
 
     if (preview) {
@@ -139,7 +139,7 @@ router.post("/inspection", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const parsed = parseInspectionFile(req.file.buffer);
+    const parsed = await parseInspectionFile(req.file.buffer);
     const preview = req.query.preview === "true";
 
     if (preview) {

@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import path from "path";
 import { readFile } from "fs/promises";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { db } from "@workspace/db";
 import { inspectionLogTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -12,19 +12,16 @@ const CO_CHAIR_EMAIL = "kevin_de_melo@hotmail.com";
 
 const router: IRouter = Router();
 
-// Path to the bundled template xlsx (artifacts/api-server/assets/)
 const TEMPLATE_PATH = path.join(__dirname, "../assets/inspection_template.xlsx");
 
 function genInspectionCode(id: number) {
   return "IL-" + String(id).padStart(3, "0");
 }
 
-function setCell(ws: XLSX.WorkSheet, row: number, col: number, value: string) {
-  const ref = XLSX.utils.encode_cell({ r: row - 1, c: col });
-  ws[ref] = { v: value, t: "s" };
+function setCell(ws: ExcelJS.Worksheet, row: number, col: number, value: string) {
+  ws.getRow(row).getCell(col + 1).value = value;
 }
 
-// GET /api/inspect/checklist — return the checklist structure + zone list
 router.get("/checklist", (_req, res) => {
   res.json({ sections: CHECKLIST_SECTIONS, zones: ZONE_NAMES });
 });
@@ -36,60 +33,58 @@ interface ItemResponse {
 }
 
 interface ExportBody {
-  zoneIndex: number; // 0-10
+  zoneIndex: number;
   date: string;
   inspector: string;
-  responses: Record<string, ItemResponse>; // keyed by row number string
+  responses: Record<string, ItemResponse>;
   additionalComments?: string;
 }
 
-// POST /api/inspect/export — fill template and return xlsx download
+async function buildFilledWorkbook(
+  body: ExportBody
+): Promise<{ workbook: ExcelJS.Workbook; sheetName: string } | null> {
+  const { zoneIndex, date, inspector, responses, additionalComments } = body;
+  if (zoneIndex == null || zoneIndex < 0 || zoneIndex > 10) return null;
+
+  const templateBuffer = await readFile(TEMPLATE_PATH);
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(templateBuffer as any);
+
+  const sheetName = `Inspection ${zoneIndex + 1}`;
+  const ws = workbook.getWorksheet(sheetName);
+  if (!ws) return null;
+
+  if (date) setCell(ws, 4, 1, date);
+  if (inspector) setCell(ws, 5, 2, inspector);
+
+  for (const [rowStr, resp] of Object.entries(responses)) {
+    const row = parseInt(rowStr, 10);
+    if (!resp.rating) continue;
+    setCell(ws, row, 2, resp.rating);
+    if (resp.correctiveAction) setCell(ws, row, 4, resp.correctiveAction);
+    if (resp.responsibleParty) setCell(ws, row, 5, resp.responsibleParty);
+  }
+
+  if (additionalComments) {
+    setCell(ws, ADDITIONAL_COMMENTS_ROW + 1, 0, additionalComments);
+  }
+
+  const sheetsToRemove = workbook.worksheets.filter((s) => s.name !== sheetName);
+  for (const s of sheetsToRemove) {
+    workbook.removeWorksheet(s.id);
+  }
+
+  return { workbook, sheetName };
+}
+
 router.post("/export", async (req, res) => {
   try {
     const body: ExportBody = req.body;
-    const { zoneIndex, date, inspector, responses, additionalComments } = body;
+    const { zoneIndex, date } = body;
 
-    if (zoneIndex == null || zoneIndex < 0 || zoneIndex > 10) {
-      return res.status(400).json({ error: "Invalid zone index" });
-    }
-
-    const templateBuffer = await readFile(TEMPLATE_PATH);
-    const workbook = XLSX.read(templateBuffer, { type: "buffer" });
-
-    const sheetName = `Inspection ${zoneIndex + 1}`;
-    const ws = workbook.Sheets[sheetName];
-    if (!ws) {
-      return res.status(400).json({ error: `Sheet "${sheetName}" not found in template` });
-    }
-
-    // Fill date (row 4, col B)
-    if (date) setCell(ws, 4, 1, date);
-
-    // Fill inspector name (row 5, col C — Inspectors' Signatures area)
-    if (inspector) setCell(ws, 5, 2, inspector);
-
-    // Fill checklist responses
-    for (const [rowStr, resp] of Object.entries(responses)) {
-      const row = parseInt(rowStr, 10);
-      if (!resp.rating) continue;
-
-      // Col C = hazard rating
-      setCell(ws, row, 2, resp.rating);
-
-      // Col E = corrective action
-      if (resp.correctiveAction) {
-        setCell(ws, row, 4, resp.correctiveAction);
-      }
-
-      // Col F = responsible party
-      if (resp.responsibleParty) {
-        setCell(ws, row, 5, resp.responsibleParty);
-      }
-    }
-
-    // Fill additional comments (row 111, col A)
-    if (additionalComments) {
-      setCell(ws, ADDITIONAL_COMMENTS_ROW + 1, 0, additionalComments);
+    const result = await buildFilledWorkbook(body);
+    if (!result) {
+      return res.status(400).json({ error: "Invalid zone index or sheet not found in template" });
     }
 
     const zoneName = ZONE_NAMES[zoneIndex] ?? `Zone ${zoneIndex + 1}`;
@@ -97,10 +92,7 @@ router.post("/export", async (req, res) => {
     const safeDate = date ? date.replace(/-/g, "") : "undated";
     const fileName = `JHSC_Inspection_${safeZone}_${safeDate}.xlsx`;
 
-    // Export only the selected zone's sheet as a standalone file
-    const singleSheetWorkbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(singleSheetWorkbook, ws, sheetName);
-    const outBuffer = XLSX.write(singleSheetWorkbook, { type: "buffer", bookType: "xlsx" });
+    const outBuffer = Buffer.from(await result.workbook.xlsx.writeBuffer());
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
@@ -118,7 +110,6 @@ interface SaveBody {
   responses: Record<string, ItemResponse>;
 }
 
-// POST /api/inspect/save — save findings to inspection_log
 router.post("/save", async (req, res) => {
   try {
     const body: SaveBody = req.body;
@@ -132,7 +123,6 @@ router.post("/save", async (req, res) => {
     const today = new Date().toISOString().split("T")[0];
     const entryDate = date || today;
 
-    // Build a map of row → { sectionName, item }
     const rowToItem = new Map<number, { sectionName: string; description: string }>();
     for (const section of CHECKLIST_SECTIONS) {
       for (const item of section.items) {
@@ -149,7 +139,7 @@ router.post("/save", async (req, res) => {
     let imported = 0;
 
     for (const [rowStr, resp] of Object.entries(responses)) {
-      if (!resp.rating || resp.rating === "X") continue; // Only import issues
+      if (!resp.rating || resp.rating === "X") continue;
 
       const row = parseInt(rowStr, 10);
       const itemInfo = rowToItem.get(row);
@@ -193,39 +183,18 @@ router.post("/save", async (req, res) => {
   }
 });
 
-// POST /api/inspect/email — fill template sheet and email it to the Co-Chair
 router.post("/email", async (req, res) => {
   try {
     const body: ExportBody = req.body;
-    const { zoneIndex, date, inspector, responses, additionalComments } = body;
+    const { zoneIndex, date, inspector, responses } = body;
 
     if (zoneIndex == null || zoneIndex < 0 || zoneIndex > 10) {
       return res.status(400).json({ error: "Invalid zone index" });
     }
 
-    // Build the filled single-sheet workbook (same logic as /export)
-    const templateBuffer = await readFile(TEMPLATE_PATH);
-    const workbook = XLSX.read(templateBuffer, { type: "buffer" });
-
-    const sheetName = `Inspection ${zoneIndex + 1}`;
-    const ws = workbook.Sheets[sheetName];
-    if (!ws) {
-      return res.status(400).json({ error: `Sheet "${sheetName}" not found in template` });
-    }
-
-    if (date) setCell(ws, 4, 1, date);
-    if (inspector) setCell(ws, 5, 2, inspector);
-
-    for (const [rowStr, resp] of Object.entries(responses)) {
-      const row = parseInt(rowStr, 10);
-      if (!resp.rating) continue;
-      setCell(ws, row, 2, resp.rating);
-      if (resp.correctiveAction) setCell(ws, row, 4, resp.correctiveAction);
-      if (resp.responsibleParty) setCell(ws, row, 5, resp.responsibleParty);
-    }
-
-    if (additionalComments) {
-      setCell(ws, ADDITIONAL_COMMENTS_ROW + 1, 0, additionalComments);
+    const result = await buildFilledWorkbook(body);
+    if (!result) {
+      return res.status(400).json({ error: "Sheet not found in template" });
     }
 
     const zoneName = ZONE_NAMES[zoneIndex] ?? `Zone ${zoneIndex + 1}`;
@@ -233,15 +202,14 @@ router.post("/email", async (req, res) => {
     const safeDate = date ? date.replace(/-/g, "") : "undated";
     const fileName = `JHSC_Inspection_${safeZone}_${safeDate}.xlsx`;
 
-    const singleSheetWorkbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(singleSheetWorkbook, ws, sheetName);
-    const outBuffer = XLSX.write(singleSheetWorkbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
+    const outBuffer = Buffer.from(await result.workbook.xlsx.writeBuffer());
     const base64Attachment = outBuffer.toString("base64");
 
-    // Count rated items for the email summary
-    const ratedCount = Object.values(responses).filter(r => r.rating !== null).length;
-    const issueCount = Object.values(responses).filter(r => r.rating && r.rating !== "X").length;
-    const displayDate = date ? new Date(date + "T12:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" }) : "Unknown date";
+    const ratedCount = Object.values(responses).filter((r) => r.rating !== null).length;
+    const issueCount = Object.values(responses).filter((r) => r.rating && r.rating !== "X").length;
+    const displayDate = date
+      ? new Date(date + "T12:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })
+      : "Unknown date";
 
     const { client, fromEmail } = await getUncachableResendClient();
 

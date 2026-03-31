@@ -13,9 +13,7 @@
     "prettier": "^3.8.1",
     "typescript": "~5.9.2"
   },
-  "dependencies": {
-    "xlsx": "^0.18.5"
-  },
+  "dependencies": {},
   "pnpm": {
     "overrides": {
       "path-to-regexp": "8.4.0",

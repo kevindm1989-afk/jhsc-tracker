@@ -1,14 +1,49 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
-// Excel serial → ISO date string
 function excelDateToISO(value: unknown): string | null {
-  if (typeof value !== "number" || value < 1) return null;
-  try {
-    const d = (XLSX.SSF as any).parse_date_code(Math.floor(value));
-    return `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
-  } catch {
-    return null;
+  if (value instanceof Date) {
+    const y = value.getUTCFullYear();
+    const m = String(value.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(value.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
   }
+  if (typeof value !== "number" || value < 1) return null;
+  const ms = (value - 25569) * 86400 * 1000;
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+function normalizeCellValue(val: ExcelJS.CellValue | undefined): unknown {
+  if (val == null) return "";
+  if (val instanceof Date) return val;
+  if (typeof val === "object") {
+    if ("richText" in val) {
+      return (val as ExcelJS.CellRichTextValue).richText.map((rt) => rt.text).join("");
+    }
+    if ("formula" in val) {
+      const result = (val as ExcelJS.CellFormulaValue).result;
+      if (result == null) return "";
+      if (result instanceof Date) return result;
+      if (typeof result === "object" && "error" in result) return "";
+      return result;
+    }
+    if ("error" in val) return "";
+    if ("text" in val) return (val as ExcelJS.CellHyperlinkValue).text;
+  }
+  return val;
+}
+
+function sheetToRows(worksheet: ExcelJS.Worksheet): unknown[][] {
+  const rows: unknown[][] = [];
+  worksheet.eachRow({ includeEmpty: true }, (row) => {
+    const values = row.values as (ExcelJS.CellValue | undefined)[];
+    const arr: unknown[] = [];
+    for (let i = 1; i < values.length; i++) {
+      arr.push(normalizeCellValue(values[i]));
+    }
+    rows.push(arr);
+  });
+  return rows;
 }
 
 function str(v: unknown): string {
@@ -16,7 +51,6 @@ function str(v: unknown): string {
   return String(v).trim();
 }
 
-// Zone name map: "Zone N" → short display name
 const ZONE_NAMES: Record<string, string> = {
   "Zone 1": "Zone 1 — Process / Production",
   "Zone 2": "Zone 2 — Tank Gallery / Labs",
@@ -32,7 +66,6 @@ const ZONE_NAMES: Record<string, string> = {
 };
 
 function normalizeZone(rawZone: string): string {
-  // Extract "Zone N" prefix e.g. "Zone 1 (Process Rooms...)" → "Zone 1"
   const match = rawZone.match(/^(Zone\s+\d+)/i);
   if (match) {
     const key = match[1].replace(/\s+/, " ");
@@ -81,20 +114,19 @@ export interface ParsedInspectionFile {
 }
 
 function parseInspectionSheet(rows: unknown[][], sheetName: string): ParsedInspectionSheet {
-  // Zone: row 5 (index 4), col B (index 1)
   const rawZone = str(rows[4]?.[1]) || sheetName;
   const zone = normalizeZone(rawZone);
 
-  // Date: row 4 (index 3), col B (index 1)
   let date = "";
   const dateVal = rows[3]?.[1];
-  if (typeof dateVal === "number" && dateVal > 100) {
+  if (dateVal instanceof Date) {
+    date = excelDateToISO(dateVal) || "";
+  } else if (typeof dateVal === "number" && dateVal > 100) {
     date = excelDateToISO(dateVal) || "";
   } else if (typeof dateVal === "string" && dateVal && dateVal !== "DATE") {
     date = dateVal.trim();
   }
 
-  // Inspector: row 4 col D (index 3), row 5 col D, or row 5 col C
   let inspector = "";
   for (const [ri, ci] of [[3, 3], [3, 4], [4, 3], [4, 2]]) {
     const v = str(rows[ri as number]?.[ci as number]);
@@ -118,19 +150,16 @@ function parseInspectionSheet(rows: unknown[][], sheetName: string): ParsedInspe
     const cellE = str(row[4]);
     const cellF = str(row[5]);
 
-    // Additional comments row
     if (str(cellA) === "Additional Comments:" || cellB.toLowerCase().startsWith("additional comment")) {
       additionalComments = str(row[1]) || str(row[2]);
       continue;
     }
 
-    // Section header: integer in col A, non-empty description in col B, no hazard rating
     if (typeof cellA === "number" && Number.isInteger(cellA) && cellA > 0 && cellB) {
       currentSection = cellB;
       continue;
     }
 
-    // Checklist item: numeric (decimal) or string decimal in col A, description in col B
     const hasItemRef =
       (typeof cellA === "number" && cellA > 0 && !Number.isInteger(cellA)) ||
       (typeof cellA === "string" && /^\d+[\.\s]\d+/.test(cellA));
@@ -138,11 +167,9 @@ function parseInspectionSheet(rows: unknown[][], sheetName: string): ParsedInspe
     if (!hasItemRef || !cellB) continue;
 
     const rating = toHazardRating(cellC);
-    if (!rating) continue; // Only import actual issues (A/B/C), skip blank or X
+    if (!rating) continue;
 
-    const findingText = cellE
-      ? `${cellB} — ${cellE}`
-      : cellB;
+    const findingText = cellE ? `${cellB} — ${cellE}` : cellB;
 
     findings.push({
       zone,
@@ -160,23 +187,19 @@ function parseInspectionSheet(rows: unknown[][], sheetName: string): ParsedInspe
   return { sheetName, zone, date, inspector, findings, additionalComments };
 }
 
-export function parseInspectionFile(buffer: Buffer): ParsedInspectionFile {
-  const workbook = XLSX.read(buffer, { type: "buffer" });
+export async function parseInspectionFile(buffer: Buffer): Promise<ParsedInspectionFile> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as any);
 
   const sheets: ParsedInspectionSheet[] = [];
   let totalFindings = 0;
 
-  for (const sheetName of workbook.SheetNames) {
+  for (const worksheet of workbook.worksheets) {
+    const sheetName = worksheet.name;
     if (!sheetName.trim().toLowerCase().startsWith("inspection")) continue;
+    if (worksheet.rowCount === 0) continue;
 
-    const sheet = workbook.Sheets[sheetName];
-    if (!sheet || !sheet["!ref"]) continue;
-
-    const rows = XLSX.utils.sheet_to_json(sheet, {
-      header: 1,
-      defval: "",
-    }) as unknown[][];
-
+    const rows = sheetToRows(worksheet);
     const parsed = parseInspectionSheet(rows, sheetName);
     sheets.push(parsed);
     totalFindings += parsed.findings.length;
@@ -189,5 +212,4 @@ export function parseInspectionFile(buffer: Buffer): ParsedInspectionFile {
   };
 }
 
-// Export zone names for use in the frontend
 export { ZONE_NAMES };
