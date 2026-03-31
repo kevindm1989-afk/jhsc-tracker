@@ -18,7 +18,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatCard 
           title="Overdue Items" 
           value={summary?.overdueCount} 
