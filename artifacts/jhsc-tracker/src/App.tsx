@@ -9,6 +9,7 @@ import ActionItemsPage from "@/pages/action-items";
 import HazardFindingsPage from "@/pages/hazard-findings";
 import InspectionLogPage from "@/pages/inspection-log";
 import WorkerStatementsPage from "@/pages/worker-statements";
+import ImportMinutesPage from "@/pages/import-minutes";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -29,6 +30,7 @@ function Router() {
         <Route path="/hazard-findings" component={HazardFindingsPage} />
         <Route path="/inspection-log" component={InspectionLogPage} />
         <Route path="/worker-statements" component={WorkerStatementsPage} />
+        <Route path="/import-minutes" component={ImportMinutesPage} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>
