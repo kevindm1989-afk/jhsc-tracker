@@ -1,22 +1,31 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: JHSC Tracker API for Unifor Local 1285
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: action-items
+    description: JHSC Action Items
+  - name: hazard-findings
+    description: JHSC Hazard Findings
+  - name: inspection-log
+    description: JHSC Inspection Log entries
+  - name: worker-statements
+    description: JHSC Worker Statements (confidential)
+  - name: dashboard
+    description: Dashboard summary data
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +33,439 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── ACTION ITEMS ──
+  /action-items:
+    get:
+      operationId: listActionItems
+      tags: [action-items]
+      summary: List all action items
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: department
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of action items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActionItem"
+    post:
+      operationId: createActionItem
+      tags: [action-items]
+      summary: Create a new action item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateActionItem"
+      responses:
+        "201":
+          description: Created action item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionItem"
+
+  /action-items/{id}:
+    get:
+      operationId: getActionItem
+      tags: [action-items]
+      summary: Get an action item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Action item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionItem"
+    put:
+      operationId: updateActionItem
+      tags: [action-items]
+      summary: Update an action item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateActionItem"
+      responses:
+        "200":
+          description: Updated action item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionItem"
+    delete:
+      operationId: deleteActionItem
+      tags: [action-items]
+      summary: Delete an action item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── HAZARD FINDINGS ──
+  /hazard-findings:
+    get:
+      operationId: listHazardFindings
+      tags: [hazard-findings]
+      summary: List all hazard findings
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: department
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of hazard findings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HazardFinding"
+    post:
+      operationId: createHazardFinding
+      tags: [hazard-findings]
+      summary: Create a new hazard finding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHazardFinding"
+      responses:
+        "201":
+          description: Created hazard finding
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HazardFinding"
+
+  /hazard-findings/{id}:
+    get:
+      operationId: getHazardFinding
+      tags: [hazard-findings]
+      summary: Get a hazard finding by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Hazard finding
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HazardFinding"
+    put:
+      operationId: updateHazardFinding
+      tags: [hazard-findings]
+      summary: Update a hazard finding
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHazardFinding"
+      responses:
+        "200":
+          description: Updated hazard finding
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HazardFinding"
+    delete:
+      operationId: deleteHazardFinding
+      tags: [hazard-findings]
+      summary: Delete a hazard finding
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── INSPECTION LOG ──
+  /inspection-log:
+    get:
+      operationId: listInspectionEntries
+      tags: [inspection-log]
+      summary: List all inspection log entries
+      parameters:
+        - name: zone
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of inspection entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InspectionEntry"
+    post:
+      operationId: createInspectionEntry
+      tags: [inspection-log]
+      summary: Create a new inspection entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInspectionEntry"
+      responses:
+        "201":
+          description: Created inspection entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionEntry"
+
+  /inspection-log/{id}:
+    get:
+      operationId: getInspectionEntry
+      tags: [inspection-log]
+      summary: Get an inspection entry by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Inspection entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionEntry"
+    put:
+      operationId: updateInspectionEntry
+      tags: [inspection-log]
+      summary: Update an inspection entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInspectionEntry"
+      responses:
+        "200":
+          description: Updated inspection entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionEntry"
+    delete:
+      operationId: deleteInspectionEntry
+      tags: [inspection-log]
+      summary: Delete an inspection entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── WORKER STATEMENTS ──
+  /worker-statements:
+    get:
+      operationId: listWorkerStatements
+      tags: [worker-statements]
+      summary: List all worker statements
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: department
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of worker statements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkerStatement"
+    post:
+      operationId: createWorkerStatement
+      tags: [worker-statements]
+      summary: Create a new worker statement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkerStatement"
+      responses:
+        "201":
+          description: Created worker statement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkerStatement"
+
+  /worker-statements/{id}:
+    get:
+      operationId: getWorkerStatement
+      tags: [worker-statements]
+      summary: Get a worker statement by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Worker statement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkerStatement"
+    put:
+      operationId: updateWorkerStatement
+      tags: [worker-statements]
+      summary: Update a worker statement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkerStatement"
+      responses:
+        "200":
+          description: Updated worker statement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkerStatement"
+    delete:
+      operationId: deleteWorkerStatement
+      tags: [worker-statements]
+      summary: Delete a worker statement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── DASHBOARD ──
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard statistics summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/overdue:
+    get:
+      operationId: getDashboardOverdue
+      tags: [dashboard]
+      summary: Get overdue items across all modules
+      responses:
+        "200":
+          description: List of overdue items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OverdueItem"
+
+  /dashboard/recent:
+    get:
+      operationId: getDashboardRecent
+      tags: [dashboard]
+      summary: Get recent activity across all modules
+      responses:
+        "200":
+          description: Recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecentItem"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +473,480 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ActionItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        itemCode:
+          type: string
+          description: "AI-001 format identifier"
+        date:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        description:
+          type: string
+        raisedBy:
+          type: string
+        assignedTo:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+          enum: [High, Medium, Low]
+        status:
+          type: string
+          enum: [Open, In Progress, Overdue, Closed]
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, itemCode, date, department, description, raisedBy, assignedTo, priority, status, createdAt, updatedAt]
+
+    CreateActionItem:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        description:
+          type: string
+        raisedBy:
+          type: string
+        assignedTo:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+          enum: [High, Medium, Low]
+        status:
+          type: string
+          enum: [Open, In Progress, Closed]
+        notes:
+          type: string
+          nullable: true
+      required: [date, department, description, raisedBy, assignedTo, priority, status]
+
+    UpdateActionItem:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        description:
+          type: string
+        raisedBy:
+          type: string
+        assignedTo:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+          enum: [High, Medium, Low]
+        status:
+          type: string
+          enum: [Open, In Progress, Closed]
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    HazardFinding:
+      type: object
+      properties:
+        id:
+          type: integer
+        itemCode:
+          type: string
+          description: "HF-001 format identifier"
+        date:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        hazardDescription:
+          type: string
+        ohsaReference:
+          type: string
+          nullable: true
+        severity:
+          type: string
+          enum: [High, Medium, Low]
+        recommendationDate:
+          type: string
+          format: date
+        responseDeadline:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [Open, Awaiting Response, Disputed, Closed]
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, itemCode, date, department, hazardDescription, severity, recommendationDate, status, createdAt, updatedAt]
+
+    CreateHazardFinding:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        hazardDescription:
+          type: string
+        ohsaReference:
+          type: string
+          nullable: true
+        severity:
+          type: string
+          enum: [High, Medium, Low]
+        recommendationDate:
+          type: string
+          format: date
+        responseDeadline:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [Open, Awaiting Response, Disputed, Closed]
+        notes:
+          type: string
+          nullable: true
+      required: [date, department, hazardDescription, severity, recommendationDate, status]
+
+    UpdateHazardFinding:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        hazardDescription:
+          type: string
+        ohsaReference:
+          type: string
+          nullable: true
+        severity:
+          type: string
+          enum: [High, Medium, Low]
+        recommendationDate:
+          type: string
+          format: date
+        responseDeadline:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [Open, Awaiting Response, Disputed, Closed]
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    InspectionEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        itemCode:
+          type: string
+          description: "IL-001 format identifier"
+        date:
+          type: string
+          format: date
+        zone:
+          type: string
+          description: "Zone 1 – Receiving / Shipping Dock, etc."
+        area:
+          type: string
+          nullable: true
+        finding:
+          type: string
+        priority:
+          type: string
+          enum: [High, Medium, Low]
+        assignedTo:
+          type: string
+          nullable: true
+        followUpDate:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [Open, In Progress, Closed]
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, itemCode, date, zone, finding, priority, status, createdAt, updatedAt]
+
+    CreateInspectionEntry:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        zone:
+          type: string
+        area:
+          type: string
+          nullable: true
+        finding:
+          type: string
+        priority:
+          type: string
+          enum: [High, Medium, Low]
+        assignedTo:
+          type: string
+          nullable: true
+        followUpDate:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [Open, In Progress, Closed]
+        notes:
+          type: string
+          nullable: true
+      required: [date, zone, finding, priority, status]
+
+    UpdateInspectionEntry:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        zone:
+          type: string
+        area:
+          type: string
+          nullable: true
+        finding:
+          type: string
+        priority:
+          type: string
+          enum: [High, Medium, Low]
+        assignedTo:
+          type: string
+          nullable: true
+        followUpDate:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [Open, In Progress, Closed]
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    WorkerStatement:
+      type: object
+      properties:
+        id:
+          type: integer
+        statementCode:
+          type: string
+          description: "W-001 format confidential code"
+        dateReceived:
+          type: string
+          format: date
+        shift:
+          type: string
+          enum: [Day, Afternoon, Night]
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        hazardType:
+          type: string
+        description:
+          type: string
+        linkedItemCode:
+          type: string
+          nullable: true
+          description: "e.g. AI-005 or HF-002"
+        status:
+          type: string
+          enum: [Received, Under Review, Actioned, Closed]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, statementCode, dateReceived, shift, department, hazardType, description, status, createdAt, updatedAt]
+
+    CreateWorkerStatement:
+      type: object
+      properties:
+        dateReceived:
+          type: string
+          format: date
+        shift:
+          type: string
+          enum: [Day, Afternoon, Night]
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        hazardType:
+          type: string
+        description:
+          type: string
+        linkedItemCode:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [Received, Under Review, Actioned, Closed]
+        notes:
+          type: string
+          nullable: true
+      required: [dateReceived, shift, department, hazardType, description, status]
+
+    UpdateWorkerStatement:
+      type: object
+      properties:
+        dateReceived:
+          type: string
+          format: date
+        shift:
+          type: string
+          enum: [Day, Afternoon, Night]
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        hazardType:
+          type: string
+        description:
+          type: string
+        linkedItemCode:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [Received, Under Review, Actioned, Closed]
+        notes:
+          type: string
+          nullable: true
+
+    DashboardSummary:
+      type: object
+      properties:
+        overdueCount:
+          type: integer
+        openActionItems:
+          type: integer
+        openHazardFindings:
+          type: integer
+        totalWorkerStatements:
+          type: integer
+        closedThisMonth:
+          type: integer
+      required: [overdueCount, openActionItems, openHazardFindings, totalWorkerStatements, closedThisMonth]
+
+    OverdueItem:
+      type: object
+      properties:
+        itemCode:
+          type: string
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        priority:
+          type: string
+          nullable: true
+        module:
+          type: string
+          enum: [action-items, hazard-findings, inspection-log]
+      required: [itemCode, description, dueDate, module]
+
+    RecentItem:
+      type: object
+      properties:
+        itemCode:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        module:
+          type: string
+          enum: [action-items, hazard-findings, inspection-log, worker-statements]
+        status:
+          type: string
+      required: [itemCode, description, date, module, status]

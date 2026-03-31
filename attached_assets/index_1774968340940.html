@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JHSC Tracker — Unifor Local 1285</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1a2744;
+  --navy-light: #243460;
+  --red: #E33225;
+  --amber: #f0a500;
+  --green: #2d8a4e;
+  --green-light: #e8f5ed;
+  --blue: #1e6bb8;
+  --blue-light: #e8f2fc;
+  --red-light: #fdecea;
+  --amber-light: #fff8e6;
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --border: #dde2ea;
+  --text: #1a1a2e;
+  --text-muted: #6b7280;
+  --sidebar-w: 220px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--navy); display: flex;
+  flex-direction: column; z-index: 100; overflow-y: auto;
+}
+.sidebar-logo { padding: 20px 16px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-logo .org { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); margin-bottom: 4px; }
+.sidebar-logo .app { font-size: 15px; font-weight: 700; color: #fff; line-height: 1.25; }
+.sidebar-logo .facility { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 4px; }
+nav ul { list-style: none; padding: 10px 0; flex: 1; }
+nav ul li a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; color: rgba(255,255,255,0.6);
+  text-decoration: none; font-size: 13px; font-weight: 500;
+  cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s;
+}
+nav ul li a:hover { background: rgba(255,255,255,0.07); color: #fff; }
+nav ul li a.active { background: rgba(227,50,37,0.15); color: #fff; border-left-color: var(--red); }
+nav ul li a .ico { font-size: 15px; min-width: 20px; }
+nav ul li a .badge {
+  margin-left: auto; background: var(--red); color: #fff;
+  font-size: 10px; font-weight: 700; padding: 2px 6px;
+  border-radius: 10px; font-family: 'IBM Plex Mono', monospace;
+}
+.sidebar-foot { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: rgba(255,255,255,0.28); line-height: 1.6; }
+
+/* ── MAIN ── */
+#main { margin-left: var(--sidebar-w); min-height: 100vh; }
+.page-hdr {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 16px 24px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 50;
+}
+.page-hdr h1 { font-size: 18px; font-weight: 700; color: var(--navy); }
+.page-hdr .sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.content { padding: 22px 24px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 6px;
+  font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+}
+.btn-primary { background: var(--red); color: #fff; }
+.btn-primary:hover { background: #c42b20; }
+.btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg); }
+.btn-danger { background: var(--red-light); color: var(--red); border: 1px solid #f5c6c3; }
+.btn-danger:hover { background: #fad5d3; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* ── DASHBOARD STATS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.stat-card { background: var(--surface); border-radius: 10px; padding: 16px 18px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.stat-card.red::before { background: var(--red); }
+.stat-card.amber::before { background: var(--amber); }
+.stat-card.green::before { background: var(--green); }
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.navy::before { background: var(--navy); }
+.stat-card .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.stat-card .val { font-size: 32px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; color: var(--navy); line-height: 1; }
+.stat-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.section-title { font-size: 12px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px; }
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+.alert-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 4px solid var(--amber); border-radius: 6px;
+  padding: 10px 14px; display: flex; align-items: center; gap: 12px;
+}
+.alert-item.critical { border-left-color: var(--red); }
+.alert-id { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); min-width: 58px; }
+.alert-desc { font-size: 13px; flex: 1; }
+.alert-due { font-size: 11px; color: var(--red); font-weight: 600; white-space: nowrap; }
+.muted-msg { color: var(--text-muted); font-size: 13px; padding: 10px 0; }
+
+/* ── TABLE ── */
+.table-wrap { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+.table-toolbar { padding: 12px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.ml-auto { margin-left: auto; }
+.filter-btn {
+  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+  background: transparent; font-size: 12px; font-weight: 500;
+  cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--text-muted); transition: all 0.15s;
+}
+.filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.filter-btn:hover:not(.active) { background: var(--bg); }
+.tbl-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 700px; }
+th { background: #f8f9fb; padding: 9px 13px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid #f0f2f5; font-size: 13px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafbfc; }
+.row-overdue td { background: #fffbf0 !important; }
+.row-overdue:hover td { background: #fff5e0 !important; }
+.empty-state { text-align: center; padding: 44px 24px; color: var(--text-muted); }
+.empty-state .ico { font-size: 34px; margin-bottom: 10px; }
+.empty-state p { font-size: 14px; }
+.action-row { display: flex; gap: 5px; }
+
+/* ── BADGES ── */
+.badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.02em; white-space: nowrap; }
+.b-open    { background: var(--blue-light);  color: var(--blue); }
+.b-prog    { background: var(--amber-light); color: #b87d00; }
+.b-over    { background: var(--red-light);   color: var(--red); }
+.b-closed  { background: var(--green-light); color: var(--green); }
+.b-rcvd    { background: var(--blue-light);  color: var(--blue); }
+.b-disp    { background: var(--red-light);   color: #9b2c1e; }
+.b-high    { background: #fdecea; color: #c0392b; }
+.b-medium  { background: var(--amber-light); color: #b87d00; }
+.b-low     { background: var(--green-light); color: var(--green); }
+.b-wh      { background: #e8f0fe; color: #1a56db; }
+.b-prod    { background: #f3e8ff; color: #7e3af2; }
+.id-tag    { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.ohsa-ref  { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--navy); font-weight: 600; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(10,20,40,0.55);
+  z-index: 200; display: flex; align-items: flex-start;
+  justify-content: center; padding: 30px 16px; overflow-y: auto;
+}
+.modal { background: var(--surface); border-radius: 12px; width: 100%; max-width: 580px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal-hdr { padding: 18px 22px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-hdr h2 { font-size: 16px; font-weight: 700; color: var(--navy); }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 4px; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 18px 22px; }
+.modal-foot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg.full { grid-column: 1 / -1; }
+label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+input, select, textarea { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); background: var(--surface); transition: border-color 0.15s; width: 100%; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--navy); }
+textarea { resize: vertical; min-height: 68px; }
+
+/* ── SECTIONS ── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── CONFIDENTIAL NOTICE ── */
+.conf-notice { background: var(--amber-light); border: 1px solid var(--amber); border-radius: 8px; padding: 11px 15px; margin-bottom: 16px; font-size: 13px; color: #7a5800; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 0px; }
+  #sidebar { width: 100%; height: auto; position: relative; flex-direction: column; }
+  .sidebar-logo { padding: 10px 14px; }
+  .sidebar-logo .app { font-size: 14px; }
+  nav ul { display: flex; padding: 4px 8px; overflow-x: auto; gap: 2px; }
+  nav ul li a { padding: 8px 10px; border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; border-radius: 6px 6px 0 0; }
+  nav ul li a.active { border-bottom-color: var(--red); background: rgba(227,50,37,0.1); }
+  nav ul li a .ico { display: none; }
+  #main { margin-left: 0; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-grid { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  .page-hdr { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal { border-radius: 12px 12px 0 0; max-width: 100%; }
+  .sidebar-foot { display: none; }
+  .content { padding: 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="org">Unifor Local 1285</div>
+    <div class="app">JHSC Co-Chair<br>Tracker</div>
+    <div class="facility">Saputo Georgetown</div>
+  </div>
+  <nav>
+    <ul>
+      <li><a class="nav-link active" data-sec="dashboard"><span class="ico">📊</span> Dashboard <span class="badge" id="b-dash">0</span></a></li>
+      <li><a class="nav-link" data-sec="action-items"><span class="ico">✅</span> Action Items <span class="badge" id="b-ai" style="display:none"></span></a></li>
+      <li><a class="nav-link" data-sec="hazard-findings"><span class="ico">⚠️</span> Hazard Findings <span class="badge" id="b-hf" style="display:none"></span></a></li>
+      <li><a class="nav-link" data-sec="inspection-log"><span class="ico">🔍</span> Inspection Log <span class="badge" id="b-il" style="display:none"></span></a></li>
+      <li><a class="nav-link" data-sec="worker-statements"><span class="ico">📋</span> Worker Statements <span class="badge" id="b-ws" style="display:none"></span></a></li>
+    </ul>
+  </nav>
+  <div class="sidebar-foot">OHSA s.9 | O. Reg. 297/13<br>Co-Chair: Worker Representative<br>Last saved: <span id="last-saved">—</span></div>
+</div>
+
+<!-- ═══════════════════════════ MAIN ═══════════════════════════ -->
+<div id="main">
+
+  <!-- DASHBOARD -->
+  <div id="sec-dashboard" class="section active">
+    <div class="page-hdr">
+      <div><h1>Dashboard</h1><div class="sub" id="dash-date"></div></div>
+    </div>
+    <div class="content">
+      <div class="stats-grid">
+        <div class="stat-card red">  <div class="lbl">Overdue Items</div>   <div class="val" id="st-ov">0</div>  <div class="sub">Require immediate action</div></div>
+        <div class="stat-card amber"><div class="lbl">Open Action Items</div><div class="val" id="st-ai">0</div>  <div class="sub">All departments</div></div>
+        <div class="stat-card blue"> <div class="lbl">Hazard Findings</div>  <div class="val" id="st-hf">0</div>  <div class="sub">Open / pending</div></div>
+        <div class="stat-card navy"> <div class="lbl">Worker Statements</div><div class="val" id="st-ws">0</div>  <div class="sub">Total received</div></div>
+        <div class="stat-card green"><div class="lbl">Closed This Month</div><div class="val" id="st-cl">0</div>  <div class="sub">Resolved</div></div>
+      </div>
+      <div class="two-col">
+        <div>
+          <div class="section-title">🔴 Overdue / Urgent</div>
+          <div class="alert-list" id="dash-over"></div>
+        </div>
+        <div>
+          <div class="section-title">🕐 Recent Activity</div>
+          <div class="alert-list" id="dash-recent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION ITEMS -->
+  <div id="sec-action-items" class="section">
+    <div class="page-hdr">
+      <div><h1>Action Items</h1><div class="sub">JHSC tracked action items — all departments</div></div>
+      <button class="btn btn-primary" onclick="openModal('action-items')">+ Add Item</button>
+    </div>
+    <div class="content">
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="filter-group">
+            <button class="filter-btn active" onclick="setFilter('ai','status','all',this)">All</button>
+            <button class="filter-btn" onclick="setFilter('ai','status','Open',this)">Open</button>
+            <button class="filter-btn" onclick="setFilter('ai','status','In Progress',this)">In Progress</button>
+            <button class="filter-btn" onclick="setFilter('ai','status','Overdue',this)">Overdue</button>
+            <button class="filter-btn" onclick="setFilter('ai','status','Closed',this)">Closed</button>
+          </div>
+          <div class="filter-group ml-auto">
+            <button class="filter-btn active" onclick="setFilter('ai','dept','all',this)">All Depts</button>
+            <button class="filter-btn" onclick="setFilter('ai','dept','Warehouse',this)">Warehouse</button>
+            <button class="filter-btn" onclick="setFilter('ai','dept','Production',this)">Production</button>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>ID</th><th>Date</th><th>Dept</th><th>Description</th><th>Raised By</th><th>Assigned To</th><th>Due Date</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="ai-body"></tbody>
+          </table>
+        </div>
+        <div id="ai-empty" class="empty-state" style="display:none"><div class="ico">✅</div><p>No action items yet. Click <strong>+ Add Item</strong>.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HAZARD FINDINGS -->
+  <div id="sec-hazard-findings" class="section">
+    <div class="page-hdr">
+      <div><h1>Hazard Findings</h1><div class="sub">OHSA s.9(20) recommendations & hazard tracking</div></div>
+      <button class="btn btn-primary" onclick="openModal('hazard-findings')">+ Add Finding</button>
+    </div>
+    <div class="content">
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="filter-group">
+            <button class="filter-btn active" onclick="setFilter('hf','status','all',this)">All</button>
+            <button class="filter-btn" onclick="setFilter('hf','status','Open',this)">Open</button>
+            <button class="filter-btn" onclick="setFilter('hf','status','Awaiting Response',this)">Awaiting Response</button>
+            <button class="filter-btn" onclick="setFilter('hf','status','Disputed',this)">Disputed</button>
+            <button class="filter-btn" onclick="setFilter('hf','status','Closed',this)">Closed</button>
+          </div>
+          <div class="filter-group ml-auto">
+            <button class="filter-btn active" onclick="setFilter('hf','dept','all',this)">All Depts</button>
+            <button class="filter-btn" onclick="setFilter('hf','dept','Warehouse',this)">Warehouse</button>
+            <button class="filter-btn" onclick="setFilter('hf','dept','Production',this)">Production</button>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>ID</th><th>Date</th><th>Dept</th><th>Hazard Description</th><th>OHSA Ref</th><th>Severity</th><th>Recommendation Date</th><th>Response Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="hf-body"></tbody>
+          </table>
+        </div>
+        <div id="hf-empty" class="empty-state" style="display:none"><div class="ico">⚠️</div><p>No hazard findings logged. Click <strong>+ Add Finding</strong>.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSPECTION LOG -->
+  <div id="sec-inspection-log" class="section">
+    <div class="page-hdr">
+      <div><h1>Inspection Log</h1><div class="sub">Zone-by-zone monthly inspection records — 9 zones</div></div>
+      <button class="btn btn-primary" onclick="openModal('inspection-log')">+ Log Inspection</button>
+    </div>
+    <div class="content">
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="filter-group">
+            <button class="filter-btn active" onclick="setFilter('il','zone','all',this)">All</button>
+            <button class="filter-btn" onclick="setFilter('il','zone','Zone 1',this)">Z1</button>
+            <button class="filter-btn" onclick="setFilter('il','zone','Zone 2',this)">Z2</button>
+            <button class="filter-btn" onclick="setFilter('il','zone','Zone 3',this)">Z3</button>
+            <button class="filter-btn" onclick="setFilter('il','zone','Zone 4',this)">Z4</button>
+            <button class="filter-btn" onclick="setFilter('il','zone','Zone 5',this)">Z5</button>
+            <button class="filter-btn" onclick="setFilter('il','zone','Zone 6',this)">Z6</button>
+            <button class="filter-btn" onclick="setFilter('il','zone','Zone 7',this)">Z7</button>
+            <button class="filter-btn" onclick="setFilter('il','zone','Zone 8',this)">Z8</button>
+            <button class="filter-btn" onclick="setFilter('il','zone','Zone 9',this)">Z9</button>
+          </div>
+          <div class="filter-group ml-auto">
+            <button class="filter-btn active" onclick="setFilter('il','status','all',this)">All Status</button>
+            <button class="filter-btn" onclick="setFilter('il','status','Open',this)">Open</button>
+            <button class="filter-btn" onclick="setFilter('il','status','In Progress',this)">In Progress</button>
+            <button class="filter-btn" onclick="setFilter('il','status','Closed',this)">Closed</button>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>ID</th><th>Date</th><th>Zone</th><th>Area</th><th>Finding</th><th>Priority</th><th>Assigned To</th><th>Follow-Up</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="il-body"></tbody>
+          </table>
+        </div>
+        <div id="il-empty" class="empty-state" style="display:none"><div class="ico">🔍</div><p>No inspections logged. Click <strong>+ Log Inspection</strong>.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKER STATEMENTS -->
+  <div id="sec-worker-statements" class="section">
+    <div class="page-hdr">
+      <div><h1>Worker Statements</h1><div class="sub">Confidential — tracked by statement code only</div></div>
+      <button class="btn btn-primary" onclick="openModal('worker-statements')">+ Log Statement</button>
+    </div>
+    <div class="content">
+      <div class="conf-notice"><strong>⚠️ Confidentiality Notice:</strong> All worker statements are tracked by statement code only (W-001 format). Do not record worker names. Codes correspond to a separate confidential key held by the Worker Co-Chair only.</div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="filter-group">
+            <button class="filter-btn active" onclick="setFilter('ws','status','all',this)">All</button>
+            <button class="filter-btn" onclick="setFilter('ws','status','Received',this)">Received</button>
+            <button class="filter-btn" onclick="setFilter('ws','status','Under Review',this)">Under Review</button>
+            <button class="filter-btn" onclick="setFilter('ws','status','Actioned',this)">Actioned</button>
+            <button class="filter-btn" onclick="setFilter('ws','status','Closed',this)">Closed</button>
+          </div>
+          <div class="filter-group ml-auto">
+            <button class="filter-btn active" onclick="setFilter('ws','dept','all',this)">All Depts</button>
+            <button class="filter-btn" onclick="setFilter('ws','dept','Warehouse',this)">Warehouse</button>
+            <button class="filter-btn" onclick="setFilter('ws','dept','Production',this)">Production</button>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>Code</th><th>Date Received</th><th>Shift</th><th>Dept</th><th>Hazard Type</th><th>Description</th><th>Linked Item</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="ws-body"></tbody>
+          </table>
+        </div>
+        <div id="ws-empty" class="empty-state" style="display:none"><div class="ico">📋</div><p>No worker statements logged. Click <strong>+ Log Statement</strong>.</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════ MODAL ═══════════════════════════ -->
+<div id="modal-overlay" style="display:none" class="modal-overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 id="modal-title">New Item</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DATA LAYER — localStorage
+// ══════════════════════════════════════════════════════════════
+const STORE = {
+  'action-items':      'jhsc_ai',
+  'hazard-findings':   'jhsc_hf',
+  'inspection-log':    'jhsc_il',
+  'worker-statements': 'jhsc_ws'
+};
+const PREFIX = { 'action-items':'AI', 'hazard-findings':'HF', 'inspection-log':'IL', 'worker-statements':'WS' };
+
+function load(type) { return JSON.parse(localStorage.getItem(STORE[type]) || '[]'); }
+function save(type, data) {
+  localStorage.setItem(STORE[type], JSON.stringify(data));
+  document.getElementById('last-saved').textContent = new Date().toLocaleTimeString('en-CA', {hour:'2-digit',minute:'2-digit'});
+}
+function nextId(type) {
+  const c = JSON.parse(localStorage.getItem('__ctr') || '{}');
+  c[type] = (c[type] || 0) + 1;
+  localStorage.setItem('__ctr', JSON.stringify(c));
+  return PREFIX[type] + '-' + String(c[type]).padStart(3,'0');
+}
+
+// ══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-link').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const sec = a.dataset.sec;
+    document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    document.getElementById('sec-' + sec).classList.add('active');
+    render(sec);
+  });
+});
+
+function render(sec) {
+  if (sec === 'dashboard')         renderDash();
+  else if (sec === 'action-items')      renderAI();
+  else if (sec === 'hazard-findings')   renderHF();
+  else if (sec === 'inspection-log')    renderIL();
+  else if (sec === 'worker-statements') renderWS();
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════════
+const today = () => new Date().toISOString().slice(0,10);
+const fmt   = d  => d ? new Date(d+'T12:00:00').toLocaleDateString('en-CA') : '—';
+const trunc = (s, n=55) => s && s.length > n ? s.slice(0,n)+'…' : (s||'—');
+
+function isOD(item) {
+  if (item.status === 'Closed') return false;
+  const due = item.dueDate || item.responseDeadline || item.followUpDate;
+  return due && due < today();
+}
+
+function sBadge(s) {
+  const m = { 'Open':'b-open','In Progress':'b-prog','Overdue':'b-over','Closed':'b-closed',
+              'Received':'b-rcvd','Under Review':'b-prog','Actioned':'b-prog',
+              'Awaiting Response':'b-prog','Disputed':'b-disp' };
+  return `<span class="badge ${m[s]||'b-open'}">${s}</span>`;
+}
+function pBadge(p) {
+  const m = {'High':'b-high','Medium':'b-medium','Low':'b-low'};
+  return p ? `<span class="badge ${m[p]||'b-medium'}">${p}</span>` : '—';
+}
+function dBadge(d) {
+  if (!d || d==='Both') return d ? `<span class="badge b-wh" style="background:#e0e8ff;color:#333">Both</span>` : '—';
+  return d === 'Warehouse'
+    ? `<span class="badge b-wh">WH</span>`
+    : `<span class="badge b-prod">PROD</span>`;
+}
+function dueTd(d, od) {
+  return `<td style="color:${od?'var(--red)':'inherit'};font-weight:${od?'600':'400'}">${fmt(d)}</td>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════════════════════════════
+const F = { ai:{status:'all',dept:'all'}, hf:{status:'all',dept:'all'}, il:{zone:'all',status:'all'}, ws:{status:'all',dept:'all'} };
+
+function setFilter(tbl, key, val, btn) {
+  F[tbl][key] = val;
+  btn.closest('.filter-group').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tbl==='ai') renderAI();
+  else if (tbl==='hf') renderHF();
+  else if (tbl==='il') renderIL();
+  else if (tbl==='ws') renderWS();
+}
+
+// ══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function renderDash() {
+  document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  const ai = load('action-items');
+  const hf = load('hazard-findings');
+  const il = load('inspection-log');
+  const ws = load('worker-statements');
+  const all = [...ai,...hf,...il];
+
+  const overdue  = all.filter(isOD);
+  const openAI   = ai.filter(i => i.status !== 'Closed').length;
+  const openHF   = hf.filter(i => i.status !== 'Closed').length;
+  const thisMonth= today().slice(0,7);
+  const closed   = all.filter(i => i.status==='Closed' && (i.closedDate||'').startsWith(thisMonth)).length;
+
+  document.getElementById('st-ov').textContent  = overdue.length;
+  document.getElementById('st-ai').textContent  = openAI;
+  document.getElementById('st-hf').textContent  = openHF;
+  document.getElementById('st-ws').textContent  = ws.length;
+  document.getElementById('st-cl').textContent  = closed;
+
+  const b = document.getElementById('b-dash');
+  b.textContent = overdue.length; b.style.display = overdue.length ? '' : 'none';
+
+  // Overdue list
+  const od = document.getElementById('dash-over');
+  od.innerHTML = overdue.length === 0
+    ? '<p class="muted-msg">No overdue items. ✓</p>'
+    : overdue.slice(0,8).map(i => {
+        const due = i.dueDate||i.responseDeadline||i.followUpDate;
+        return `<div class="alert-item${(i.priority||i.severity)==='High'?' critical':''}">
+          <span class="alert-id">${i.id}</span>
+          <span class="alert-desc">${trunc(i.description||i.hazardDescription||i.finding,48)}</span>
+          <span class="alert-due">${fmt(due)}</span>
+        </div>`;
+      }).join('');
+
+  // Recent activity
+  const recent = [...ai,...hf,...il,...ws]
+    .sort((a,b) => (b.date||b.dateReceived||'').localeCompare(a.date||a.dateReceived||''))
+    .slice(0,6);
+  const rl = document.getElementById('dash-recent');
+  rl.innerHTML = recent.length === 0
+    ? '<p class="muted-msg">No items yet.</p>'
+    : recent.map(i => `<div class="alert-item">
+        <span class="alert-id">${i.id}</span>
+        <span class="alert-desc">${trunc(i.description||i.hazardDescription||i.finding||i.hazardType||'—',48)}</span>
+        <span class="alert-due">${fmt(i.date||i.dateReceived)}</span>
+      </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// ACTION ITEMS
+// ══════════════════════════════════════════════════════════════
+function renderAI() {
+  let items = load('action-items').map(i => isOD(i)&&i.status!=='Closed' ? {...i,status:'Overdue'} : i);
+  const f = F.ai;
+  if (f.status !== 'all') items = items.filter(i => i.status === f.status);
+  if (f.dept   !== 'all') items = items.filter(i => i.department === f.dept);
+
+  const open = load('action-items').filter(i => i.status !== 'Closed').length;
+  const b = document.getElementById('b-ai');
+  b.textContent = open; b.style.display = open ? '' : 'none';
+
+  const body = document.getElementById('ai-body');
+  const emp  = document.getElementById('ai-empty');
+  if (items.length === 0) { body.innerHTML=''; emp.style.display=''; return; }
+  emp.style.display = 'none';
+  body.innerHTML = items.map(i => {
+    const od = isOD(i);
+    return `<tr class="${od?'row-overdue':''}">
+      <td><span class="id-tag">${i.id}</span></td>
+      <td>${fmt(i.date)}</td>
+      <td>${dBadge(i.department)}</td>
+      <td title="${i.description||''}">${trunc(i.description)}</td>
+      <td>${i.raisedBy||'—'}</td>
+      <td>${i.assignedTo||'—'}</td>
+      ${dueTd(i.dueDate, od)}
+      <td>${pBadge(i.priority)}</td>
+      <td>${sBadge(i.status)}</td>
+      <td><div class="action-row">
+        <button class="btn btn-ghost btn-sm" onclick="editItem('action-items','${i.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="delItem('action-items','${i.id}')">Del</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// HAZARD FINDINGS
+// ══════════════════════════════════════════════════════════════
+function renderHF() {
+  let items = load('hazard-findings');
+  const f = F.hf;
+  if (f.status !== 'all') items = items.filter(i => i.status === f.status);
+  if (f.dept   !== 'all') items = items.filter(i => i.department === f.dept);
+
+  const open = load('hazard-findings').filter(i => i.status !== 'Closed').length;
+  const b = document.getElementById('b-hf');
+  b.textContent = open; b.style.display = open ? '' : 'none';
+
+  const body = document.getElementById('hf-body');
+  const emp  = document.getElementById('hf-empty');
+  if (items.length === 0) { body.innerHTML=''; emp.style.display=''; return; }
+  emp.style.display = 'none';
+  body.innerHTML = items.map(i => {
+    const od = isOD({...i, dueDate: i.responseDeadline});
+    return `<tr class="${od?'row-overdue':''}">
+      <td><span class="id-tag">${i.id}</span></td>
+      <td>${fmt(i.date)}</td>
+      <td>${dBadge(i.department)}</td>
+      <td title="${i.hazardDescription||''}">${trunc(i.hazardDescription)}</td>
+      <td><span class="ohsa-ref">${(i.ohsaReference||'—').replace('— Select —','—')}</span></td>
+      <td>${pBadge(i.severity)}</td>
+      <td>${fmt(i.recommendationDate)}</td>
+      ${dueTd(i.responseDeadline, od)}
+      <td>${sBadge(i.status)}</td>
+      <td><div class="action-row">
+        <button class="btn btn-ghost btn-sm" onclick="editItem('hazard-findings','${i.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="delItem('hazard-findings','${i.id}')">Del</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// INSPECTION LOG
+// ══════════════════════════════════════════════════════════════
+function renderIL() {
+  let items = load('inspection-log');
+  const f = F.il;
+  if (f.zone   !== 'all') items = items.filter(i => i.zone && i.zone.startsWith(f.zone));
+  if (f.status !== 'all') items = items.filter(i => i.status === f.status);
+
+  const open = load('inspection-log').filter(i => i.status !== 'Closed').length;
+  const b = document.getElementById('b-il');
+  b.textContent = open; b.style.display = open ? '' : 'none';
+
+  const body = document.getElementById('il-body');
+  const emp  = document.getElementById('il-empty');
+  if (items.length === 0) { body.innerHTML=''; emp.style.display=''; return; }
+  emp.style.display = 'none';
+  body.innerHTML = items.map(i => {
+    const od = isOD({...i, dueDate: i.followUpDate});
+    const zNum = (i.zone||'').split(' ')[1] || '?';
+    return `<tr class="${od?'row-overdue':''}">
+      <td><span class="id-tag">${i.id}</span></td>
+      <td>${fmt(i.date)}</td>
+      <td><span class="badge b-wh">Z${zNum}</span></td>
+      <td style="font-size:12px;color:var(--text-muted)">${(i.zone||'').replace(/Zone \d+ – /,'')}</td>
+      <td title="${i.finding||''}">${trunc(i.finding)}</td>
+      <td>${pBadge(i.priority)}</td>
+      <td>${i.assignedTo||'—'}</td>
+      ${dueTd(i.followUpDate, od)}
+      <td>${sBadge(i.status)}</td>
+      <td><div class="action-row">
+        <button class="btn btn-ghost btn-sm" onclick="editItem('inspection-log','${i.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="delItem('inspection-log','${i.id}')">Del</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// WORKER STATEMENTS
+// ══════════════════════════════════════════════════════════════
+function renderWS() {
+  let items = load('worker-statements');
+  const f = F.ws;
+  if (f.status !== 'all') items = items.filter(i => i.status === f.status);
+  if (f.dept   !== 'all') items = items.filter(i => i.department === f.dept);
+
+  const open = load('worker-statements').filter(i => i.status !== 'Closed').length;
+  const b = document.getElementById('b-ws');
+  b.textContent = open; b.style.display = open ? '' : 'none';
+
+  const body = document.getElementById('ws-body');
+  const emp  = document.getElementById('ws-empty');
+  if (items.length === 0) { body.innerHTML=''; emp.style.display=''; return; }
+  emp.style.display = 'none';
+  body.innerHTML = items.map(i => `<tr>
+    <td><span class="id-tag">${i.id}</span></td>
+    <td>${fmt(i.dateReceived)}</td>
+    <td>${i.shift||'—'}</td>
+    <td>${dBadge(i.department)}</td>
+    <td>${i.hazardType&&i.hazardType!=='— Select —' ? i.hazardType : '—'}</td>
+    <td title="${i.description||''}">${trunc(i.description)}</td>
+    <td><span class="id-tag">${i.linkedItem||'—'}</span></td>
+    <td>${sBadge(i.status)}</td>
+    <td><div class="action-row">
+      <button class="btn btn-ghost btn-sm" onclick="editItem('worker-statements','${i.id}')">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="delItem('worker-statements','${i.id}')">Del</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// MODAL FORMS
+// ══════════════════════════════════════════════════════════════
+const ZONES = ['Zone 1 – Receiving Dock','Zone 2 – Cold Storage / Cooler','Zone 3 – Case Flow / Pick Line',
+  'Zone 4 – Shipping Dock','Zone 5 – Production Floor','Zone 6 – Maintenance Area',
+  'Zone 7 – Offices / Lunchroom','Zone 8 – Yard / External','Zone 9 – Mezzanine / Upper Level'];
+
+const OHSA_REFS = ['— Select —','s.9(20) – JHSC Written Recommendation','s.9(21) – Employer Response Required',
+  's.25(1)(b) – Equipment in Good Condition','s.25(2)(h) – Take Every Precaution Reasonable',
+  's.43 – Right to Refuse Unsafe Work','O. Reg. 297/13 – MSD Prevention',
+  'CSA B335-15 – Industrial Lift Trucks','O. Reg. 851 – Industrial Establishments','Other'];
+
+const HAZ_TYPES = ['— Select —','MSD / Ergonomic','Slip / Trip / Fall','Struck By / Caught In',
+  'Electrical','Chemical / WHMIS','Temperature Extremes','Noise / Vibration',
+  'Equipment / Machinery','Housekeeping','Other'];
+
+function inp(name, label, type='text', val='') {
+  return `<div class="fg"><label>${label}</label><input type="${type}" name="${name}" value="${val||''}"></div>`;
+}
+function sel(name, label, opts, val='') {
+  return `<div class="fg"><label>${label}</label><select name="${name}">${
+    opts.map(o => `<option value="${o}"${val===o?' selected':''}>${o}</option>`).join('')
+  }</select></div>`;
+}
+function ta(name, label, val='') {
+  return `<div class="fg full"><label>${label}</label><textarea name="${name}">${val||''}</textarea></div>`;
+}
+function full(html) { return `<div class="fg full">${html}</div>`; }
+
+function buildForm(type, d={}) {
+  const v = k => d[k]||'';
+  if (type === 'action-items') return `<div class="form-grid">
+    ${inp('date','Date Raised','date', v('date')||today())}
+    ${sel('department','Department',['Warehouse','Production','Both'], v('department'))}
+    ${ta('description','Description of Action Item', v('description'))}
+    ${inp('raisedBy','Raised By', 'text', v('raisedBy'))}
+    ${inp('assignedTo','Assigned To', 'text', v('assignedTo'))}
+    ${inp('dueDate','Due Date','date', v('dueDate'))}
+    ${sel('priority','Priority',['High','Medium','Low'], v('priority')||'Medium')}
+    ${sel('status','Status',['Open','In Progress','Closed'], v('status')||'Open')}
+    ${inp('closedDate','Closed Date (if applicable)','date', v('closedDate'))}
+    ${ta('notes','Notes / Follow-Up', v('notes'))}
+  </div>`;
+
+  if (type === 'hazard-findings') return `<div class="form-grid">
+    ${inp('date','Date Identified','date', v('date')||today())}
+    ${sel('department','Department',['Warehouse','Production','Both'], v('department'))}
+    ${ta('hazardDescription','Hazard Description', v('hazardDescription'))}
+    ${sel('ohsaReference','OHSA Reference', OHSA_REFS, v('ohsaReference'))}
+    ${sel('severity','Severity',['High','Medium','Low'], v('severity')||'High')}
+    ${inp('raisedBy','Raised By (Worker Co-Chair)', 'text', v('raisedBy'))}
+    ${inp('assignedTo','Management Contact', 'text', v('assignedTo'))}
+    ${inp('recommendationDate','Recommendation Date','date', v('recommendationDate'))}
+    ${inp('responseDeadline','Response Deadline (21 days)','date', v('responseDeadline'))}
+    ${sel('status','Status',['Open','Awaiting Response','Disputed','Closed'], v('status')||'Open')}
+    ${ta('managementResponse','Management Response (if any)', v('managementResponse'))}
+    ${ta('notes','Notes', v('notes'))}
+  </div>`;
+
+  if (type === 'inspection-log') return `<div class="form-grid">
+    ${inp('date','Inspection Date','date', v('date')||today())}
+    ${sel('zone','Zone', ZONES, v('zone'))}
+    ${inp('area','Specific Area / Location', 'text', v('area'))}
+    ${inp('inspector','Inspector Name', 'text', v('inspector'))}
+    ${ta('finding','Finding / Observation', v('finding'))}
+    ${sel('priority','Priority',['High','Medium','Low'], v('priority')||'Medium')}
+    ${inp('assignedTo','Assigned To', 'text', v('assignedTo'))}
+    ${inp('followUpDate','Follow-Up Date','date', v('followUpDate'))}
+    ${sel('status','Status',['Open','In Progress','Closed'], v('status')||'Open')}
+    ${ta('notes','Notes', v('notes'))}
+  </div>`;
+
+  if (type === 'worker-statements') return `<div class="form-grid">
+    ${inp('dateReceived','Date Received','date', v('dateReceived')||today())}
+    ${sel('shift','Shift',['Days','Afternoons','Nights','Unknown'], v('shift'))}
+    ${sel('department','Department',['Warehouse','Production','Both','Unknown'], v('department'))}
+    ${sel('hazardType','Hazard Type', HAZ_TYPES, v('hazardType'))}
+    ${ta('description','Description — NO WORKER NAMES', v('description'))}
+    ${inp('linkedItem','Linked Item ID (e.g. HF-001)', 'text', v('linkedItem'))}
+    ${sel('status','Status',['Received','Under Review','Actioned','Closed'], v('status')||'Received')}
+    ${ta('notes','Notes / Follow-Up Actions', v('notes'))}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MODAL CONTROL
+// ══════════════════════════════════════════════════════════════
+let _type = null, _editId = null;
+const TITLES = {
+  'action-items':'Action Item', 'hazard-findings':'Hazard Finding',
+  'inspection-log':'Inspection Entry', 'worker-statements':'Worker Statement'
+};
+
+function openModal(type, data=null) {
+  _type = type; _editId = data ? data.id : null;
+  document.getElementById('modal-title').textContent = (_editId ? 'Edit ' : 'New ') + TITLES[type];
+  document.getElementById('modal-body').innerHTML = buildForm(type, data||{});
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  _type = null; _editId = null;
+}
+function overlayClick(e) { if (e.target.id === 'modal-overlay') closeModal(); }
+
+function saveModal() {
+  const fields = document.getElementById('modal-body').querySelectorAll('input,select,textarea');
+  const data = {};
+  fields.forEach(f => { data[f.name] = f.value; });
+
+  const items = load(_type);
+  if (_editId) {
+    const idx = items.findIndex(i => i.id === _editId);
+    if (idx !== -1) items[idx] = {...items[idx], ...data};
+  } else {
+    data.id = nextId(_type);
+    items.push(data);
+  }
+  save(_type, items);
+  closeModal();
+  render(_type);
+  renderDash();
+}
+
+function editItem(type, id) {
+  const item = load(type).find(i => i.id === id);
+  if (item) openModal(type, item);
+}
+
+function delItem(type, id) {
+  if (!confirm('Delete this record permanently?')) return;
+  save(type, load(type).filter(i => i.id !== id));
+  render(type);
+  renderDash();
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+renderDash();
+</script>
+</body>
+</html>
