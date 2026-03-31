@@ -28,15 +28,17 @@ import { StatusBadge, PriorityBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
 
 const ZONES = [
-  "Zone 1 - Receiving / Shipping Dock",
-  "Zone 2 - Warehouse",
-  "Zone 3 - Pre-weigh / Mixing",
-  "Zone 4 - Production Line A",
-  "Zone 5 - Production Line B",
-  "Zone 6 - Packaging",
-  "Zone 7 - Maintenance Shop",
-  "Zone 8 - Office / Welfare Areas",
-  "Zone 9 - Roof / Mechanical"
+  "Zone 1 — Process / Production",
+  "Zone 2 — Tank Gallery / Labs",
+  "Zone 3 — Basement / Raw Milk Receiving",
+  "Zone 4 — Employee Facilities",
+  "Zone 5 — Exterior Building",
+  "Zone 6 — Cold Warehouse",
+  "Zone 7 — WH #2 / Case Wash",
+  "Zone 8 — Maintenance / Boiler / Ammonia",
+  "Zone 9 — Caser Stacker / Chain System",
+  "Zone 10 — Warehouse #1",
+  "Zone 11 — Maintenance Boiler / Hot Water",
 ];
 
 const formSchema = z.object({
@@ -159,7 +161,7 @@ export default function InspectionLogPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Monthly Inspection Log</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Findings from workplace inspections across all 9 zones.</p>
+          <p className="text-muted-foreground mt-1 text-sm">Findings from workplace inspections across all 11 zones.</p>
         </div>
         <Button onClick={handleCreate} className="shrink-0 font-bold shadow-sm">
           <Plus className="w-4 h-4 mr-2" /> Record Finding
