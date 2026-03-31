@@ -194,13 +194,17 @@ export async function parseInspectionFile(buffer: Buffer): Promise<ParsedInspect
   const sheets: ParsedInspectionSheet[] = [];
   let totalFindings = 0;
 
-  for (const worksheet of workbook.worksheets) {
-    const sheetName = worksheet.name;
-    if (!sheetName.trim().toLowerCase().startsWith("inspection")) continue;
-    if (worksheet.rowCount === 0) continue;
+  // Prefer sheets named "Inspection X" (multi-zone upload); fall back to all
+  // non-empty sheets so individual per-zone file uploads also work.
+  const allNonEmpty = workbook.worksheets.filter((ws) => ws.rowCount > 0);
+  const inspectionSheets = allNonEmpty.filter((ws) =>
+    ws.name.trim().toLowerCase().startsWith("inspection")
+  );
+  const worksheetsToProcess = inspectionSheets.length > 0 ? inspectionSheets : allNonEmpty;
 
+  for (const worksheet of worksheetsToProcess) {
     const rows = sheetToRows(worksheet);
-    const parsed = parseInspectionSheet(rows, sheetName);
+    const parsed = parseInspectionSheet(rows, worksheet.name);
     sheets.push(parsed);
     totalFindings += parsed.findings.length;
   }
