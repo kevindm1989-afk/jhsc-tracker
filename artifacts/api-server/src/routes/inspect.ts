@@ -12,7 +12,7 @@ const CO_CHAIR_EMAIL = "kevin_de_melo@hotmail.com";
 
 const router: IRouter = Router();
 
-const TEMPLATE_PATH = path.join(__dirname, "../assets/inspection_template.xlsx");
+const ASSETS_DIR = path.join(__dirname, "../assets");
 
 function genInspectionCode(id: number) {
   return "IL-" + String(id).padStart(3, "0");
@@ -40,37 +40,29 @@ async function buildFilledBuffer(body: ExportBody): Promise<Buffer | null> {
   const { zoneIndex, date, inspector, responses, additionalComments } = body;
   if (zoneIndex == null || zoneIndex < 0 || zoneIndex > 10) return null;
 
-  const templateBuffer = await readFile(TEMPLATE_PATH);
+  const zonePath = path.join(ASSETS_DIR, `inspection_zone_${zoneIndex + 1}.xlsx`);
+  const templateBuffer = await readFile(zonePath);
   const workbook = await XlsxPopulate.fromDataAsync(templateBuffer);
 
-  const sheetName = `Inspection ${zoneIndex + 1}`;
-  const sheet = workbook.sheet(sheetName);
+  // Each per-zone file has exactly one sheet
+  const sheet = workbook.sheets()[0];
   if (!sheet) return null;
 
-  // col is 0-indexed in original logic; xlsx-populate uses 1-indexed rows AND cols
-  // row 4, col B (0-indexed col 1) → cell(4, 2)
+  // xlsx-populate uses 1-indexed rows AND cols
   if (date) sheet.cell(4, 2).value(date);
-  // row 5, col C (0-indexed col 2) → cell(5, 3)
   if (inspector) sheet.cell(5, 3).value(inspector);
 
   for (const [rowStr, resp] of Object.entries(responses)) {
     const row = parseInt(rowStr, 10);
     if (!resp.rating) continue;
-    // col C (0-indexed col 2) → col 3
     sheet.cell(row, 3).value(resp.rating);
-    // col E (0-indexed col 4) → col 5
     if (resp.correctiveAction) sheet.cell(row, 5).value(resp.correctiveAction);
-    // col F (0-indexed col 5) → col 6
     if (resp.responsibleParty) sheet.cell(row, 6).value(resp.responsibleParty);
   }
 
   if (additionalComments) {
-    // col A (0-indexed col 0) → col 1
     sheet.cell(ADDITIONAL_COMMENTS_ROW + 1, 1).value(additionalComments);
   }
-
-  // Set the target sheet as the active (first visible) sheet
-  sheet.active(true);
 
   return workbook.outputAsync();
 }
