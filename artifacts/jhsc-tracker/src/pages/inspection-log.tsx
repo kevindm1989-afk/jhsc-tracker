@@ -262,7 +262,7 @@ export default function InspectionLogPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -314,7 +314,7 @@ export default function InspectionLogPage() {
                 )} />
               </div>
               
-              <div className="grid grid-cols-[1fr_2fr] gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-4">
                 <FormField control={form.control} name="area" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Specific Area</FormLabel>

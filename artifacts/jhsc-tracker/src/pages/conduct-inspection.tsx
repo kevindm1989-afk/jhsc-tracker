@@ -485,35 +485,35 @@ export default function ConductInspectionPage() {
             {date && <span className="ml-2 text-xs">· {date}</span>}
             {inspector && <span className="ml-2 text-xs">· {inspector}</span>}
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" onClick={handleReset} className="text-xs px-3">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={handleReset} className="text-xs px-3 shrink-0">
               Reset
             </Button>
             <Button
               onClick={handleSave}
               disabled={isSaving || findingCount === 0}
               variant="outline"
-              className="font-semibold flex-1 sm:flex-none"
+              className="font-semibold flex-1 min-w-[130px] sm:flex-none"
             >
-              <Save className="w-4 h-4 mr-1.5" />
-              {isSaving ? "Saving..." : `Save ${findingCount > 0 ? `${findingCount} Finding${findingCount !== 1 ? "s" : ""}` : "Findings"}`}
+              <Save className="w-4 h-4 mr-1.5 shrink-0" />
+              <span className="truncate">{isSaving ? "Saving..." : `Save${findingCount > 0 ? ` (${findingCount})` : ""}`}</span>
             </Button>
             <Button
               onClick={handleExport}
               disabled={isExporting || ratedCount === 0}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold flex-1 sm:flex-none"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold flex-1 min-w-[130px] sm:flex-none"
             >
-              <Download className="w-4 h-4 mr-1.5" />
-              {isExporting ? "Exporting..." : "Export Form (.xlsx)"}
+              <Download className="w-4 h-4 mr-1.5 shrink-0" />
+              <span className="truncate">{isExporting ? "Exporting..." : "Export (.xlsx)"}</span>
             </Button>
             <Button
               onClick={handleEmail}
               disabled={isEmailing || ratedCount === 0}
               variant="outline"
-              className="border-primary text-primary hover:bg-primary/10 font-semibold flex-1 sm:flex-none"
+              className="border-primary text-primary hover:bg-primary/10 font-semibold flex-1 min-w-[130px] sm:flex-none"
             >
-              <Mail className="w-4 h-4 mr-1.5" />
-              {isEmailing ? "Sending..." : "Email to Co-Chair"}
+              <Mail className="w-4 h-4 mr-1.5 shrink-0" />
+              <span className="truncate">{isEmailing ? "Sending..." : "Email Co-Chair"}</span>
             </Button>
           </div>
         </div>
