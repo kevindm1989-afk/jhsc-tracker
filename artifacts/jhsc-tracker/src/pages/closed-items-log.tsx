@@ -8,7 +8,7 @@ import {
   useCreateClosedItem,
   useUpdateClosedItem,
   useDeleteClosedItem,
-  getListClosedItemsUrl,
+  getListClosedItemsQueryKey,
   ClosedItem,
   ClosedItemDepartment,
 } from "@workspace/api-client-react";
@@ -66,7 +66,7 @@ export default function ClosedItemsLogPage() {
   const { data: items, isLoading } = useListClosedItems(queryParams);
 
   const invalidateList = () => {
-    queryClient.invalidateQueries({ queryKey: [getListClosedItemsUrl()] });
+    queryClient.invalidateQueries({ queryKey: getListClosedItemsQueryKey() });
   };
 
   const createMutation = useCreateClosedItem({
