@@ -12,6 +12,7 @@ import {
   LogOut,
   ShieldCheck,
   User,
+  FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +35,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     { name: "Conduct Inspection", href: "/conduct-inspection", icon: ClipboardCheck, permission: "conduct-inspection" },
     { name: "Worker Statements", href: "/worker-statements", icon: MessageSquareWarning, permission: "worker-statements", badge: summary?.totalWorkerStatements },
     { name: "Import Data", href: "/import-minutes", icon: Upload, permission: "import-data" },
+    { name: "Documents", href: "/documents", icon: FolderOpen, permission: "documents" },
   ].filter((item) => hasPermission(item.permission));
 
   const isActive = (href: string) =>

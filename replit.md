@@ -50,11 +50,12 @@ A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo
 - **Worker Statements** — Confidential statements tracked by code only (W-001), no worker names stored
 - **Authentication** — Session-based login (bcrypt + express-session + PostgreSQL session store); admin auto-seeded on first run (username: admin, password: Unifor1285!)
 - **Manage Users** — Admin-only page to create/edit/delete member accounts and assign per-module permissions
+- **Documents** — Upload, browse, and download safety documents; category-based organisation (Meeting Minutes, Inspection Reports, Hazard Reports, OHSA References, Policies & Procedures, Worker Statements, Other); presigned GCS upload via Replit Object Storage; metadata stored in DB; per-user delete permission
 
 ### Auth & Permissions
 
 - Roles: `admin` (full access, bypass all checks) and `member` (custom permission set)
-- Permission keys: `dashboard`, `action-items`, `hazard-findings`, `inspection-log`, `conduct-inspection`, `worker-statements`, `import-data`
+- Permission keys: `dashboard`, `action-items`, `hazard-findings`, `inspection-log`, `conduct-inspection`, `worker-statements`, `import-data`, `documents`
 - Frontend: `AuthContext` provides `user`, `login()`, `logout()`, `hasPermission()`; `ProtectedRoute` guards each page
 - Sidebar hides nav items a member doesn't have access to; admin section ("Manage Users") only visible to admins
 - All API routes except `/api/auth/*` and `/api/health` require a valid session
@@ -66,6 +67,7 @@ A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo
 - `inspection_log` — IL-001 codes, 11 zones, areas, findings
 - `worker_statements` — W-001 codes, shifts, hazard types, linked items
 - `users` — username, displayName, passwordHash, role, permissions (JSON array), timestamps
+- `documents` — title, description, category, fileName, fileSize, mimeType, objectPath, uploadedBy, timestamps
 - `session` — auto-created by connect-pg-simple for session storage
 
 ## TypeScript & Composite Projects

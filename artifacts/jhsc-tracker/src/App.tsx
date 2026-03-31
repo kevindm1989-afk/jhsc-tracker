@@ -14,6 +14,7 @@ import WorkerStatementsPage from "@/pages/worker-statements";
 import ImportMinutesPage from "@/pages/import-minutes";
 import ConductInspectionPage from "@/pages/conduct-inspection";
 import ManageUsersPage from "@/pages/manage-users";
+import DocumentsPage from "@/pages/documents";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -104,6 +105,9 @@ function Router() {
               </Route>
               <Route path="/import-minutes">
                 <ProtectedRoute component={ImportMinutesPage} permission="import-data" />
+              </Route>
+              <Route path="/documents">
+                <ProtectedRoute component={DocumentsPage} permission="documents" />
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />
