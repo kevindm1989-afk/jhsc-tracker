@@ -17,7 +17,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     { name: "Hazard Findings", href: "/hazard-findings", icon: AlertTriangle, badge: summary?.openHazardFindings },
     { name: "Inspection Log", href: "/inspection-log", icon: Search },
     { name: "Worker Statements", href: "/worker-statements", icon: MessageSquareWarning, badge: summary?.totalWorkerStatements },
-    { name: "Import Minutes", href: "/import-minutes", icon: Upload },
+    { name: "Import Data", href: "/import-minutes", icon: Upload },
   ];
 
   return (

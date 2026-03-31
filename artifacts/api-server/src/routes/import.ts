@@ -1,9 +1,10 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { db } from "@workspace/db";
-import { actionItemsTable, hazardFindingsTable } from "@workspace/db/schema";
+import { actionItemsTable, hazardFindingsTable, inspectionLogTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { parseMinutesFile } from "../minutesParser";
+import { parseInspectionFile } from "../inspectionParser";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -128,4 +129,83 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
   }
 });
 
+function genInspectionCode(id: number) {
+  return "IL-" + String(id).padStart(3, "0");
+}
+
+router.post("/inspection", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const parsed = parseInspectionFile(req.file.buffer);
+    const preview = req.query.preview === "true";
+
+    if (preview) {
+      return res.json(parsed);
+    }
+
+    if (parsed.isBlank) {
+      return res.json({
+        success: true,
+        imported: { inspectionEntries: 0 },
+        skipped: { inspectionEntries: 0 },
+        message: "The file appears to be a blank template — no findings were recorded.",
+      });
+    }
+
+    let imported = 0;
+    let skipped = 0;
+    const today = new Date().toISOString().split("T")[0];
+
+    for (const sheet of parsed.sheets) {
+      for (const finding of sheet.findings) {
+        const entryDate = finding.date || today;
+
+        const [created] = await db
+          .insert(inspectionLogTable)
+          .values({
+            itemCode: "IL-000",
+            date: entryDate,
+            zone: finding.zone,
+            area: finding.area || null,
+            finding: finding.finding,
+            priority: finding.priority,
+            assignedTo: finding.assignedTo || null,
+            status: "Open",
+            notes: finding.notes || null,
+          })
+          .returning()
+          .catch(() => [null]);
+
+        if (!created) {
+          skipped++;
+          continue;
+        }
+
+        await db
+          .update(inspectionLogTable)
+          .set({ itemCode: genInspectionCode(created.id) })
+          .where(eq(inspectionLogTable.id, created.id));
+
+        imported++;
+      }
+    }
+
+    res.json({
+      success: true,
+      imported: { inspectionEntries: imported },
+      skipped: { inspectionEntries: skipped },
+      totalSheets: parsed.sheets.length,
+    });
+  } catch (err) {
+    console.error("Inspection import error:", err);
+    res.status(500).json({
+      error: "Failed to parse or import the file. Make sure it is a valid JHSC Inspection Form workbook.",
+    });
+  }
+});
+
 export default router;
+
