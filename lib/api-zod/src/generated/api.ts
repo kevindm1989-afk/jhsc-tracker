@@ -124,6 +124,80 @@ export const DeleteActionItemParams = zod.object({
 });
 
 /**
+ * @summary List all closed items (from imported Closed Items sheet)
+ */
+export const ListClosedItemsQueryParams = zod.object({
+  department: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListClosedItemsResponseItem = zod.object({
+  id: zod.number(),
+  itemCode: zod.string().describe("CI-001 format identifier"),
+  date: zod.coerce.date(),
+  department: zod.enum(["Warehouse", "Production", "Both"]),
+  description: zod.string(),
+  assignedTo: zod.string(),
+  closedDate: zod.coerce.date().nullish(),
+  meetingDate: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListClosedItemsResponse = zod.array(ListClosedItemsResponseItem);
+
+/**
+ * @summary Create a closed item record
+ */
+export const CreateClosedItemBody = zod.object({
+  date: zod.coerce.date(),
+  department: zod.enum(["Warehouse", "Production", "Both"]),
+  description: zod.string(),
+  assignedTo: zod.string(),
+  closedDate: zod.coerce.date().nullish(),
+  meetingDate: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Update a closed item
+ */
+export const UpdateClosedItemParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateClosedItemBody = zod.object({
+  date: zod.coerce.date().optional(),
+  department: zod.enum(["Warehouse", "Production", "Both"]).optional(),
+  description: zod.string().optional(),
+  assignedTo: zod.string().optional(),
+  closedDate: zod.coerce.date().nullish(),
+  meetingDate: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateClosedItemResponse = zod.object({
+  id: zod.number(),
+  itemCode: zod.string().describe("CI-001 format identifier"),
+  date: zod.coerce.date(),
+  department: zod.enum(["Warehouse", "Production", "Both"]),
+  description: zod.string(),
+  assignedTo: zod.string(),
+  closedDate: zod.coerce.date().nullish(),
+  meetingDate: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a closed item record
+ */
+export const DeleteClosedItemParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary List all hazard findings
  */
 export const ListHazardFindingsQueryParams = zod.object({

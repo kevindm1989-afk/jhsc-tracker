@@ -11,6 +11,8 @@ tags:
     description: Health operations
   - name: action-items
     description: JHSC Action Items
+  - name: closed-items-log
+    description: Closed Items imported from minutes
   - name: hazard-findings
     description: JHSC Hazard Findings
   - name: inspection-log
@@ -121,6 +123,86 @@ paths:
       operationId: deleteActionItem
       tags: [action-items]
       summary: Delete an action item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── CLOSED ITEMS LOG ──
+  /closed-items-log:
+    get:
+      operationId: listClosedItems
+      tags: [closed-items-log]
+      summary: List all closed items (from imported Closed Items sheet)
+      parameters:
+        - name: department
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of closed items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClosedItem"
+    post:
+      operationId: createClosedItem
+      tags: [closed-items-log]
+      summary: Create a closed item record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClosedItem"
+      responses:
+        "201":
+          description: Created closed item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClosedItem"
+
+  /closed-items-log/{id}:
+    put:
+      operationId: updateClosedItem
+      tags: [closed-items-log]
+      summary: Update a closed item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateClosedItem"
+      responses:
+        "200":
+          description: Updated closed item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClosedItem"
+    delete:
+      operationId: deleteClosedItem
+      tags: [closed-items-log]
+      summary: Delete a closed item record
       parameters:
         - name: id
           in: path
@@ -950,3 +1032,96 @@ components:
         status:
           type: string
       required: [itemCode, description, date, module, status]
+
+    ClosedItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        itemCode:
+          type: string
+          description: "CI-001 format identifier"
+        date:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        description:
+          type: string
+        assignedTo:
+          type: string
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        meetingDate:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, itemCode, date, department, description, assignedTo, createdAt, updatedAt]
+
+    CreateClosedItem:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        description:
+          type: string
+        assignedTo:
+          type: string
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        meetingDate:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required: [date, department, description, assignedTo]
+
+    UpdateClosedItem:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Warehouse, Production, Both]
+        description:
+          type: string
+        assignedTo:
+          type: string
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        meetingDate:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    ListClosedItemsParams:
+      type: object
+      properties:
+        department:
+          type: string
+        search:
+          type: string

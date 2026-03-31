@@ -18,7 +18,9 @@ import type {
 
 import type {
   ActionItem,
+  ClosedItem,
   CreateActionItem,
+  CreateClosedItem,
   CreateHazardFinding,
   CreateInspectionEntry,
   CreateWorkerStatement,
@@ -27,12 +29,14 @@ import type {
   HealthStatus,
   InspectionEntry,
   ListActionItemsParams,
+  ListClosedItemsParams,
   ListHazardFindingsParams,
   ListInspectionEntriesParams,
   ListWorkerStatementsParams,
   OverdueItem,
   RecentItem,
   UpdateActionItem,
+  UpdateClosedItem,
   UpdateHazardFinding,
   UpdateInspectionEntry,
   UpdateWorkerStatement,
@@ -559,6 +563,357 @@ export const useDeleteActionItem = <
   TContext
 > => {
   return useMutation(getDeleteActionItemMutationOptions(options));
+};
+
+/**
+ * @summary List all closed items (from imported Closed Items sheet)
+ */
+export const getListClosedItemsUrl = (params?: ListClosedItemsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/closed-items-log?${stringifiedParams}`
+    : `/api/closed-items-log`;
+};
+
+export const listClosedItems = async (
+  params?: ListClosedItemsParams,
+  options?: RequestInit,
+): Promise<ClosedItem[]> => {
+  return customFetch<ClosedItem[]>(getListClosedItemsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListClosedItemsQueryKey = (params?: ListClosedItemsParams) => {
+  return [`/api/closed-items-log`, ...(params ? [params] : [])] as const;
+};
+
+export const getListClosedItemsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listClosedItems>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListClosedItemsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listClosedItems>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListClosedItemsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listClosedItems>>> = ({
+    signal,
+  }) => listClosedItems(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listClosedItems>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListClosedItemsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listClosedItems>>
+>;
+export type ListClosedItemsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all closed items (from imported Closed Items sheet)
+ */
+
+export function useListClosedItems<
+  TData = Awaited<ReturnType<typeof listClosedItems>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListClosedItemsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listClosedItems>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListClosedItemsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a closed item record
+ */
+export const getCreateClosedItemUrl = () => {
+  return `/api/closed-items-log`;
+};
+
+export const createClosedItem = async (
+  createClosedItem: CreateClosedItem,
+  options?: RequestInit,
+): Promise<ClosedItem> => {
+  return customFetch<ClosedItem>(getCreateClosedItemUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createClosedItem),
+  });
+};
+
+export const getCreateClosedItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createClosedItem>>,
+    TError,
+    { data: BodyType<CreateClosedItem> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createClosedItem>>,
+  TError,
+  { data: BodyType<CreateClosedItem> },
+  TContext
+> => {
+  const mutationKey = ["createClosedItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createClosedItem>>,
+    { data: BodyType<CreateClosedItem> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createClosedItem(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateClosedItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createClosedItem>>
+>;
+export type CreateClosedItemMutationBody = BodyType<CreateClosedItem>;
+export type CreateClosedItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a closed item record
+ */
+export const useCreateClosedItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createClosedItem>>,
+    TError,
+    { data: BodyType<CreateClosedItem> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createClosedItem>>,
+  TError,
+  { data: BodyType<CreateClosedItem> },
+  TContext
+> => {
+  return useMutation(getCreateClosedItemMutationOptions(options));
+};
+
+/**
+ * @summary Update a closed item
+ */
+export const getUpdateClosedItemUrl = (id: number) => {
+  return `/api/closed-items-log/${id}`;
+};
+
+export const updateClosedItem = async (
+  id: number,
+  updateClosedItem: UpdateClosedItem,
+  options?: RequestInit,
+): Promise<ClosedItem> => {
+  return customFetch<ClosedItem>(getUpdateClosedItemUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateClosedItem),
+  });
+};
+
+export const getUpdateClosedItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateClosedItem>>,
+    TError,
+    { id: number; data: BodyType<UpdateClosedItem> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateClosedItem>>,
+  TError,
+  { id: number; data: BodyType<UpdateClosedItem> },
+  TContext
+> => {
+  const mutationKey = ["updateClosedItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateClosedItem>>,
+    { id: number; data: BodyType<UpdateClosedItem> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateClosedItem(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateClosedItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateClosedItem>>
+>;
+export type UpdateClosedItemMutationBody = BodyType<UpdateClosedItem>;
+export type UpdateClosedItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a closed item
+ */
+export const useUpdateClosedItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateClosedItem>>,
+    TError,
+    { id: number; data: BodyType<UpdateClosedItem> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateClosedItem>>,
+  TError,
+  { id: number; data: BodyType<UpdateClosedItem> },
+  TContext
+> => {
+  return useMutation(getUpdateClosedItemMutationOptions(options));
+};
+
+/**
+ * @summary Delete a closed item record
+ */
+export const getDeleteClosedItemUrl = (id: number) => {
+  return `/api/closed-items-log/${id}`;
+};
+
+export const deleteClosedItem = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteClosedItemUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteClosedItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteClosedItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteClosedItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteClosedItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteClosedItem>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteClosedItem(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteClosedItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteClosedItem>>
+>;
+
+export type DeleteClosedItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a closed item record
+ */
+export const useDeleteClosedItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteClosedItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteClosedItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteClosedItemMutationOptions(options));
 };
 
 /**

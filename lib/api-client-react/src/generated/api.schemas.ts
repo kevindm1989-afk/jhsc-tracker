@@ -525,9 +525,81 @@ export interface RecentItem {
   status: string;
 }
 
+export type ClosedItemDepartment =
+  (typeof ClosedItemDepartment)[keyof typeof ClosedItemDepartment];
+
+export const ClosedItemDepartment = {
+  Warehouse: "Warehouse",
+  Production: "Production",
+  Both: "Both",
+} as const;
+
+export interface ClosedItem {
+  id: number;
+  /** CI-001 format identifier */
+  itemCode: string;
+  date: string;
+  department: ClosedItemDepartment;
+  description: string;
+  assignedTo: string;
+  closedDate?: string | null;
+  meetingDate?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateClosedItemDepartment =
+  (typeof CreateClosedItemDepartment)[keyof typeof CreateClosedItemDepartment];
+
+export const CreateClosedItemDepartment = {
+  Warehouse: "Warehouse",
+  Production: "Production",
+  Both: "Both",
+} as const;
+
+export interface CreateClosedItem {
+  date: string;
+  department: CreateClosedItemDepartment;
+  description: string;
+  assignedTo: string;
+  closedDate?: string | null;
+  meetingDate?: string | null;
+  notes?: string | null;
+}
+
+export type UpdateClosedItemDepartment =
+  (typeof UpdateClosedItemDepartment)[keyof typeof UpdateClosedItemDepartment];
+
+export const UpdateClosedItemDepartment = {
+  Warehouse: "Warehouse",
+  Production: "Production",
+  Both: "Both",
+} as const;
+
+export interface UpdateClosedItem {
+  date?: string;
+  department?: UpdateClosedItemDepartment;
+  description?: string;
+  assignedTo?: string;
+  closedDate?: string | null;
+  meetingDate?: string | null;
+  notes?: string | null;
+}
+
+export interface ListClosedItemsParams {
+  department?: string;
+  search?: string;
+}
+
 export type ListActionItemsParams = {
   status?: string;
   department?: string;
+};
+
+export type ListClosedItemsParams = {
+  department?: string;
+  search?: string;
 };
 
 export type ListHazardFindingsParams = {

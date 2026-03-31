@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { db } from "@workspace/db";
-import { actionItemsTable, hazardFindingsTable, inspectionLogTable } from "@workspace/db/schema";
+import { actionItemsTable, hazardFindingsTable, inspectionLogTable, closedItemsLogTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { parseMinutesFile } from "../minutesParser";
 import { parseInspectionFile } from "../inspectionParser";
@@ -36,8 +36,12 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     let skippedActionItems = 0;
     let skippedHazardFindings = 0;
 
-    // Import action items (dedup by description)
-    for (const item of parsed.actionItems) {
+    // Separate closed items (from the "Closed Items" sheet) from regular action items
+    const closedItemsFromSheet = parsed.actionItems.filter((a) => a.source === "Closed Items");
+    const regularActionItems = parsed.actionItems.filter((a) => a.source !== "Closed Items");
+
+    // Import regular action items (dedup by description)
+    for (const item of regularActionItems) {
       const existing = await db
         .select({ id: actionItemsTable.id })
         .from(actionItemsTable)
@@ -71,6 +75,42 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         .where(eq(actionItemsTable.id, created.id));
 
       importedActionItems++;
+    }
+
+    // Import closed items into the dedicated closed_items_log table (dedup by description)
+    let importedClosedItems = 0;
+    let skippedClosedItems = 0;
+    for (const item of closedItemsFromSheet) {
+      const existing = await db
+        .select({ id: closedItemsLogTable.id })
+        .from(closedItemsLogTable)
+        .where(eq(closedItemsLogTable.description, item.description));
+
+      if (existing.length > 0) {
+        skippedClosedItems++;
+        continue;
+      }
+
+      const [created] = await db
+        .insert(closedItemsLogTable)
+        .values({
+          itemCode: "CI-000",
+          date: item.date,
+          department: item.department,
+          description: item.description,
+          assignedTo: item.assignedTo,
+          closedDate: item.closedDate ?? null,
+          meetingDate: parsed.meetingDate ?? null,
+          notes: item.notes ?? null,
+        })
+        .returning();
+
+      await db
+        .update(closedItemsLogTable)
+        .set({ itemCode: "CI-" + String(created.id).padStart(3, "0") })
+        .where(eq(closedItemsLogTable.id, created.id));
+
+      importedClosedItems++;
     }
 
     // Import hazard findings (dedup by description)
@@ -117,10 +157,12 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       imported: {
         actionItems: importedActionItems,
         hazardFindings: importedHazardFindings,
+        closedItems: importedClosedItems,
       },
       skipped: {
         actionItems: skippedActionItems,
         hazardFindings: skippedHazardFindings,
+        closedItems: skippedClosedItems,
       },
     });
   } catch (err) {
