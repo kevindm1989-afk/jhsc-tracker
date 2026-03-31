@@ -15,3 +15,12 @@ BASE_PATH = "/__mockup"
 
 [services.development]
 run = "pnpm --filter @workspace/mockup-sandbox run dev"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/mockup-sandbox", "run", "build"]
+run = ["pnpm", "--filter", "@workspace/mockup-sandbox", "run", "preview"]
+
+[services.production.env]
+NODE_ENV = "production"
+PORT = "8081"
+BASE_PATH = "/__mockup"
