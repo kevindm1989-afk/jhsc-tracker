@@ -5,6 +5,7 @@ import hazardFindingsRouter from "./hazardFindings";
 import inspectionLogRouter from "./inspectionLog";
 import workerStatementsRouter from "./workerStatements";
 import dashboardRouter from "./dashboard";
+import importRouter from "./import";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use("/hazard-findings", hazardFindingsRouter);
 router.use("/inspection-log", inspectionLogRouter);
 router.use("/worker-statements", workerStatementsRouter);
 router.use("/dashboard", dashboardRouter);
+router.use("/import", importRouter);
 
 export default router;
