@@ -1,9 +1,11 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 import AppLayout from "@/components/layout/AppLayout";
+import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
 import ActionItemsPage from "@/pages/action-items";
 import HazardFindingsPage from "@/pages/hazard-findings";
@@ -11,6 +13,7 @@ import InspectionLogPage from "@/pages/inspection-log";
 import WorkerStatementsPage from "@/pages/worker-statements";
 import ImportMinutesPage from "@/pages/import-minutes";
 import ConductInspectionPage from "@/pages/conduct-inspection";
+import ManageUsersPage from "@/pages/manage-users";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -22,20 +25,95 @@ const queryClient = new QueryClient({
   },
 });
 
+function ProtectedRoute({
+  component: Component,
+  permission,
+}: {
+  component: React.ComponentType;
+  permission?: string;
+}) {
+  const { user, isLoading, hasPermission } = useAuth();
+  const [location] = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
+  if (permission && !hasPermission(permission)) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
+        <p className="text-lg font-semibold text-foreground">Access Restricted</p>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          You don't have permission to view this page. Contact your Co-Chair admin to request access.
+        </p>
+      </div>
+    );
+  }
+
+  return <Component />;
+}
+
 function Router() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-muted-foreground text-sm font-mono">Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <AppLayout>
-      <Switch>
-        <Route path="/" component={DashboardPage} />
-        <Route path="/action-items" component={ActionItemsPage} />
-        <Route path="/hazard-findings" component={HazardFindingsPage} />
-        <Route path="/inspection-log" component={InspectionLogPage} />
-        <Route path="/conduct-inspection" component={ConductInspectionPage} />
-        <Route path="/worker-statements" component={WorkerStatementsPage} />
-        <Route path="/import-minutes" component={ImportMinutesPage} />
-        <Route component={NotFound} />
-      </Switch>
-    </AppLayout>
+    <Switch>
+      <Route path="/login">
+        {user ? <Redirect to="/" /> : <LoginPage />}
+      </Route>
+
+      <Route>
+        {!user ? (
+          <Redirect to="/login" />
+        ) : (
+          <AppLayout>
+            <Switch>
+              <Route path="/">
+                <ProtectedRoute component={DashboardPage} permission="dashboard" />
+              </Route>
+              <Route path="/action-items">
+                <ProtectedRoute component={ActionItemsPage} permission="action-items" />
+              </Route>
+              <Route path="/hazard-findings">
+                <ProtectedRoute component={HazardFindingsPage} permission="hazard-findings" />
+              </Route>
+              <Route path="/inspection-log">
+                <ProtectedRoute component={InspectionLogPage} permission="inspection-log" />
+              </Route>
+              <Route path="/conduct-inspection">
+                <ProtectedRoute component={ConductInspectionPage} permission="conduct-inspection" />
+              </Route>
+              <Route path="/worker-statements">
+                <ProtectedRoute component={WorkerStatementsPage} permission="worker-statements" />
+              </Route>
+              <Route path="/import-minutes">
+                <ProtectedRoute component={ImportMinutesPage} permission="import-data" />
+              </Route>
+              <Route path="/manage-users">
+                <ProtectedRoute component={ManageUsersPage} />
+              </Route>
+              <Route component={NotFound} />
+            </Switch>
+          </AppLayout>
+        )}
+      </Route>
+    </Switch>
   );
 }
 
@@ -44,7 +122,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
+          <AuthProvider>
+            <Router />
+          </AuthProvider>
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

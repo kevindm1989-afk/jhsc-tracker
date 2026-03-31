@@ -48,13 +48,25 @@ A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo
 - **Inspection Log** — Zone-by-zone inspections (11 zones matching actual facility), finding tracking with follow-up dates
 - **Conduct Inspection** — Digital checklist for the 10-section / 50-item JHSC inspection form; rate each item A/B/C/X, add corrective actions + responsible parties, then export a fully filled Excel form (.xlsx) or save findings directly to the Inspection Log
 - **Worker Statements** — Confidential statements tracked by code only (W-001), no worker names stored
+- **Authentication** — Session-based login (bcrypt + express-session + PostgreSQL session store); admin auto-seeded on first run (username: admin, password: Unifor1285!)
+- **Manage Users** — Admin-only page to create/edit/delete member accounts and assign per-module permissions
+
+### Auth & Permissions
+
+- Roles: `admin` (full access, bypass all checks) and `member` (custom permission set)
+- Permission keys: `dashboard`, `action-items`, `hazard-findings`, `inspection-log`, `conduct-inspection`, `worker-statements`, `import-data`
+- Frontend: `AuthContext` provides `user`, `login()`, `logout()`, `hasPermission()`; `ProtectedRoute` guards each page
+- Sidebar hides nav items a member doesn't have access to; admin section ("Manage Users") only visible to admins
+- All API routes except `/api/auth/*` and `/api/health` require a valid session
 
 ### Data Models
 
 - `action_items` — AI-001 format codes, department, priority, status, due dates
 - `hazard_findings` — HF-001 codes, OHSA references, severity, response deadlines
-- `inspection_log` — IL-001 codes, 9 zones, areas, findings
+- `inspection_log` — IL-001 codes, 11 zones, areas, findings
 - `worker_statements` — W-001 codes, shifts, hazard types, linked items
+- `users` — username, displayName, passwordHash, role, permissions (JSON array), timestamps
+- `session` — auto-created by connect-pg-simple for session storage
 
 ## TypeScript & Composite Projects
 
