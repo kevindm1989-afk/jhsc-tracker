@@ -69,15 +69,10 @@ async function buildFilledBuffer(body: ExportBody): Promise<Buffer | null> {
     sheet.cell(ADDITIONAL_COMMENTS_ROW + 1, 1).value(additionalComments);
   }
 
-  // Remove all sheets except the target to produce a single-sheet file
-  const sheetsToDelete = workbook.sheets()
-    .map((s) => s.name())
-    .filter((n) => n !== sheetName);
-  for (const name of sheetsToDelete) {
-    workbook.deleteSheet(name);
-  }
+  // Set the target sheet as the active (first visible) sheet
+  sheet.active(true);
 
-  return workbook.outputAsync("nodebuffer");
+  return workbook.outputAsync();
 }
 
 router.post("/export", async (req, res) => {
