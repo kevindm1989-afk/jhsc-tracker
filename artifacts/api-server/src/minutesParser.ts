@@ -135,6 +135,60 @@ const ALL_SECTION_KEYWORDS = [
   "ATTENDANCE", "WORKPLACE INSPECTION", "WSIB", "EXECUTIVE SUMMARY", "KEY METRICS",
 ];
 
+function parseClosedItemsSheet(
+  worksheet: ExcelJS.Worksheet,
+  meetingDate: string
+): ParsedActionItem[] {
+  const rows = sheetToRows(worksheet);
+  const items: ParsedActionItem[] = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row) continue;
+
+    const cell0 = row[0];
+    const description = str(row[1]);
+
+    // Skip header rows and blank rows
+    if (!description || description.toLowerCase().includes("description") || description.toLowerCase().includes("item")) {
+      continue;
+    }
+
+    // Accept rows that start with a sequential number OR any row that has a description
+    // (some sheets don't number rows)
+    const hasNumber = typeof cell0 === "number" && cell0 >= 1;
+    const hasDesc = description.length > 2;
+
+    if (!hasDesc) continue;
+    if (hasNumber || i > 0) {
+      // Try typical column layout: col1=desc, col5=assignedTo, col7=dept, col13=closedDate
+      // Also try alternate: col0=item#, col1=desc, col4=assignedTo, col6=dept, col12=closedDate
+      const closedDate =
+        excelDateToISO(row[13]) ||
+        excelDateToISO(row[12]) ||
+        excelDateToISO(row[11]) ||
+        null;
+
+      const assignedTo = str(row[5]) || str(row[4]) || str(row[3]) || "Unassigned";
+      const dept = str(row[7]) || str(row[6]) || "";
+
+      items.push({
+        date: closedDate || meetingDate || new Date().toISOString().split("T")[0],
+        department: mapDept(dept),
+        description,
+        raisedBy: "JHSC",
+        assignedTo,
+        priority: "Low",
+        status: "Closed",
+        closedDate,
+        source: "Closed Items",
+      });
+    }
+  }
+
+  return items;
+}
+
 export async function parseMinutesFile(buffer: Buffer): Promise<ParsedMinutes> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer as any);
@@ -303,6 +357,35 @@ export async function parseMinutesFile(buffer: Buffer): Promise<ParsedMinutes> {
             status: str(row[12]),
           });
         }
+      }
+    }
+  }
+
+  // Also check for a dedicated "Closed Items" sheet (any sheet whose name
+  // contains "closed" or "completed", excluding the main minutes sheet).
+  const closedItemsSheetNames = ["Closed Items", "Closed", "Completed Items", "Completed"];
+  const closedSheet = workbook.worksheets.find((ws) => {
+    if (ws.name === sheetName) return false; // skip the main sheet already parsed
+    const n = ws.name.trim().toLowerCase();
+    return (
+      closedItemsSheetNames.some((c) => n === c.toLowerCase()) ||
+      n.includes("closed") ||
+      n.includes("completed")
+    );
+  });
+
+  if (closedSheet) {
+    const extra = parseClosedItemsSheet(closedSheet, result.meetingDate);
+    // Merge: avoid duplicates already parsed from the COMPLETED section inside Meeting Minutes
+    const existingDescs = new Set(
+      result.actionItems
+        .filter((a) => a.source === "Closed Items")
+        .map((a) => a.description.toLowerCase())
+    );
+    for (const item of extra) {
+      if (!existingDescs.has(item.description.toLowerCase())) {
+        result.actionItems.push(item);
+        existingDescs.add(item.description.toLowerCase());
       }
     }
   }
