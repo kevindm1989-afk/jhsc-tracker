@@ -42,7 +42,6 @@ app.use(
   session({
     store: new PgSession({
       pool,
-      createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET || "jhsc-tracker-secret",
     resave: false,
@@ -57,5 +56,24 @@ app.use(
 );
 
 app.use("/api", router);
+
+export async function ensureSessionTable(): Promise<void> {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "session" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
+      ) WITH (OIDS=FALSE);
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+    `);
+  } finally {
+    client.release();
+  }
+}
 
 export default app;

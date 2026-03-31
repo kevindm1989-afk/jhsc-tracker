@@ -1,4 +1,4 @@
-import app from "./app";
+import app, { ensureSessionTable } from "./app";
 import { logger } from "./lib/logger";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
@@ -38,12 +38,19 @@ async function seedAdminIfNeeded() {
   }
 }
 
-app.listen(port, async (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
+ensureSessionTable()
+  .then(() => {
+    app.listen(port, async (err) => {
+      if (err) {
+        logger.error({ err }, "Error listening on port");
+        process.exit(1);
+      }
 
-  logger.info({ port }, "Server listening");
-  await seedAdminIfNeeded();
-});
+      logger.info({ port }, "Server listening");
+      await seedAdminIfNeeded();
+    });
+  })
+  .catch((err) => {
+    logger.error({ err }, "Failed to ensure session table");
+    process.exit(1);
+  });
