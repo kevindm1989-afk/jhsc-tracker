@@ -179,6 +179,16 @@ export default function ConductInspectionPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const handleZoneChange = (newIndex: number) => {
+    const hasData = Object.values(responses).some(r => r.rating !== null) || additionalComments.trim();
+    if (hasData) {
+      if (!window.confirm(`Switch to ${ZONES[newIndex]}?\n\nThis will clear all responses for the current zone. Export or save your work first if needed.`)) return;
+    }
+    setZoneIndex(newIndex);
+    setResponses({});
+    setAdditionalComments("");
+  };
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -295,7 +305,7 @@ export default function ConductInspectionPage() {
         <CardContent className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="zone">Zone</Label>
-            <Select value={String(zoneIndex)} onValueChange={v => setZoneIndex(Number(v))}>
+            <Select value={String(zoneIndex)} onValueChange={v => handleZoneChange(Number(v))}>
               <SelectTrigger id="zone" className="w-full">
                 <SelectValue />
               </SelectTrigger>

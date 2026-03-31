@@ -94,7 +94,10 @@ router.post("/export", async (req, res) => {
     const safeDate = date ? date.replace(/-/g, "") : "undated";
     const fileName = `JHSC_Inspection_${safeZone}_${safeDate}.xlsx`;
 
-    const outBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+    // Export only the selected zone's sheet as a standalone file
+    const singleSheetWorkbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(singleSheetWorkbook, ws, sheetName);
+    const outBuffer = XLSX.write(singleSheetWorkbook, { type: "buffer", bookType: "xlsx" });
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
