@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Download, Save, ClipboardCheck, Info } from "lucide-react";
+import { Download, Save, ClipboardCheck, Info, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -278,6 +278,32 @@ export default function ConductInspectionPage() {
     }
   };
 
+  const [isEmailing, setIsEmailing] = useState(false);
+
+  const handleEmail = async () => {
+    if (ratedCount === 0) {
+      toast({ title: "Nothing to email", description: "Rate at least one checklist item before emailing.", variant: "destructive" });
+      return;
+    }
+    setIsEmailing(true);
+    try {
+      const resp = await fetch(`${BASE}/api/inspect/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildPayload()),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || `Email failed: ${resp.status}`);
+      }
+      toast({ title: "Email sent", description: `Inspection form emailed to Kevin (kevin_de_melo@hotmail.com).` });
+    } catch (e: any) {
+      toast({ title: "Email failed", description: e.message, variant: "destructive" });
+    } finally {
+      setIsEmailing(false);
+    }
+  };
+
   const handleReset = () => {
     if (!window.confirm("Clear all responses and start over?")) return;
     setResponses({});
@@ -479,6 +505,15 @@ export default function ConductInspectionPage() {
             >
               <Download className="w-4 h-4 mr-1.5" />
               {isExporting ? "Exporting..." : "Export Form (.xlsx)"}
+            </Button>
+            <Button
+              onClick={handleEmail}
+              disabled={isEmailing || ratedCount === 0}
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary/10 font-semibold flex-1 sm:flex-none"
+            >
+              <Mail className="w-4 h-4 mr-1.5" />
+              {isEmailing ? "Sending..." : "Email to Co-Chair"}
             </Button>
           </div>
         </div>
