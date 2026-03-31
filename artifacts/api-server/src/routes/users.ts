@@ -16,6 +16,7 @@ const ALL_PERMISSIONS = [
   "conduct-inspection",
   "worker-statements",
   "import-data",
+  "documents",
 ];
 
 // GET /api/users — list all users (admin only)

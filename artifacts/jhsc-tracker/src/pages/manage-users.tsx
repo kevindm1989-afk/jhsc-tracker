@@ -27,6 +27,7 @@ const PERMISSION_LABELS: Record<string, string> = {
   "conduct-inspection": "Conduct Inspection",
   "worker-statements": "Worker Statements",
   "import-data": "Import Data",
+  "documents": "Documents",
 };
 const ALL_PERMISSIONS = Object.keys(PERMISSION_LABELS);
 
