@@ -1,13 +1,49 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 function excelDateToISO(value: unknown): string | null {
-  if (typeof value !== "number" || value < 1) return null;
-  try {
-    const d = (XLSX.SSF as any).parse_date_code(Math.floor(value));
-    return `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
-  } catch {
-    return null;
+  if (value instanceof Date) {
+    const y = value.getUTCFullYear();
+    const m = String(value.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(value.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
   }
+  if (typeof value !== "number" || value < 1) return null;
+  const ms = (value - 25569) * 86400 * 1000;
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+function normalizeCellValue(val: ExcelJS.CellValue | undefined): unknown {
+  if (val == null) return "";
+  if (val instanceof Date) return val;
+  if (typeof val === "object") {
+    if ("richText" in val) {
+      return (val as ExcelJS.CellRichTextValue).richText.map((rt) => rt.text).join("");
+    }
+    if ("formula" in val) {
+      const result = (val as ExcelJS.CellFormulaValue).result;
+      if (result == null) return "";
+      if (result instanceof Date) return result;
+      if (typeof result === "object" && "error" in result) return "";
+      return result;
+    }
+    if ("error" in val) return "";
+    if ("text" in val) return (val as ExcelJS.CellHyperlinkValue).text;
+  }
+  return val;
+}
+
+function sheetToRows(worksheet: ExcelJS.Worksheet): unknown[][] {
+  const rows: unknown[][] = [];
+  worksheet.eachRow({ includeEmpty: true }, (row) => {
+    const values = row.values as (ExcelJS.CellValue | undefined)[];
+    const arr: unknown[] = [];
+    for (let i = 1; i < values.length; i++) {
+      arr.push(normalizeCellValue(values[i]));
+    }
+    rows.push(arr);
+  });
+  return rows;
 }
 
 function mapDept(raw: string): "Warehouse" | "Production" | "Both" {
@@ -94,24 +130,34 @@ const SECTION_KEYWORDS: Record<string, string> = {
   COMPLETED: "closed",
 };
 
-// All recognised section title fragments — used to avoid treating data rows as section headers
 const ALL_SECTION_KEYWORDS = [
   "NEW BUSINESS", "OLD BUSINESS", "NOTICE OF RECOMMENDATION", "COMPLETED",
   "ATTENDANCE", "WORKPLACE INSPECTION", "WSIB", "EXECUTIVE SUMMARY", "KEY METRICS",
 ];
 
-export function parseMinutesFile(buffer: Buffer): ParsedMinutes {
-  const workbook = XLSX.read(buffer, { type: "buffer" });
+export async function parseMinutesFile(buffer: Buffer): Promise<ParsedMinutes> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as any);
 
-  const sheetName = workbook.SheetNames.includes("Meeting Minutes")
+  const sheetNames = workbook.worksheets.map((ws) => ws.name);
+  const sheetName = sheetNames.includes("Meeting Minutes")
     ? "Meeting Minutes"
-    : workbook.SheetNames[0];
+    : sheetNames[0];
 
-  const sheet = workbook.Sheets[sheetName];
-  const rows: unknown[][] = XLSX.utils.sheet_to_json(sheet, {
-    header: 1,
-    defval: "",
-  }) as unknown[][];
+  const worksheet = workbook.getWorksheet(sheetName);
+  if (!worksheet) {
+    return {
+      meetingDate: "",
+      facility: "",
+      quorumMet: "",
+      attendees: [],
+      zones: [],
+      actionItems: [],
+      hazardFindings: [],
+    };
+  }
+
+  const rows: unknown[][] = sheetToRows(worksheet);
 
   const result: ParsedMinutes = {
     meetingDate: "",
@@ -123,7 +169,6 @@ export function parseMinutesFile(buffer: Buffer): ParsedMinutes {
     hazardFindings: [],
   };
 
-  // Extract header info from first 10 rows
   for (let i = 0; i < Math.min(10, rows.length); i++) {
     const row = rows[i];
     const cell0 = str(row[0]);
@@ -143,9 +188,6 @@ export function parseMinutesFile(buffer: Buffer): ParsedMinutes {
     const cell1 = str(row[1]);
     const cell1Upper = cell1.toUpperCase();
 
-    // Detect section header: small integer in col 0, known section title in col 1
-    // Only enters this block when the row actually contains a recognised section keyword
-    // to avoid treating data rows (e.g. [1, "INSIGHT", ...]) as section markers.
     if (
       typeof cell0 === "number" &&
       cell0 >= 1 &&
@@ -184,7 +226,7 @@ export function parseMinutesFile(buffer: Buffer): ParsedMinutes {
     if (section === "new" || section === "old") {
       if (typeof cell0 === "number" && cell0 >= 1 && str(row[2])) {
         const date =
-          excelDateToISO(row[8] as number) ||
+          excelDateToISO(row[8]) ||
           result.meetingDate ||
           new Date().toISOString().split("T")[0];
         result.actionItems.push({
@@ -202,13 +244,13 @@ export function parseMinutesFile(buffer: Buffer): ParsedMinutes {
     } else if (section === "rec") {
       if (typeof cell0 === "number" && cell0 >= 1 && cell1) {
         const startDate =
-          excelDateToISO(row[8] as number) ||
+          excelDateToISO(row[8]) ||
           result.meetingDate ||
           new Date().toISOString().split("T")[0];
         result.hazardFindings.push({
           date: startDate,
           recommendationDate: startDate,
-          responseDeadline: excelDateToISO(row[9] as number),
+          responseDeadline: excelDateToISO(row[9]),
           department: mapDept(str(row[11])),
           hazardDescription: cell1,
           severity: mapPriority(str(row[14])),
@@ -219,7 +261,7 @@ export function parseMinutesFile(buffer: Buffer): ParsedMinutes {
       }
     } else if (section === "closed") {
       if (typeof cell0 === "number" && cell0 >= 1 && str(row[1])) {
-        const closedDate = excelDateToISO(row[13] as number);
+        const closedDate = excelDateToISO(row[13]);
         result.actionItems.push({
           date:
             closedDate ||
