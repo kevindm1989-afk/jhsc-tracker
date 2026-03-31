@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useGetDashboardSummary } from "@workspace/api-client-react";
-import { LayoutDashboard, AlertTriangle, ListChecks, Search, MessageSquareWarning, Upload } from "lucide-react";
+import { LayoutDashboard, AlertTriangle, ListChecks, Search, MessageSquareWarning, Upload, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -16,6 +16,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     { name: "Action Items", href: "/action-items", icon: ListChecks, badge: summary?.openActionItems },
     { name: "Hazard Findings", href: "/hazard-findings", icon: AlertTriangle, badge: summary?.openHazardFindings },
     { name: "Inspection Log", href: "/inspection-log", icon: Search },
+    { name: "Conduct Inspection", href: "/conduct-inspection", icon: ClipboardCheck },
     { name: "Worker Statements", href: "/worker-statements", icon: MessageSquareWarning, badge: summary?.totalWorkerStatements },
     { name: "Import Data", href: "/import-minutes", icon: Upload },
   ];

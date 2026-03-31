@@ -45,7 +45,8 @@ A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo
 - **Dashboard** — Stats overview (overdue count, open items, hazard findings, worker statements, closed this month), urgent/overdue alerts, recent activity feed
 - **Action Items** — Full CRUD with status/priority/department tracking, due date overdue highlighting
 - **Hazard Findings** — OHSA s.9 formal recommendations with OHSA reference codes, severity, response deadlines
-- **Inspection Log** — Zone-by-zone inspections (9 zones), finding tracking with follow-up dates
+- **Inspection Log** — Zone-by-zone inspections (11 zones matching actual facility), finding tracking with follow-up dates
+- **Conduct Inspection** — Digital checklist for the 10-section / 50-item JHSC inspection form; rate each item A/B/C/X, add corrective actions + responsible parties, then export a fully filled Excel form (.xlsx) or save findings directly to the Inspection Log
 - **Worker Statements** — Confidential statements tracked by code only (W-001), no worker names stored
 
 ### Data Models
