@@ -3,7 +3,11 @@ import { useGetDashboardSummary } from "@workspace/api-client-react";
 import { LayoutDashboard, AlertTriangle, ListChecks, Search, MessageSquareWarning } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function Sidebar() {
+interface SidebarProps {
+  onNavigate?: () => void;
+}
+
+export default function Sidebar({ onNavigate }: SidebarProps) {
   const [location] = useLocation();
   const { data: summary } = useGetDashboardSummary();
 
@@ -16,9 +20,11 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="flex flex-col w-64 h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0 sticky top-0">
+    <div className="flex flex-col w-64 h-full min-h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
       <div className="p-4 md:p-6 flex flex-col gap-1 border-b border-sidebar-border">
-        <h1 className="font-bold text-lg text-sidebar-foreground uppercase tracking-wider leading-tight">JHSC Co-Chair Tracker</h1>
+        <h1 className="font-bold text-lg text-sidebar-foreground uppercase tracking-wider leading-tight">
+          JHSC Co-Chair Tracker
+        </h1>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-primary flex-shrink-0" />
           <span className="text-sm font-semibold text-sidebar-foreground/90">Unifor Local 1285</span>
@@ -30,7 +36,7 @@ export default function Sidebar() {
         {navItems.map((item) => {
           const isActive = location === item.href;
           return (
-            <Link key={item.name} href={item.href}>
+            <Link key={item.name} href={item.href} onClick={onNavigate}>
               <div
                 className={cn(
                   "flex items-center justify-between px-3 py-2.5 rounded-md transition-colors cursor-pointer group text-sm font-medium",
@@ -40,7 +46,14 @@ export default function Sidebar() {
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon className={cn("w-4 h-4", isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80")} />
+                  <item.icon
+                    className={cn(
+                      "w-4 h-4",
+                      isActive
+                        ? "text-primary"
+                        : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80"
+                    )}
+                  />
                   {item.name}
                 </div>
                 {item.badge !== undefined && item.badge > 0 && (
@@ -54,7 +67,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border text-xs text-sidebar-foreground/60 space-y-2">
+      <div className="p-4 border-t border-sidebar-border text-xs text-sidebar-foreground/60 space-y-1">
         <p className="font-mono text-[10px] uppercase opacity-70">OHSA s.9 | O. Reg. 297/13</p>
         <p>System Online</p>
       </div>

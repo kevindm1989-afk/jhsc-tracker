@@ -185,7 +185,7 @@ export default function HazardFindingsPage() {
         </Select>
       </div>
 
-      <div className="border rounded-md bg-card overflow-hidden shadow-sm">
+      <div className="overflow-x-auto rounded-md border shadow-sm"><div className="min-w-[800px] bg-card overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50 border-b-2 border-border">
             <TableRow>
@@ -275,7 +275,7 @@ export default function HazardFindingsPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </div></div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl border-sidebar-border shadow-2xl">
@@ -287,7 +287,7 @@ export default function HazardFindingsPage() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={form.control} name="date" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Date Found</FormLabel>
@@ -317,7 +317,7 @@ export default function HazardFindingsPage() {
                 </FormItem>
               )} />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={form.control} name="ohsaReference" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground">OHSA Reference</FormLabel>
