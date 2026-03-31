@@ -6,7 +6,7 @@ import { db } from "@workspace/db";
 import { inspectionLogTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { CHECKLIST_SECTIONS, ZONE_NAMES, ADDITIONAL_COMMENTS_ROW } from "../checklistData";
-import { getUncachableResendClient } from "../resendClient";
+import { createTransporter, getSenderAddress } from "../emailClient";
 
 const CO_CHAIR_EMAIL = "kevin_de_melo@hotmail.com";
 
@@ -190,17 +190,16 @@ router.post("/email", async (req, res) => {
     const safeDate = date ? date.replace(/-/g, "") : "undated";
     const fileName = `JHSC_Inspection_${safeZone}_${safeDate}.xlsx`;
 
-    const base64Attachment = outBuffer.toString("base64");
-
     const ratedCount = Object.values(responses).filter((r) => r.rating !== null).length;
     const issueCount = Object.values(responses).filter((r) => r.rating && r.rating !== "X").length;
     const displayDate = date
       ? new Date(date + "T12:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })
       : "Unknown date";
 
-    const { client, fromEmail } = await getUncachableResendClient();
+    const transporter = createTransporter();
+    const fromEmail = getSenderAddress();
 
-    const { error } = await client.emails.send({
+    await transporter.sendMail({
       from: fromEmail,
       to: CO_CHAIR_EMAIL,
       subject: `JHSC Inspection Complete — ${zoneName} (${displayDate})`,
@@ -240,15 +239,11 @@ router.post("/email", async (req, res) => {
       attachments: [
         {
           filename: fileName,
-          content: base64Attachment,
+          content: outBuffer,
+          contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         },
       ],
     });
-
-    if (error) {
-      console.error("Resend error:", error);
-      return res.status(500).json({ error: "Failed to send email: " + (error as any).message });
-    }
 
     res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName });
   } catch (err) {
