@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import path from "path";
 import { readFile } from "fs/promises";
-import ExcelJS from "exceljs";
+import XlsxPopulate from "xlsx-populate";
 import { db } from "@workspace/db";
 import { inspectionLogTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -16,10 +16,6 @@ const TEMPLATE_PATH = path.join(__dirname, "../assets/inspection_template.xlsx")
 
 function genInspectionCode(id: number) {
   return "IL-" + String(id).padStart(3, "0");
-}
-
-function setCell(ws: ExcelJS.Worksheet, row: number, col: number, value: string) {
-  ws.getRow(row).getCell(col + 1).value = value;
 }
 
 router.get("/checklist", (_req, res) => {
@@ -40,41 +36,48 @@ interface ExportBody {
   additionalComments?: string;
 }
 
-async function buildFilledWorkbook(
-  body: ExportBody
-): Promise<{ workbook: ExcelJS.Workbook; sheetName: string } | null> {
+async function buildFilledBuffer(body: ExportBody): Promise<Buffer | null> {
   const { zoneIndex, date, inspector, responses, additionalComments } = body;
   if (zoneIndex == null || zoneIndex < 0 || zoneIndex > 10) return null;
 
   const templateBuffer = await readFile(TEMPLATE_PATH);
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(templateBuffer as any);
+  const workbook = await XlsxPopulate.fromDataAsync(templateBuffer);
 
   const sheetName = `Inspection ${zoneIndex + 1}`;
-  const ws = workbook.getWorksheet(sheetName);
-  if (!ws) return null;
+  const sheet = workbook.sheet(sheetName);
+  if (!sheet) return null;
 
-  if (date) setCell(ws, 4, 1, date);
-  if (inspector) setCell(ws, 5, 2, inspector);
+  // col is 0-indexed in original logic; xlsx-populate uses 1-indexed rows AND cols
+  // row 4, col B (0-indexed col 1) → cell(4, 2)
+  if (date) sheet.cell(4, 2).value(date);
+  // row 5, col C (0-indexed col 2) → cell(5, 3)
+  if (inspector) sheet.cell(5, 3).value(inspector);
 
   for (const [rowStr, resp] of Object.entries(responses)) {
     const row = parseInt(rowStr, 10);
     if (!resp.rating) continue;
-    setCell(ws, row, 2, resp.rating);
-    if (resp.correctiveAction) setCell(ws, row, 4, resp.correctiveAction);
-    if (resp.responsibleParty) setCell(ws, row, 5, resp.responsibleParty);
+    // col C (0-indexed col 2) → col 3
+    sheet.cell(row, 3).value(resp.rating);
+    // col E (0-indexed col 4) → col 5
+    if (resp.correctiveAction) sheet.cell(row, 5).value(resp.correctiveAction);
+    // col F (0-indexed col 5) → col 6
+    if (resp.responsibleParty) sheet.cell(row, 6).value(resp.responsibleParty);
   }
 
   if (additionalComments) {
-    setCell(ws, ADDITIONAL_COMMENTS_ROW + 1, 0, additionalComments);
+    // col A (0-indexed col 0) → col 1
+    sheet.cell(ADDITIONAL_COMMENTS_ROW + 1, 1).value(additionalComments);
   }
 
-  const sheetsToRemove = workbook.worksheets.filter((s) => s.name !== sheetName);
-  for (const s of sheetsToRemove) {
-    workbook.removeWorksheet(s.id);
+  // Remove all sheets except the target to produce a single-sheet file
+  const sheetsToDelete = workbook.sheets()
+    .map((s) => s.name())
+    .filter((n) => n !== sheetName);
+  for (const name of sheetsToDelete) {
+    workbook.deleteSheet(name);
   }
 
-  return { workbook, sheetName };
+  return workbook.outputAsync("nodebuffer");
 }
 
 router.post("/export", async (req, res) => {
@@ -82,8 +85,8 @@ router.post("/export", async (req, res) => {
     const body: ExportBody = req.body;
     const { zoneIndex, date } = body;
 
-    const result = await buildFilledWorkbook(body);
-    if (!result) {
+    const outBuffer = await buildFilledBuffer(body);
+    if (!outBuffer) {
       return res.status(400).json({ error: "Invalid zone index or sheet not found in template" });
     }
 
@@ -91,8 +94,6 @@ router.post("/export", async (req, res) => {
     const safeZone = zoneName.replace(/[^a-zA-Z0-9]/g, "_").slice(0, 30);
     const safeDate = date ? date.replace(/-/g, "") : "undated";
     const fileName = `JHSC_Inspection_${safeZone}_${safeDate}.xlsx`;
-
-    const outBuffer = Buffer.from(await result.workbook.xlsx.writeBuffer());
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
@@ -192,8 +193,8 @@ router.post("/email", async (req, res) => {
       return res.status(400).json({ error: "Invalid zone index" });
     }
 
-    const result = await buildFilledWorkbook(body);
-    if (!result) {
+    const outBuffer = await buildFilledBuffer(body);
+    if (!outBuffer) {
       return res.status(400).json({ error: "Sheet not found in template" });
     }
 
@@ -202,7 +203,6 @@ router.post("/email", async (req, res) => {
     const safeDate = date ? date.replace(/-/g, "") : "undated";
     const fileName = `JHSC_Inspection_${safeZone}_${safeDate}.xlsx`;
 
-    const outBuffer = Buffer.from(await result.workbook.xlsx.writeBuffer());
     const base64Attachment = outBuffer.toString("base64");
 
     const ratedCount = Object.values(responses).filter((r) => r.rating !== null).length;
