@@ -23,6 +23,7 @@ import type {
   CreateClosedItem,
   CreateHazardFinding,
   CreateInspectionEntry,
+  CreateMemberAction,
   CreateWorkerStatement,
   DashboardSummary,
   HazardFinding,
@@ -33,12 +34,14 @@ import type {
   ListHazardFindingsParams,
   ListInspectionEntriesParams,
   ListWorkerStatementsParams,
+  MemberAction,
   OverdueItem,
   RecentItem,
   UpdateActionItem,
   UpdateClosedItem,
   UpdateHazardFinding,
   UpdateInspectionEntry,
+  UpdateMemberAction,
   UpdateWorkerStatement,
   WorkerStatement,
 } from "./api.schemas";
@@ -563,6 +566,338 @@ export const useDeleteActionItem = <
   TContext
 > => {
   return useMutation(getDeleteActionItemMutationOptions(options));
+};
+
+/**
+ * @summary List member actions (admins see all; members see their own)
+ */
+export const getListMemberActionsUrl = () => {
+  return `/api/member-actions`;
+};
+
+export const listMemberActions = async (
+  options?: RequestInit,
+): Promise<MemberAction[]> => {
+  return customFetch<MemberAction[]>(getListMemberActionsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMemberActionsQueryKey = () => {
+  return [`/api/member-actions`] as const;
+};
+
+export const getListMemberActionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMemberActions>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMemberActions>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMemberActionsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMemberActions>>
+  > = ({ signal }) => listMemberActions({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMemberActions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMemberActionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMemberActions>>
+>;
+export type ListMemberActionsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List member actions (admins see all; members see their own)
+ */
+
+export function useListMemberActions<
+  TData = Awaited<ReturnType<typeof listMemberActions>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMemberActions>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMemberActionsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a member action (admin only)
+ */
+export const getCreateMemberActionUrl = () => {
+  return `/api/member-actions`;
+};
+
+export const createMemberAction = async (
+  createMemberAction: CreateMemberAction,
+  options?: RequestInit,
+): Promise<MemberAction> => {
+  return customFetch<MemberAction>(getCreateMemberActionUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createMemberAction),
+  });
+};
+
+export const getCreateMemberActionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMemberAction>>,
+    TError,
+    { data: BodyType<CreateMemberAction> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createMemberAction>>,
+  TError,
+  { data: BodyType<CreateMemberAction> },
+  TContext
+> => {
+  const mutationKey = ["createMemberAction"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createMemberAction>>,
+    { data: BodyType<CreateMemberAction> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createMemberAction(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateMemberActionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createMemberAction>>
+>;
+export type CreateMemberActionMutationBody = BodyType<CreateMemberAction>;
+export type CreateMemberActionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a member action (admin only)
+ */
+export const useCreateMemberAction = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMemberAction>>,
+    TError,
+    { data: BodyType<CreateMemberAction> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createMemberAction>>,
+  TError,
+  { data: BodyType<CreateMemberAction> },
+  TContext
+> => {
+  return useMutation(getCreateMemberActionMutationOptions(options));
+};
+
+/**
+ * @summary Update a member action (admin or assigned user)
+ */
+export const getUpdateMemberActionUrl = (id: number) => {
+  return `/api/member-actions/${id}`;
+};
+
+export const updateMemberAction = async (
+  id: number,
+  updateMemberAction: UpdateMemberAction,
+  options?: RequestInit,
+): Promise<MemberAction> => {
+  return customFetch<MemberAction>(getUpdateMemberActionUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateMemberAction),
+  });
+};
+
+export const getUpdateMemberActionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMemberAction>>,
+    TError,
+    { id: number; data: BodyType<UpdateMemberAction> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMemberAction>>,
+  TError,
+  { id: number; data: BodyType<UpdateMemberAction> },
+  TContext
+> => {
+  const mutationKey = ["updateMemberAction"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMemberAction>>,
+    { id: number; data: BodyType<UpdateMemberAction> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateMemberAction(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMemberActionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMemberAction>>
+>;
+export type UpdateMemberActionMutationBody = BodyType<UpdateMemberAction>;
+export type UpdateMemberActionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a member action (admin or assigned user)
+ */
+export const useUpdateMemberAction = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMemberAction>>,
+    TError,
+    { id: number; data: BodyType<UpdateMemberAction> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMemberAction>>,
+  TError,
+  { id: number; data: BodyType<UpdateMemberAction> },
+  TContext
+> => {
+  return useMutation(getUpdateMemberActionMutationOptions(options));
+};
+
+/**
+ * @summary Delete a member action (admin only)
+ */
+export const getDeleteMemberActionUrl = (id: number) => {
+  return `/api/member-actions/${id}`;
+};
+
+export const deleteMemberAction = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteMemberActionUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteMemberActionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMemberAction>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteMemberAction>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteMemberAction"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteMemberAction>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteMemberAction(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteMemberActionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteMemberAction>>
+>;
+
+export type DeleteMemberActionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a member action (admin only)
+ */
+export const useDeleteMemberAction = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMemberAction>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteMemberAction>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteMemberActionMutationOptions(options));
 };
 
 /**

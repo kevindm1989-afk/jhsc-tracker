@@ -14,6 +14,7 @@ import {
   User,
   FolderOpen,
   CheckCheck,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,13 +33,14 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     { name: "Dashboard", href: "/", icon: LayoutDashboard, permission: "dashboard" },
     { name: "Action Items", href: "/action-items", icon: ListChecks, permission: "action-items", badge: summary?.openActionItems },
     { name: "Closed Items Log", href: "/closed-items-log", icon: CheckCheck, permission: "action-items" },
+    { name: "Member Actions", href: "/member-actions", icon: ClipboardList, permission: null },
     { name: "Hazard Findings", href: "/hazard-findings", icon: AlertTriangle, permission: "hazard-findings", badge: summary?.openHazardFindings },
     { name: "Inspection Log", href: "/inspection-log", icon: Search, permission: "inspection-log" },
     { name: "Conduct Inspection", href: "/conduct-inspection", icon: ClipboardCheck, permission: "conduct-inspection" },
     { name: "Worker Statements", href: "/worker-statements", icon: MessageSquareWarning, permission: "worker-statements", badge: summary?.totalWorkerStatements },
     { name: "Import Data", href: "/import-minutes", icon: Upload, permission: "import-data" },
     { name: "Documents", href: "/documents", icon: FolderOpen, permission: "documents" },
-  ].filter((item) => hasPermission(item.permission));
+  ].filter((item) => item.permission === null || hasPermission(item.permission));
 
   const isActive = (href: string) =>
     href === "/" ? location === "/" : location.startsWith(href);

@@ -16,6 +16,7 @@ import ConductInspectionPage from "@/pages/conduct-inspection";
 import ManageUsersPage from "@/pages/manage-users";
 import DocumentsPage from "@/pages/documents";
 import ClosedItemsLogPage from "@/pages/closed-items-log";
+import MemberActionsPage from "@/pages/member-actions";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -112,6 +113,9 @@ function Router() {
               </Route>
               <Route path="/closed-items-log">
                 <ProtectedRoute component={ClosedItemsLogPage} permission="action-items" />
+              </Route>
+              <Route path="/member-actions">
+                <ProtectedRoute component={MemberActionsPage} />
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />

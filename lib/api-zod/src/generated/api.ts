@@ -124,6 +124,86 @@ export const DeleteActionItemParams = zod.object({
 });
 
 /**
+ * @summary List member actions (admins see all; members see their own)
+ */
+export const ListMemberActionsResponseItem = zod.object({
+  id: zod.number(),
+  actionCode: zod.string().describe("MA-001 format identifier"),
+  title: zod.string(),
+  type: zod.enum(["conduct-inspection", "verify-closed-items", "other"]),
+  assignedToUserId: zod.number(),
+  assignedToName: zod.string(),
+  dueDate: zod.coerce.date().nullish(),
+  status: zod.enum(["pending", "in-progress", "completed"]),
+  notes: zod.string().nullish(),
+  completedAt: zod.coerce.date().nullish(),
+  relatedItemCode: zod.string().nullish(),
+  createdByUserId: zod.number(),
+  createdByName: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListMemberActionsResponse = zod.array(
+  ListMemberActionsResponseItem,
+);
+
+/**
+ * @summary Create a member action (admin only)
+ */
+export const CreateMemberActionBody = zod.object({
+  title: zod.string(),
+  type: zod.enum(["conduct-inspection", "verify-closed-items", "other"]),
+  assignedToUserId: zod.number(),
+  dueDate: zod.coerce.date().nullish(),
+  notes: zod.string().nullish(),
+  relatedItemCode: zod.string().nullish(),
+});
+
+/**
+ * @summary Update a member action (admin or assigned user)
+ */
+export const UpdateMemberActionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateMemberActionBody = zod.object({
+  title: zod.string().optional(),
+  type: zod
+    .enum(["conduct-inspection", "verify-closed-items", "other"])
+    .optional(),
+  assignedToUserId: zod.number().optional(),
+  dueDate: zod.coerce.date().nullish(),
+  status: zod.enum(["pending", "in-progress", "completed"]).optional(),
+  notes: zod.string().nullish(),
+  relatedItemCode: zod.string().nullish(),
+});
+
+export const UpdateMemberActionResponse = zod.object({
+  id: zod.number(),
+  actionCode: zod.string().describe("MA-001 format identifier"),
+  title: zod.string(),
+  type: zod.enum(["conduct-inspection", "verify-closed-items", "other"]),
+  assignedToUserId: zod.number(),
+  assignedToName: zod.string(),
+  dueDate: zod.coerce.date().nullish(),
+  status: zod.enum(["pending", "in-progress", "completed"]),
+  notes: zod.string().nullish(),
+  completedAt: zod.coerce.date().nullish(),
+  relatedItemCode: zod.string().nullish(),
+  createdByUserId: zod.number(),
+  createdByName: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a member action (admin only)
+ */
+export const DeleteMemberActionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary List all closed items (from imported Closed Items sheet)
  */
 export const ListClosedItemsQueryParams = zod.object({
