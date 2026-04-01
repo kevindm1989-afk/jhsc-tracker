@@ -1211,11 +1211,14 @@ components:
           type: string
         type:
           type: string
-          enum: [conduct-inspection, verify-closed-items, other]
+          enum: [zone-inspection, inspect-spill-kits, inspect-first-aid-kits, inspect-eye-saline, verify-closed-items, other]
         assignedToUserId:
           type: integer
         assignedToName:
           type: string
+        zone:
+          type: integer
+          nullable: true
         dueDate:
           type: string
           format: date
@@ -1252,9 +1255,13 @@ components:
           type: string
         type:
           type: string
-          enum: [conduct-inspection, verify-closed-items, other]
+          enum: [zone-inspection, inspect-spill-kits, inspect-first-aid-kits, inspect-eye-saline, verify-closed-items, other]
         assignedToUserId:
           type: integer
+        zone:
+          type: integer
+          nullable: true
+          description: "Zone number 1-11 (only for zone-inspection type)"
         dueDate:
           type: string
           format: date
@@ -1274,9 +1281,12 @@ components:
           type: string
         type:
           type: string
-          enum: [conduct-inspection, verify-closed-items, other]
+          enum: [zone-inspection, inspect-spill-kits, inspect-first-aid-kits, inspect-eye-saline, verify-closed-items, other]
         assignedToUserId:
           type: integer
+        zone:
+          type: integer
+          nullable: true
         dueDate:
           type: string
           format: date

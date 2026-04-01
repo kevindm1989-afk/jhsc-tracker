@@ -54,6 +54,7 @@ router.post("/", requireAdmin, async (req, res) => {
         type: body.type,
         assignedToUserId: assignee.id,
         assignedToName: assignee.displayName,
+        zone: body.zone ?? null,
         dueDate: body.dueDate ?? null,
         status: "pending",
         notes: body.notes ?? null,
@@ -104,6 +105,7 @@ router.put("/:id", async (req, res) => {
     if (user.role === "admin") {
       if (body.title !== undefined) updates.title = body.title;
       if (body.type !== undefined) updates.type = body.type;
+      if (body.zone !== undefined) updates.zone = body.zone ?? null;
       if (body.dueDate !== undefined) updates.dueDate = body.dueDate || null;
       if (body.relatedItemCode !== undefined) updates.relatedItemCode = body.relatedItemCode || null;
       if (body.assignedToUserId !== undefined) {

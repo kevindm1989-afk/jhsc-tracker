@@ -11,6 +11,8 @@ export interface CreateMemberAction {
   title: string;
   type: CreateMemberActionType;
   assignedToUserId: number;
+  /** Zone number 1-11 (only for zone-inspection type) */
+  zone?: number | null;
   dueDate?: Date | null;
   notes?: string | null;
   relatedItemCode?: string | null;

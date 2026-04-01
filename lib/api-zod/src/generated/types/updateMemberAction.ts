@@ -12,6 +12,7 @@ export interface UpdateMemberAction {
   title?: string;
   type?: UpdateMemberActionType;
   assignedToUserId?: number;
+  zone?: number | null;
   dueDate?: Date | null;
   status?: UpdateMemberActionStatus;
   notes?: string | null;

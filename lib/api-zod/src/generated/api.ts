@@ -130,9 +130,17 @@ export const ListMemberActionsResponseItem = zod.object({
   id: zod.number(),
   actionCode: zod.string().describe("MA-001 format identifier"),
   title: zod.string(),
-  type: zod.enum(["conduct-inspection", "verify-closed-items", "other"]),
+  type: zod.enum([
+    "zone-inspection",
+    "inspect-spill-kits",
+    "inspect-first-aid-kits",
+    "inspect-eye-saline",
+    "verify-closed-items",
+    "other",
+  ]),
   assignedToUserId: zod.number(),
   assignedToName: zod.string(),
+  zone: zod.number().nullish(),
   dueDate: zod.coerce.date().nullish(),
   status: zod.enum(["pending", "in-progress", "completed"]),
   notes: zod.string().nullish(),
@@ -152,8 +160,19 @@ export const ListMemberActionsResponse = zod.array(
  */
 export const CreateMemberActionBody = zod.object({
   title: zod.string(),
-  type: zod.enum(["conduct-inspection", "verify-closed-items", "other"]),
+  type: zod.enum([
+    "zone-inspection",
+    "inspect-spill-kits",
+    "inspect-first-aid-kits",
+    "inspect-eye-saline",
+    "verify-closed-items",
+    "other",
+  ]),
   assignedToUserId: zod.number(),
+  zone: zod
+    .number()
+    .nullish()
+    .describe("Zone number 1-11 (only for zone-inspection type)"),
   dueDate: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
   relatedItemCode: zod.string().nullish(),
@@ -169,9 +188,17 @@ export const UpdateMemberActionParams = zod.object({
 export const UpdateMemberActionBody = zod.object({
   title: zod.string().optional(),
   type: zod
-    .enum(["conduct-inspection", "verify-closed-items", "other"])
+    .enum([
+      "zone-inspection",
+      "inspect-spill-kits",
+      "inspect-first-aid-kits",
+      "inspect-eye-saline",
+      "verify-closed-items",
+      "other",
+    ])
     .optional(),
   assignedToUserId: zod.number().optional(),
+  zone: zod.number().nullish(),
   dueDate: zod.coerce.date().nullish(),
   status: zod.enum(["pending", "in-progress", "completed"]).optional(),
   notes: zod.string().nullish(),
@@ -182,9 +209,17 @@ export const UpdateMemberActionResponse = zod.object({
   id: zod.number(),
   actionCode: zod.string().describe("MA-001 format identifier"),
   title: zod.string(),
-  type: zod.enum(["conduct-inspection", "verify-closed-items", "other"]),
+  type: zod.enum([
+    "zone-inspection",
+    "inspect-spill-kits",
+    "inspect-first-aid-kits",
+    "inspect-eye-saline",
+    "verify-closed-items",
+    "other",
+  ]),
   assignedToUserId: zod.number(),
   assignedToName: zod.string(),
+  zone: zod.number().nullish(),
   dueDate: zod.coerce.date().nullish(),
   status: zod.enum(["pending", "in-progress", "completed"]),
   notes: zod.string().nullish(),

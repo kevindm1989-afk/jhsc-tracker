@@ -16,6 +16,7 @@ export interface MemberAction {
   type: MemberActionType;
   assignedToUserId: number;
   assignedToName: string;
+  zone?: number | null;
   dueDate?: Date | null;
   status: MemberActionStatus;
   notes?: string | null;
