@@ -11,6 +11,8 @@ tags:
     description: Health operations
   - name: action-items
     description: JHSC Action Items
+  - name: member-actions
+    description: Actions assigned to committee members
   - name: closed-items-log
     description: Closed Items imported from minutes
   - name: hazard-findings
@@ -123,6 +125,77 @@ paths:
       operationId: deleteActionItem
       tags: [action-items]
       summary: Delete an action item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── MEMBER ACTIONS ──
+  /member-actions:
+    get:
+      operationId: listMemberActions
+      tags: [member-actions]
+      summary: List member actions (admins see all; members see their own)
+      responses:
+        "200":
+          description: List of member actions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemberAction"
+    post:
+      operationId: createMemberAction
+      tags: [member-actions]
+      summary: Create a member action (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMemberAction"
+      responses:
+        "201":
+          description: Created member action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberAction"
+
+  /member-actions/{id}:
+    put:
+      operationId: updateMemberAction
+      tags: [member-actions]
+      summary: Update a member action (admin or assigned user)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMemberAction"
+      responses:
+        "200":
+          description: Updated member action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberAction"
+    delete:
+      operationId: deleteMemberAction
+      tags: [member-actions]
+      summary: Delete a member action (admin only)
       parameters:
         - name: id
           in: path
@@ -1125,3 +1198,95 @@ components:
           type: string
         search:
           type: string
+
+    MemberAction:
+      type: object
+      properties:
+        id:
+          type: integer
+        actionCode:
+          type: string
+          description: "MA-001 format identifier"
+        title:
+          type: string
+        type:
+          type: string
+          enum: [conduct-inspection, verify-closed-items, other]
+        assignedToUserId:
+          type: integer
+        assignedToName:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [pending, in-progress, completed]
+        notes:
+          type: string
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        relatedItemCode:
+          type: string
+          nullable: true
+        createdByUserId:
+          type: integer
+        createdByName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, actionCode, title, type, assignedToUserId, assignedToName, status, createdByUserId, createdByName, createdAt, updatedAt]
+
+    CreateMemberAction:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: [conduct-inspection, verify-closed-items, other]
+        assignedToUserId:
+          type: integer
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        relatedItemCode:
+          type: string
+          nullable: true
+      required: [title, type, assignedToUserId]
+
+    UpdateMemberAction:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: [conduct-inspection, verify-closed-items, other]
+        assignedToUserId:
+          type: integer
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [pending, in-progress, completed]
+        notes:
+          type: string
+          nullable: true
+        relatedItemCode:
+          type: string
+          nullable: true

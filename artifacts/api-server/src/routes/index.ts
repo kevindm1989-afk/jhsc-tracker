@@ -5,6 +5,7 @@ import hazardFindingsRouter from "./hazardFindings";
 import inspectionLogRouter from "./inspectionLog";
 import workerStatementsRouter from "./workerStatements";
 import closedItemsLogRouter from "./closedItemsLog";
+import memberActionsRouter from "./memberActions";
 import dashboardRouter from "./dashboard";
 import importRouter from "./import";
 import inspectRouter from "./inspect";
@@ -30,6 +31,7 @@ router.use("/hazard-findings", requireAuth, requirePermission("hazard-findings")
 router.use("/inspection-log", requireAuth, requirePermission("inspection-log"), inspectionLogRouter);
 router.use("/worker-statements", requireAuth, requirePermission("worker-statements"), workerStatementsRouter);
 router.use("/closed-items-log", requireAuth, requirePermission("action-items"), closedItemsLogRouter);
+router.use("/member-actions", requireAuth, memberActionsRouter);
 router.use("/import", requireAuth, requirePermission("import-data"), importRouter);
 router.use("/inspect", requireAuth, requirePermission("conduct-inspection"), inspectRouter);
 router.use("/documents", requirePermission("documents"), documentsRouter);

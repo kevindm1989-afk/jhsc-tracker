@@ -592,6 +592,89 @@ export interface ListClosedItemsParams {
   search?: string;
 }
 
+export type MemberActionType =
+  (typeof MemberActionType)[keyof typeof MemberActionType];
+
+export const MemberActionType = {
+  "conduct-inspection": "conduct-inspection",
+  "verify-closed-items": "verify-closed-items",
+  other: "other",
+} as const;
+
+export type MemberActionStatus =
+  (typeof MemberActionStatus)[keyof typeof MemberActionStatus];
+
+export const MemberActionStatus = {
+  pending: "pending",
+  "in-progress": "in-progress",
+  completed: "completed",
+} as const;
+
+export interface MemberAction {
+  id: number;
+  /** MA-001 format identifier */
+  actionCode: string;
+  title: string;
+  type: MemberActionType;
+  assignedToUserId: number;
+  assignedToName: string;
+  dueDate?: string | null;
+  status: MemberActionStatus;
+  notes?: string | null;
+  completedAt?: string | null;
+  relatedItemCode?: string | null;
+  createdByUserId: number;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateMemberActionType =
+  (typeof CreateMemberActionType)[keyof typeof CreateMemberActionType];
+
+export const CreateMemberActionType = {
+  "conduct-inspection": "conduct-inspection",
+  "verify-closed-items": "verify-closed-items",
+  other: "other",
+} as const;
+
+export interface CreateMemberAction {
+  title: string;
+  type: CreateMemberActionType;
+  assignedToUserId: number;
+  dueDate?: string | null;
+  notes?: string | null;
+  relatedItemCode?: string | null;
+}
+
+export type UpdateMemberActionType =
+  (typeof UpdateMemberActionType)[keyof typeof UpdateMemberActionType];
+
+export const UpdateMemberActionType = {
+  "conduct-inspection": "conduct-inspection",
+  "verify-closed-items": "verify-closed-items",
+  other: "other",
+} as const;
+
+export type UpdateMemberActionStatus =
+  (typeof UpdateMemberActionStatus)[keyof typeof UpdateMemberActionStatus];
+
+export const UpdateMemberActionStatus = {
+  pending: "pending",
+  "in-progress": "in-progress",
+  completed: "completed",
+} as const;
+
+export interface UpdateMemberAction {
+  title?: string;
+  type?: UpdateMemberActionType;
+  assignedToUserId?: number;
+  dueDate?: string | null;
+  status?: UpdateMemberActionStatus;
+  notes?: string | null;
+  relatedItemCode?: string | null;
+}
+
 export type ListActionItemsParams = {
   status?: string;
   department?: string;

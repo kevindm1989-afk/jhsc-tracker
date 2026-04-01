@@ -5,3 +5,4 @@ export * from "./workerStatements";
 export * from "./users";
 export * from "./documents";
 export * from "./closedItemsLog";
+export * from "./memberActions";
