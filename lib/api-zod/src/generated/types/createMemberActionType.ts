@@ -10,7 +10,10 @@ export type CreateMemberActionType =
   (typeof CreateMemberActionType)[keyof typeof CreateMemberActionType];
 
 export const CreateMemberActionType = {
-  "conduct-inspection": "conduct-inspection",
+  "zone-inspection": "zone-inspection",
+  "inspect-spill-kits": "inspect-spill-kits",
+  "inspect-first-aid-kits": "inspect-first-aid-kits",
+  "inspect-eye-saline": "inspect-eye-saline",
   "verify-closed-items": "verify-closed-items",
   other: "other",
 } as const;

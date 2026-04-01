@@ -60,10 +60,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const ACTION_TYPE_LABELS: Record<string, string> = {
-  "conduct-inspection": "Conduct Inspection",
+  "zone-inspection": "Zone Inspection",
+  "inspect-spill-kits": "Inspect Spill Kits",
+  "inspect-first-aid-kits": "Inspect First Aid Kits",
+  "inspect-eye-saline": "Inspect Eye Saline Bottles",
   "verify-closed-items": "Verify Closed Items",
   "other": "Other",
 };
+
+const ZONES = Array.from({ length: 11 }, (_, i) => i + 1);
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   pending: { label: "Pending", icon: Circle, className: "text-muted-foreground border-muted-foreground/40" },
@@ -75,6 +80,7 @@ const formSchema = z.object({
   title: z.string().min(3, "Title is required"),
   type: z.nativeEnum(MemberActionType),
   assignedToUserId: z.coerce.number().min(1, "Assignee is required"),
+  zone: z.coerce.number().nullable().optional(),
   dueDate: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   relatedItemCode: z.string().optional().nullable(),
@@ -114,17 +120,21 @@ export default function MemberActionsPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      type: MemberActionType["conduct-inspection"],
+      type: MemberActionType["zone-inspection"],
       assignedToUserId: 0,
+      zone: null,
       dueDate: null,
       notes: null,
       relatedItemCode: null,
     },
   });
 
+  const watchedType = form.watch("type");
+  const watchedZone = form.watch("zone");
+
   const openCreate = () => {
     setEditingItem(null);
-    form.reset({ title: "", type: MemberActionType["conduct-inspection"], assignedToUserId: 0, dueDate: null, notes: null, relatedItemCode: null });
+    form.reset({ title: "", type: MemberActionType["zone-inspection"], assignedToUserId: 0, zone: null, dueDate: null, notes: null, relatedItemCode: null });
     setIsFormOpen(true);
   };
 
@@ -134,6 +144,7 @@ export default function MemberActionsPage() {
       title: item.title,
       type: item.type as MemberActionType,
       assignedToUserId: item.assignedToUserId,
+      zone: (item as any).zone ?? null,
       dueDate: item.dueDate ?? null,
       notes: item.notes ?? null,
       relatedItemCode: item.relatedItemCode ?? null,
@@ -142,7 +153,13 @@ export default function MemberActionsPage() {
   };
 
   const onSubmit = (values: FormValues) => {
-    const payload = { ...values, dueDate: values.dueDate || null, notes: values.notes || null, relatedItemCode: values.relatedItemCode || null };
+    const payload = {
+      ...values,
+      zone: values.type === MemberActionType["zone-inspection"] ? (values.zone ?? null) : null,
+      dueDate: values.dueDate || null,
+      notes: values.notes || null,
+      relatedItemCode: values.relatedItemCode || null,
+    };
     if (editingItem) {
       updateMutation.mutate({ id: editingItem.id, data: payload });
     } else {
@@ -268,6 +285,7 @@ export default function MemberActionsPage() {
                     <TableCell className="hidden sm:table-cell">
                       <Badge variant="outline" className="text-xs font-normal">
                         {ACTION_TYPE_LABELS[item.type]}
+                        {item.type === "zone-inspection" && (item as any).zone ? ` — Zone ${(item as any).zone}` : ""}
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-sm">{item.assignedToName}</TableCell>
@@ -362,10 +380,13 @@ export default function MemberActionsPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Action Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={(val) => { field.onChange(val); form.setValue("zone", null); }} value={field.value}>
                           <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent>
-                            <SelectItem value="conduct-inspection">Conduct Inspection</SelectItem>
+                            <SelectItem value="zone-inspection">Zone Inspection</SelectItem>
+                            <SelectItem value="inspect-spill-kits">Inspect Spill Kits</SelectItem>
+                            <SelectItem value="inspect-first-aid-kits">Inspect First Aid Kits</SelectItem>
+                            <SelectItem value="inspect-eye-saline">Inspect Eye Saline Bottles</SelectItem>
                             <SelectItem value="verify-closed-items">Verify Closed Items</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
@@ -393,6 +414,36 @@ export default function MemberActionsPage() {
                     )}
                   />
                 </div>
+
+                {watchedType === MemberActionType["zone-inspection"] && (
+                  <FormField
+                    control={form.control}
+                    name="zone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Zone <span className="text-destructive">*</span></FormLabel>
+                        <Select
+                          onValueChange={(val) => {
+                            field.onChange(Number(val));
+                            const current = form.getValues("title");
+                            if (!current || /^Zone \d+ Inspection$/.test(current)) {
+                              form.setValue("title", `Zone ${val} Inspection`);
+                            }
+                          }}
+                          value={field.value ? String(field.value) : ""}
+                        >
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select zone (1–11)" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {ZONES.map((z) => (
+                              <SelectItem key={z} value={String(z)}>Zone {z}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField

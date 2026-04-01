@@ -596,7 +596,10 @@ export type MemberActionType =
   (typeof MemberActionType)[keyof typeof MemberActionType];
 
 export const MemberActionType = {
-  "conduct-inspection": "conduct-inspection",
+  "zone-inspection": "zone-inspection",
+  "inspect-spill-kits": "inspect-spill-kits",
+  "inspect-first-aid-kits": "inspect-first-aid-kits",
+  "inspect-eye-saline": "inspect-eye-saline",
   "verify-closed-items": "verify-closed-items",
   other: "other",
 } as const;
@@ -618,6 +621,7 @@ export interface MemberAction {
   type: MemberActionType;
   assignedToUserId: number;
   assignedToName: string;
+  zone?: number | null;
   dueDate?: string | null;
   status: MemberActionStatus;
   notes?: string | null;
@@ -633,7 +637,10 @@ export type CreateMemberActionType =
   (typeof CreateMemberActionType)[keyof typeof CreateMemberActionType];
 
 export const CreateMemberActionType = {
-  "conduct-inspection": "conduct-inspection",
+  "zone-inspection": "zone-inspection",
+  "inspect-spill-kits": "inspect-spill-kits",
+  "inspect-first-aid-kits": "inspect-first-aid-kits",
+  "inspect-eye-saline": "inspect-eye-saline",
   "verify-closed-items": "verify-closed-items",
   other: "other",
 } as const;
@@ -642,6 +649,8 @@ export interface CreateMemberAction {
   title: string;
   type: CreateMemberActionType;
   assignedToUserId: number;
+  /** Zone number 1-11 (only for zone-inspection type) */
+  zone?: number | null;
   dueDate?: string | null;
   notes?: string | null;
   relatedItemCode?: string | null;
@@ -651,7 +660,10 @@ export type UpdateMemberActionType =
   (typeof UpdateMemberActionType)[keyof typeof UpdateMemberActionType];
 
 export const UpdateMemberActionType = {
-  "conduct-inspection": "conduct-inspection",
+  "zone-inspection": "zone-inspection",
+  "inspect-spill-kits": "inspect-spill-kits",
+  "inspect-first-aid-kits": "inspect-first-aid-kits",
+  "inspect-eye-saline": "inspect-eye-saline",
   "verify-closed-items": "verify-closed-items",
   other: "other",
 } as const;
@@ -669,6 +681,7 @@ export interface UpdateMemberAction {
   title?: string;
   type?: UpdateMemberActionType;
   assignedToUserId?: number;
+  zone?: number | null;
   dueDate?: string | null;
   status?: UpdateMemberActionStatus;
   notes?: string | null;
