@@ -90,9 +90,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     // Import closed items — upsert by description: insert new, update existing with any improved data
     let importedClosedItems = 0;
     let updatedClosedItems = 0;
-    console.log(`[import] closed items from sheet: ${closedItemsFromSheet.length}`);
     for (const item of closedItemsFromSheet) {
-      console.log(`[import] closed item desc="${item.description.slice(0,40)}" notes="${item.notes ?? "(none)"}"`);
 
       const [existing] = await db
         .select()
