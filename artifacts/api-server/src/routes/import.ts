@@ -87,17 +87,28 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       importedActionItems++;
     }
 
-    // Import closed items into the dedicated closed_items_log table (dedup by description only)
+    // Import closed items — upsert by description: insert new, update existing with any improved data
     let importedClosedItems = 0;
-    let skippedClosedItems = 0;
+    let updatedClosedItems = 0;
     for (const item of closedItemsFromSheet) {
-      const existing = await db
-        .select({ id: closedItemsLogTable.id })
+      const [existing] = await db
+        .select()
         .from(closedItemsLogTable)
         .where(eq(closedItemsLogTable.description, item.description));
 
-      if (existing.length > 0) {
-        skippedClosedItems++;
+      if (existing) {
+        // Build a partial update with only fields that have new/better values
+        const updates: Record<string, unknown> = {};
+        if (item.closedDate && !existing.closedDate) updates.closedDate = item.closedDate;
+        if (item.notes && !existing.notes) updates.notes = item.notes;
+        if (item.assignedTo && item.assignedTo !== "Unassigned" && item.assignedTo !== existing.assignedTo) updates.assignedTo = item.assignedTo;
+        if (item.department && item.department !== existing.department) updates.department = item.department;
+        if (parsed.meetingDate && parsed.meetingDate !== existing.meetingDate) updates.meetingDate = parsed.meetingDate;
+
+        if (Object.keys(updates).length > 0) {
+          await db.update(closedItemsLogTable).set(updates).where(eq(closedItemsLogTable.id, existing.id));
+          updatedClosedItems++;
+        }
         continue;
       }
 
@@ -216,10 +227,12 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         hazardFindings: importedHazardFindings,
         closedItems: importedClosedItems,
       },
+      updated: {
+        closedItems: updatedClosedItems,
+      },
       skipped: {
         actionItems: skippedActionItems,
         hazardFindings: skippedHazardFindings,
-        closedItems: skippedClosedItems,
       },
     });
   } catch (err) {

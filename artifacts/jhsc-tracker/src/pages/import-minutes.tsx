@@ -61,7 +61,8 @@ interface MinutesResult {
   success: boolean;
   meetingDate: string;
   facility: string;
-  imported: { actionItems: number; hazardFindings: number };
+  imported: { actionItems: number; hazardFindings: number; closedItems: number };
+  updated: { closedItems: number };
   skipped: { actionItems: number; hazardFindings: number };
 }
 
@@ -237,10 +238,12 @@ function MinutesTab() {
                 <p className="text-sm text-green-700">{result.meetingDate} — {result.facility}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {[
                 { label: "Action Items Imported", val: result.imported.actionItems, cls: "text-green-700" },
                 { label: "Hazard Findings Imported", val: result.imported.hazardFindings, cls: "text-green-700" },
+                { label: "Closed Items Imported", val: result.imported.closedItems, cls: "text-green-700" },
+                { label: "Closed Items Updated", val: result.updated.closedItems, cls: "text-blue-700" },
                 { label: "Action Items Skipped", val: result.skipped.actionItems, cls: "text-muted-foreground" },
                 { label: "Hazard Findings Skipped", val: result.skipped.hazardFindings, cls: "text-muted-foreground" },
               ].map(({ label, val, cls }) => (
