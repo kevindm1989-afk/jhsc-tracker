@@ -194,7 +194,8 @@ export default function ActionItemsPage() {
             <TableRow>
               <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">ID</TableHead>
               <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Date</TableHead>
-              <TableHead className="font-bold text-xs uppercase tracking-wider">Description / Notes</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider">Description</TableHead>
+              <TableHead className="w-[200px] font-bold text-xs uppercase tracking-wider">Notes / Update</TableHead>
               <TableHead className="w-[150px] font-bold text-xs uppercase tracking-wider">Assigned To</TableHead>
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Due Date</TableHead>
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
@@ -208,6 +209,7 @@ export default function ActionItemsPage() {
                   <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-full max-w-[300px]" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-full max-w-[180px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
@@ -216,7 +218,7 @@ export default function ActionItemsPage() {
               ))
             ) : items?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                   No action items found.
                 </TableCell>
               </TableRow>
@@ -238,13 +240,10 @@ export default function ActionItemsPage() {
                           <DeptBadge dept={item.department} />
                         </div>
                         <span className="text-sm font-medium leading-snug">{item.description}</span>
-                        {item.notes && (
-                          <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1 border-l-2 border-muted-foreground/30">
-                            <span className="font-semibold uppercase tracking-wider text-[10px]">Notes: </span>
-                            {item.notes}
-                          </div>
-                        )}
                       </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground align-top">
+                      {item.notes ? item.notes : <span className="text-xs">—</span>}
                     </TableCell>
                     <TableCell className="text-sm font-medium">{item.assignedTo}</TableCell>
                     <TableCell>
