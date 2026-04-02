@@ -287,6 +287,8 @@ export const ListClosedItemsResponseItem = zod.object({
   assignedTo: zod.string(),
   closedDate: zod.coerce.date().nullish(),
   meetingDate: zod.string().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
   notes: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
@@ -332,6 +334,8 @@ export const UpdateClosedItemResponse = zod.object({
   assignedTo: zod.string(),
   closedDate: zod.coerce.date().nullish(),
   meetingDate: zod.string().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
   notes: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
@@ -342,6 +346,29 @@ export const UpdateClosedItemResponse = zod.object({
  */
 export const DeleteClosedItemParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary Mark a closed item as verified
+ */
+export const VerifyClosedItemParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const VerifyClosedItemResponse = zod.object({
+  id: zod.number(),
+  itemCode: zod.string().describe("CI-001 format identifier"),
+  date: zod.coerce.date(),
+  department: zod.enum(["Warehouse", "Production", "Both"]),
+  description: zod.string(),
+  assignedTo: zod.string(),
+  closedDate: zod.coerce.date().nullish(),
+  meetingDate: zod.string().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
 });
 
 /**

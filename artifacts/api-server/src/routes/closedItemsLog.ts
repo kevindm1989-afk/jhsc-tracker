@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { closedItemsLogTable } from "@workspace/db/schema";
 import { eq, desc, and, ilike } from "drizzle-orm";
+import "../sessionTypes";
 
 const router: IRouter = Router();
 
@@ -88,6 +89,27 @@ router.delete("/:id", async (req, res) => {
     res.status(204).send();
   } catch (err) {
     req.log.error({ err }, "Failed to delete closed item");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/:id/verify", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [item] = await db.select().from(closedItemsLogTable).where(eq(closedItemsLogTable.id, id));
+    if (!item) return res.status(404).json({ error: "Not found" });
+
+    const verifiedBy = req.session?.displayName ?? req.session?.username ?? "Unknown";
+
+    const [updated] = await db
+      .update(closedItemsLogTable)
+      .set({ verifiedAt: new Date(), verifiedBy, updatedAt: new Date() })
+      .where(eq(closedItemsLogTable.id, id))
+      .returning();
+
+    res.json(updated);
+  } catch (err) {
+    req.log.error({ err }, "Failed to verify closed item");
     res.status(500).json({ error: "Internal server error" });
   }
 });

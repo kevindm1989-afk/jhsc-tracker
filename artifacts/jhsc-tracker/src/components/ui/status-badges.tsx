@@ -18,10 +18,14 @@ export function StatusBadge({ status, className }: { status: string, className?:
     case 'Disputed':
       colorClass = "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800";
       break;
+    case 'Pending':
+      colorClass = "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800";
+      break;
     case 'Closed':
       colorClass = "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800";
       break;
     case 'Closed & Verified':
+    case 'Verified':
       colorClass = "bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/30 dark:text-teal-400 dark:border-teal-800";
       break;
   }

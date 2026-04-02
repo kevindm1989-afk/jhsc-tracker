@@ -8,6 +8,7 @@ import {
   useCreateClosedItem,
   useUpdateClosedItem,
   useDeleteClosedItem,
+  useVerifyClosedItem,
   getListClosedItemsQueryKey,
   ClosedItem,
   ClosedItemDepartment,
@@ -23,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit2, Trash2, CheckCheck } from "lucide-react";
-import { DeptBadge } from "@/components/ui/status-badges";
+import { DeptBadge, StatusBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -96,6 +97,15 @@ export default function ClosedItemsLogPage() {
         invalidateList();
         setDeletingItem(null);
         toast({ title: "Closed item deleted" });
+      },
+    },
+  });
+
+  const verifyMutation = useVerifyClosedItem({
+    mutation: {
+      onSuccess: () => {
+        invalidateList();
+        toast({ title: "Item verified", description: "Marked as verified." });
       },
     },
   });
@@ -212,14 +222,15 @@ export default function ClosedItemsLogPage() {
               <TableHead className="hidden md:table-cell w-32">Assigned To</TableHead>
               <TableHead className="hidden md:table-cell w-28">Closed Date</TableHead>
               <TableHead className="hidden lg:table-cell w-28">Meeting Date</TableHead>
-              <TableHead className="w-20 text-right">Actions</TableHead>
+              <TableHead className="w-32">Status</TableHead>
+              <TableHead className="w-24 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 8 }).map((_, j) => (
+                  {Array.from({ length: 9 }).map((_, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
@@ -246,8 +257,29 @@ export default function ClosedItemsLogPage() {
                   <TableCell className="hidden lg:table-cell text-sm whitespace-nowrap text-muted-foreground">
                     {item.meetingDate ?? <span className="text-muted-foreground/60">—</span>}
                   </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <StatusBadge status={(item as any).verifiedAt ? "Verified" : "Pending"} />
+                      {(item as any).verifiedAt ? (
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                          {(item as any).verifiedBy} · {format(new Date((item as any).verifiedAt), "MMM d, yyyy")}
+                        </span>
+                      ) : null}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      {!(item as any).verifiedAt && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs px-2 text-teal-700 border-teal-300 hover:bg-teal-50"
+                          onClick={() => verifyMutation.mutate({ id: item.id })}
+                          disabled={verifyMutation.isPending}
+                        >
+                          Verify
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -270,7 +302,7 @@ export default function ClosedItemsLogPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
                   No closed items found.{" "}
                   {deptFilter !== "all" || searchText
                     ? "Try clearing the filters."

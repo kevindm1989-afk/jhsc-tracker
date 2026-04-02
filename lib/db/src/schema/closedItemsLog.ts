@@ -11,6 +11,8 @@ export const closedItemsLogTable = pgTable("closed_items_log", {
   assignedTo: text("assigned_to").notNull(),
   closedDate: date("closed_date"),
   meetingDate: text("meeting_date"),
+  verifiedAt: timestamp("verified_at"),
+  verifiedBy: text("verified_by"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

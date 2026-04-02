@@ -1336,6 +1336,90 @@ export const useDeleteClosedItem = <
 };
 
 /**
+ * @summary Mark a closed item as verified
+ */
+export const getVerifyClosedItemUrl = (id: number) => {
+  return `/api/closed-items-log/${id}/verify`;
+};
+
+export const verifyClosedItem = async (
+  id: number,
+  options?: RequestInit,
+): Promise<ClosedItem> => {
+  return customFetch<ClosedItem>(getVerifyClosedItemUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getVerifyClosedItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyClosedItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof verifyClosedItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["verifyClosedItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof verifyClosedItem>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return verifyClosedItem(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type VerifyClosedItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof verifyClosedItem>>
+>;
+
+export type VerifyClosedItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark a closed item as verified
+ */
+export const useVerifyClosedItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyClosedItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof verifyClosedItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getVerifyClosedItemMutationOptions(options));
+};
+
+/**
  * @summary List all hazard findings
  */
 export const getListHazardFindingsUrl = (params?: ListHazardFindingsParams) => {
