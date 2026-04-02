@@ -383,6 +383,12 @@ export default function ConductInspectionPage() {
               <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">{section.name}</CardTitle>
             </CardHeader>
             <CardContent className="p-0 divide-y">
+              {/* Column headers — only visible on large screens */}
+              <div className="hidden lg:flex px-4 py-1.5 bg-muted/40 border-b gap-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="w-[38%]">Inspection Item</div>
+                <div className="flex-1">Corrective Action / Responsible Party</div>
+                <div className="w-[168px] text-right">Rating</div>
+              </div>
               {section.items.map(item => {
                 const resp = responses[item.row];
                 const rating = resp?.rating ?? null;
@@ -390,9 +396,11 @@ export default function ConductInspectionPage() {
 
                 return (
                   <div key={item.row} className={cn("px-4 py-3 transition-colors", hasIssue ? "bg-red-50/40" : "hover:bg-muted/20")}>
-                    <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-                      {/* Item text */}
-                      <div className="flex-1 min-w-0">
+                    {/* 3-column layout: description | corrective action | rating buttons */}
+                    <div className="flex flex-col lg:flex-row lg:items-start gap-3">
+
+                      {/* Col 1 — Item description */}
+                      <div className="lg:w-[38%] min-w-0">
                         <div className="flex items-start gap-2">
                           <span className="text-xs font-mono text-muted-foreground shrink-0 mt-0.5 w-8">{item.key}</span>
                           <div>
@@ -402,7 +410,7 @@ export default function ConductInspectionPage() {
                                 <TooltipTrigger asChild>
                                   <button className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5 hover:text-foreground transition-colors">
                                     <Info className="w-3 h-3" />
-                                    <span className="truncate max-w-[300px] sm:max-w-[400px]">{item.hint}</span>
+                                    <span className="truncate max-w-[240px]">{item.hint}</span>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top" className="max-w-xs text-xs">{item.hint}</TooltipContent>
@@ -410,35 +418,29 @@ export default function ConductInspectionPage() {
                             )}
                           </div>
                         </div>
+                      </div>
 
-                        {/* Corrective action / responsible party — shown when A/B/C selected */}
+                      {/* Col 2 — Corrective action (always visible) + responsible party (when issue) */}
+                      <div className="lg:flex-1 min-w-0 space-y-2">
+                        <Textarea
+                          rows={2}
+                          placeholder="Corrective action..."
+                          value={resp?.correctiveAction ?? ""}
+                          onChange={e => setField(item.row, "correctiveAction", e.target.value)}
+                          className="text-sm resize-none w-full"
+                        />
                         {hasIssue && (
-                          <div className="mt-3 ml-10 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">Corrective Action</Label>
-                              <Textarea
-                                rows={2}
-                                placeholder="Describe the corrective action required..."
-                                value={resp?.correctiveAction ?? ""}
-                                onChange={e => setField(item.row, "correctiveAction", e.target.value)}
-                                className="text-sm resize-none"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">Responsible Party</Label>
-                              <Input
-                                placeholder="Name or role"
-                                value={resp?.responsibleParty ?? ""}
-                                onChange={e => setField(item.row, "responsibleParty", e.target.value)}
-                                className="text-sm"
-                              />
-                            </div>
-                          </div>
+                          <Input
+                            placeholder="Responsible party (name or role)"
+                            value={resp?.responsibleParty ?? ""}
+                            onChange={e => setField(item.row, "responsibleParty", e.target.value)}
+                            className="text-sm"
+                          />
                         )}
                       </div>
 
-                      {/* Rating buttons */}
-                      <div className="flex gap-1.5 shrink-0 sm:mt-0.5">
+                      {/* Col 3 — Rating buttons */}
+                      <div className="flex gap-1.5 shrink-0 lg:mt-0.5">
                         {RATINGS.map(r => (
                           <button
                             key={r.value}
@@ -453,6 +455,7 @@ export default function ConductInspectionPage() {
                           </button>
                         ))}
                       </div>
+
                     </div>
                   </div>
                 );
