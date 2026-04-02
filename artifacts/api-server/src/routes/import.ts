@@ -90,7 +90,10 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     // Import closed items — upsert by description: insert new, update existing with any improved data
     let importedClosedItems = 0;
     let updatedClosedItems = 0;
+    console.log(`[import] closed items from sheet: ${closedItemsFromSheet.length}`);
     for (const item of closedItemsFromSheet) {
+      console.log(`[import] closed item desc="${item.description.slice(0,40)}" notes="${item.notes ?? "(none)"}"`);
+
       const [existing] = await db
         .select()
         .from(closedItemsLogTable)
@@ -100,7 +103,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         // Build a partial update with only fields that have new/better values
         const updates: Record<string, unknown> = {};
         if (item.closedDate && !existing.closedDate) updates.closedDate = item.closedDate;
-        if (item.notes && !existing.notes) updates.notes = item.notes;
+        if (item.notes && item.notes !== existing.notes) updates.notes = item.notes;
         if (item.assignedTo && item.assignedTo !== "Unassigned" && item.assignedTo !== existing.assignedTo) updates.assignedTo = item.assignedTo;
         if (item.department && item.department !== existing.department) updates.department = item.department;
         if (parsed.meetingDate && parsed.meetingDate !== existing.meetingDate) updates.meetingDate = parsed.meetingDate;
