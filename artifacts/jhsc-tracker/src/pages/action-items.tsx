@@ -8,7 +8,6 @@ import {
   useCreateActionItem,
   useUpdateActionItem,
   useDeleteActionItem,
-  useVerifyActionItem,
   getListActionItemsQueryKey,
   ActionItem,
   ActionItemStatus,
@@ -25,7 +24,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit2, Trash2, CalendarIcon, ShieldCheck } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, CalendarIcon } from "lucide-react";
 import { StatusBadge, PriorityBadge, DeptBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -86,18 +85,6 @@ export default function ActionItemsPage() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListActionItemsQueryKey() });
         toast({ title: "Action item deleted", variant: "destructive" });
-      }
-    }
-  });
-
-  const verifyMutation = useVerifyActionItem({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListActionItemsQueryKey() });
-        toast({ title: "Action item verified", description: "Marked as Closed & Verified." });
-      },
-      onError: () => {
-        toast({ title: "Could not verify", description: "Only closed items can be verified.", variant: "destructive" });
       }
     }
   });
@@ -265,29 +252,10 @@ export default function ActionItemsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-0.5">
-                        <StatusBadge status={overdue ? "Overdue" : ((item as any).verifiedAt ? "Closed & Verified" : item.status)} />
-                        {(item as any).verifiedAt && (
-                          <span className="text-[10px] text-muted-foreground">
-                            by {(item as any).verifiedBy} · {format(new Date((item as any).verifiedAt), "MMM d, yyyy")}
-                          </span>
-                        )}
-                      </div>
+                      <StatusBadge status={overdue ? "Overdue" : item.status} />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        {item.status === "Closed" && !(item as any).verifiedAt && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
-                            title="Verify this item"
-                            onClick={() => verifyMutation.mutate({ id: item.id })}
-                            disabled={verifyMutation.isPending}
-                          >
-                            <ShieldCheck className="h-4 w-4" />
-                          </Button>
-                        )}
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
                           <Edit2 className="h-4 w-4" />
                         </Button>

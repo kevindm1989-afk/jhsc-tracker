@@ -305,6 +305,25 @@ paths:
         "204":
           description: Deleted
 
+  /closed-items-log/{id}/verify:
+    post:
+      operationId: verifyClosedItem
+      tags: [closed-items-log]
+      summary: Mark a closed item as verified
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Verified closed item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClosedItem"
+
   # ── HAZARD FINDINGS ──
   /hazard-findings:
     get:
@@ -1155,6 +1174,13 @@ components:
           format: date
           nullable: true
         meetingDate:
+          type: string
+          nullable: true
+        verifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+        verifiedBy:
           type: string
           nullable: true
         notes:

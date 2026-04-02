@@ -546,6 +546,8 @@ export interface ClosedItem {
   assignedTo: string;
   closedDate?: string | null;
   meetingDate?: string | null;
+  verifiedAt?: string | null;
+  verifiedBy?: string | null;
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
