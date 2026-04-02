@@ -93,6 +93,26 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.patch("/:id/assign", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { assignedVerifierId, assignedVerifierName } = req.body as {
+      assignedVerifierId: number | null;
+      assignedVerifierName: string | null;
+    };
+    const [updated] = await db
+      .update(closedItemsLogTable)
+      .set({ assignedVerifierId: assignedVerifierId ?? null, assignedVerifierName: assignedVerifierName ?? null, updatedAt: new Date() })
+      .where(eq(closedItemsLogTable.id, id))
+      .returning();
+    if (!updated) return res.status(404).json({ error: "Not found" });
+    res.json(updated);
+  } catch (err) {
+    req.log.error({ err }, "Failed to assign verifier");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/:id/verify", async (req, res) => {
   try {
     const id = parseInt(req.params.id);

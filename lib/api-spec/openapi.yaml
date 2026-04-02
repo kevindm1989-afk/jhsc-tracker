@@ -324,6 +324,39 @@ paths:
               schema:
                 $ref: "#/components/schemas/ClosedItem"
 
+  /closed-items-log/{id}/assign:
+    patch:
+      operationId: assignClosedItemVerifier
+      tags: [closed-items-log]
+      summary: Assign a member to verify a closed item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assignedVerifierId:
+                  type: integer
+                  nullable: true
+                assignedVerifierName:
+                  type: string
+                  nullable: true
+              required: []
+      responses:
+        "200":
+          description: Updated closed item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClosedItem"
+
   # ── HAZARD FINDINGS ──
   /hazard-findings:
     get:
@@ -1174,6 +1207,12 @@ components:
           format: date
           nullable: true
         meetingDate:
+          type: string
+          nullable: true
+        assignedVerifierId:
+          type: integer
+          nullable: true
+        assignedVerifierName:
           type: string
           nullable: true
         verifiedAt:

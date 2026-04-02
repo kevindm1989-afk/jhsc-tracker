@@ -1,4 +1,4 @@
-import { pgTable, serial, text, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, date, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -11,6 +11,8 @@ export const closedItemsLogTable = pgTable("closed_items_log", {
   assignedTo: text("assigned_to").notNull(),
   closedDate: date("closed_date"),
   meetingDate: text("meeting_date"),
+  assignedVerifierId: integer("assigned_verifier_id"),
+  assignedVerifierName: text("assigned_verifier_name"),
   verifiedAt: timestamp("verified_at"),
   verifiedBy: text("verified_by"),
   notes: text("notes"),

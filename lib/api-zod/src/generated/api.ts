@@ -287,6 +287,8 @@ export const ListClosedItemsResponseItem = zod.object({
   assignedTo: zod.string(),
   closedDate: zod.coerce.date().nullish(),
   meetingDate: zod.string().nullish(),
+  assignedVerifierId: zod.number().nullish(),
+  assignedVerifierName: zod.string().nullish(),
   verifiedAt: zod.coerce.date().nullish(),
   verifiedBy: zod.string().nullish(),
   notes: zod.string().nullish(),
@@ -334,6 +336,8 @@ export const UpdateClosedItemResponse = zod.object({
   assignedTo: zod.string(),
   closedDate: zod.coerce.date().nullish(),
   meetingDate: zod.string().nullish(),
+  assignedVerifierId: zod.number().nullish(),
+  assignedVerifierName: zod.string().nullish(),
   verifiedAt: zod.coerce.date().nullish(),
   verifiedBy: zod.string().nullish(),
   notes: zod.string().nullish(),
@@ -364,6 +368,38 @@ export const VerifyClosedItemResponse = zod.object({
   assignedTo: zod.string(),
   closedDate: zod.coerce.date().nullish(),
   meetingDate: zod.string().nullish(),
+  assignedVerifierId: zod.number().nullish(),
+  assignedVerifierName: zod.string().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Assign a member to verify a closed item
+ */
+export const AssignClosedItemVerifierParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AssignClosedItemVerifierBody = zod.object({
+  assignedVerifierId: zod.number().nullish(),
+  assignedVerifierName: zod.string().nullish(),
+});
+
+export const AssignClosedItemVerifierResponse = zod.object({
+  id: zod.number(),
+  itemCode: zod.string().describe("CI-001 format identifier"),
+  date: zod.coerce.date(),
+  department: zod.enum(["Warehouse", "Production", "Both"]),
+  description: zod.string(),
+  assignedTo: zod.string(),
+  closedDate: zod.coerce.date().nullish(),
+  meetingDate: zod.string().nullish(),
+  assignedVerifierId: zod.number().nullish(),
+  assignedVerifierName: zod.string().nullish(),
   verifiedAt: zod.coerce.date().nullish(),
   verifiedBy: zod.string().nullish(),
   notes: zod.string().nullish(),

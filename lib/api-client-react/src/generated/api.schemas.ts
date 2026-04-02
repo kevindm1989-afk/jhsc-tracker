@@ -546,6 +546,8 @@ export interface ClosedItem {
   assignedTo: string;
   closedDate?: string | null;
   meetingDate?: string | null;
+  assignedVerifierId?: number | null;
+  assignedVerifierName?: string | null;
   verifiedAt?: string | null;
   verifiedBy?: string | null;
   notes?: string | null;
@@ -700,6 +702,11 @@ export type ListActionItemsParams = {
 export type ListClosedItemsParams = {
   department?: string;
   search?: string;
+};
+
+export type AssignClosedItemVerifierBody = {
+  assignedVerifierId?: number | null;
+  assignedVerifierName?: string | null;
 };
 
 export type ListHazardFindingsParams = {

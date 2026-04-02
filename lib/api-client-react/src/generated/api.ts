@@ -18,6 +18,7 @@ import type {
 
 import type {
   ActionItem,
+  AssignClosedItemVerifierBody,
   ClosedItem,
   CreateActionItem,
   CreateClosedItem,
@@ -1417,6 +1418,94 @@ export const useVerifyClosedItem = <
   TContext
 > => {
   return useMutation(getVerifyClosedItemMutationOptions(options));
+};
+
+/**
+ * @summary Assign a member to verify a closed item
+ */
+export const getAssignClosedItemVerifierUrl = (id: number) => {
+  return `/api/closed-items-log/${id}/assign`;
+};
+
+export const assignClosedItemVerifier = async (
+  id: number,
+  assignClosedItemVerifierBody: AssignClosedItemVerifierBody,
+  options?: RequestInit,
+): Promise<ClosedItem> => {
+  return customFetch<ClosedItem>(getAssignClosedItemVerifierUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(assignClosedItemVerifierBody),
+  });
+};
+
+export const getAssignClosedItemVerifierMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof assignClosedItemVerifier>>,
+    TError,
+    { id: number; data: BodyType<AssignClosedItemVerifierBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof assignClosedItemVerifier>>,
+  TError,
+  { id: number; data: BodyType<AssignClosedItemVerifierBody> },
+  TContext
+> => {
+  const mutationKey = ["assignClosedItemVerifier"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof assignClosedItemVerifier>>,
+    { id: number; data: BodyType<AssignClosedItemVerifierBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return assignClosedItemVerifier(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AssignClosedItemVerifierMutationResult = NonNullable<
+  Awaited<ReturnType<typeof assignClosedItemVerifier>>
+>;
+export type AssignClosedItemVerifierMutationBody =
+  BodyType<AssignClosedItemVerifierBody>;
+export type AssignClosedItemVerifierMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Assign a member to verify a closed item
+ */
+export const useAssignClosedItemVerifier = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof assignClosedItemVerifier>>,
+    TError,
+    { id: number; data: BodyType<AssignClosedItemVerifierBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof assignClosedItemVerifier>>,
+  TError,
+  { id: number; data: BodyType<AssignClosedItemVerifierBody> },
+  TContext
+> => {
+  return useMutation(getAssignClosedItemVerifierMutationOptions(options));
 };
 
 /**

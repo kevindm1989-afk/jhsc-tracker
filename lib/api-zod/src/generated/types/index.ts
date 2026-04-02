@@ -10,6 +10,7 @@ export * from "./actionItem";
 export * from "./actionItemDepartment";
 export * from "./actionItemPriority";
 export * from "./actionItemStatus";
+export * from "./assignClosedItemVerifierBody";
 export * from "./closedItem";
 export * from "./closedItemDepartment";
 export * from "./createActionItem";
