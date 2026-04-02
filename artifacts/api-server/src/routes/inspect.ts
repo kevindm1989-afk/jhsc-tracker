@@ -3,10 +3,14 @@ import path from "path";
 import { readFile } from "fs/promises";
 import XlsxPopulate from "xlsx-populate";
 import { db } from "@workspace/db";
-import { inspectionLogTable } from "@workspace/db/schema";
+import { inspectionLogTable, documentsTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { CHECKLIST_SECTIONS, ZONE_NAMES, ADDITIONAL_COMMENTS_ROW } from "../checklistData";
 import { createTransporter, getSenderAddress } from "../emailClient";
+import { ObjectStorageService } from "../lib/objectStorage";
+import "../sessionTypes";
+
+const objectStorage = new ObjectStorageService();
 
 const CO_CHAIR_EMAIL = "kevin_de_melo@hotmail.com";
 
@@ -195,6 +199,7 @@ router.post("/email", async (req, res) => {
       ? new Date(date + "T12:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })
       : "Unknown date";
 
+    // ── 1. Send email with file attached ─────────────────────────────────────
     const transporter = createTransporter();
     const fromEmail = getSenderAddress();
 
@@ -244,7 +249,73 @@ router.post("/email", async (req, res) => {
       ],
     });
 
-    res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName });
+    // ── 2. Save to Inspection Log ─────────────────────────────────────────────
+    const entryDate = date || new Date().toISOString().split("T")[0];
+    const rowToItem = new Map<number, { sectionName: string; description: string }>();
+    for (const section of CHECKLIST_SECTIONS) {
+      for (const item of section.items) {
+        rowToItem.set(item.row, { sectionName: section.name, description: item.description });
+      }
+    }
+    const priorityMap: Record<string, "High" | "Medium" | "Low"> = { A: "High", B: "Medium", C: "Low" };
+    let imported = 0;
+    for (const [rowStr, resp] of Object.entries(responses)) {
+      if (!resp.rating || resp.rating === "X") continue;
+      const row = parseInt(rowStr, 10);
+      const itemInfo = rowToItem.get(row);
+      if (!itemInfo) continue;
+      const priority = priorityMap[resp.rating] ?? "Low";
+      const [created] = await db
+        .insert(inspectionLogTable)
+        .values({
+          itemCode: "IL-000",
+          date: entryDate,
+          zone: zoneName,
+          area: itemInfo.sectionName,
+          finding: itemInfo.description,
+          correctiveAction: resp.correctiveAction || null,
+          inspector: inspector || null,
+          priority,
+          assignedTo: null,
+          status: "Pending",
+          notes: null,
+        })
+        .returning()
+        .catch(() => [null]);
+      if (!created) continue;
+      await db
+        .update(inspectionLogTable)
+        .set({ itemCode: genInspectionCode(created.id) })
+        .where(eq(inspectionLogTable.id, created.id));
+      imported++;
+    }
+
+    // ── 3. Upload file to Documents ───────────────────────────────────────────
+    let docSaved = false;
+    try {
+      const uploaderName =
+        (req.session as any)?.displayName ?? (req.session as any)?.username ?? inspector ?? "Inspector";
+      const { objectPath } = await objectStorage.uploadBufferAsDocument(
+        outBuffer,
+        fileName,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      await db.insert(documentsTable).values({
+        title: `${zoneName} Inspection — ${displayDate}`,
+        description: `Conducted by ${inspector || "Unknown"} · ${issueCount} finding${issueCount !== 1 ? "s" : ""}`,
+        category: "Inspection Forms",
+        fileName,
+        fileSize: outBuffer.length,
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        objectPath,
+        uploadedBy: uploaderName,
+      });
+      docSaved = true;
+    } catch (docErr) {
+      console.error("Inspection document save error (non-fatal):", docErr);
+    }
+
+    res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName, imported, docSaved });
   } catch (err) {
     console.error("Inspection email error:", err);
     res.status(500).json({ error: "Failed to send inspection email." });

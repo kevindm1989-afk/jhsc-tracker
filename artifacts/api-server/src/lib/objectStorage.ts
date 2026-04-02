@@ -106,6 +106,32 @@ export class ObjectStorageService {
     return new Response(webStream, { headers });
   }
 
+  async uploadBufferAsDocument(
+    buffer: Buffer,
+    fileName: string,
+    mimeType: string
+  ): Promise<{ objectPath: string; objectId: string }> {
+    const privateObjectDir = this.getPrivateObjectDir();
+    if (!privateObjectDir) {
+      throw new Error(
+        "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' tool."
+      );
+    }
+
+    const objectId = `uploads/${randomUUID()}`;
+    const fullPath = `${privateObjectDir}/${objectId}`;
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(objectName);
+    await file.save(buffer, {
+      contentType: mimeType,
+      metadata: { contentDisposition: `attachment; filename="${fileName}"` },
+    });
+
+    return { objectPath: `/objects/${objectId}`, objectId };
+  }
+
   async getObjectEntityUploadURL(): Promise<string> {
     const privateObjectDir = this.getPrivateObjectDir();
     if (!privateObjectDir) {
