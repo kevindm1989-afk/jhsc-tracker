@@ -59,6 +59,7 @@ export default function ClosedItemsLogPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ClosedItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ClosedItem | null>(null);
+  const [expandedDescId, setExpandedDescId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -277,7 +278,13 @@ export default function ClosedItemsLogPage() {
                   </TableCell>
                   <TableCell><DeptBadge dept={item.department} /></TableCell>
                   <TableCell className="text-sm max-w-xs">
-                    <p className="line-clamp-2 cursor-default" title={item.description}>{item.description}</p>
+                    <p
+                      className={expandedDescId === item.id ? "cursor-pointer whitespace-pre-wrap" : "line-clamp-2 cursor-pointer"}
+                      title={expandedDescId === item.id ? undefined : "Click to expand"}
+                      onClick={() => setExpandedDescId(expandedDescId === item.id ? null : item.id)}
+                    >
+                      {item.description}
+                    </p>
                   </TableCell>
                   <TableCell className="text-sm">{item.assignedTo}</TableCell>
                   <TableCell className="text-sm whitespace-nowrap">
