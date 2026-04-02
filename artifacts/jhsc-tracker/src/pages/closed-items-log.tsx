@@ -8,6 +8,7 @@ import {
   useCreateClosedItem,
   useUpdateClosedItem,
   useDeleteClosedItem,
+  useVerifyClosedItem,
   getListClosedItemsQueryKey,
   ClosedItem,
   ClosedItemDepartment,
@@ -97,6 +98,15 @@ export default function ClosedItemsLogPage() {
         invalidateList();
         setDeletingItem(null);
         toast({ title: "Closed item deleted" });
+      },
+    },
+  });
+
+  const verifyMutation = useVerifyClosedItem({
+    mutation: {
+      onSuccess: () => {
+        invalidateList();
+        toast({ title: "Item verified", description: "Marked as verified." });
       },
     },
   });
@@ -259,10 +269,28 @@ export default function ClosedItemsLogPage() {
                     {item.meetingDate ?? <span className="text-muted-foreground/60">—</span>}
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status="Closed" />
+                    <div className="flex flex-col gap-0.5">
+                      <StatusBadge status="Closed" />
+                      {(item as any).verifiedAt && (
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                          ✓ {(item as any).verifiedBy} · {format(new Date((item as any).verifiedAt), "MMM d, yyyy")}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {!(item as any).verifiedAt && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs px-2 text-teal-700 border-teal-300 hover:bg-teal-50"
+                          onClick={() => verifyMutation.mutate({ id: item.id })}
+                          disabled={verifyMutation.isPending}
+                        >
+                          Verify
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
