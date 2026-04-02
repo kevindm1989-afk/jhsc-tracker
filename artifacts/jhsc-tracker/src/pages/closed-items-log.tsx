@@ -251,12 +251,12 @@ export default function ClosedItemsLogPage() {
               <TableHead className="w-24">Date</TableHead>
               <TableHead className="w-28">Department</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="hidden md:table-cell w-32">Assigned To</TableHead>
-              <TableHead className="hidden md:table-cell w-28">Closed Date</TableHead>
-              <TableHead className="hidden lg:table-cell w-28">Meeting Date</TableHead>
-              <TableHead className="hidden md:table-cell w-36">Verifier</TableHead>
+              <TableHead className="w-32">Assigned To</TableHead>
+              <TableHead className="w-28">Closed Date</TableHead>
+              <TableHead className="w-28">Meeting Date</TableHead>
+              <TableHead className="w-36">Verifier</TableHead>
               <TableHead className="w-32">Status</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              <TableHead className="w-36 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -270,7 +270,7 @@ export default function ClosedItemsLogPage() {
               ))
             ) : items && items.length > 0 ? (
               items.map((item) => (
-                <TableRow key={item.id} className="group">
+                <TableRow key={item.id}>
                   <TableCell className="font-mono text-xs text-muted-foreground">{item.itemCode}</TableCell>
                   <TableCell className="text-sm whitespace-nowrap">
                     {format(new Date(item.date), "MMM d, yyyy")}
@@ -278,19 +278,15 @@ export default function ClosedItemsLogPage() {
                   <TableCell><DeptBadge dept={item.department} /></TableCell>
                   <TableCell className="text-sm max-w-xs">
                     <p className="line-clamp-2">{item.description}</p>
-                    <div className="md:hidden text-xs text-muted-foreground mt-0.5 space-y-0.5">
-                      {item.assignedTo && <p>Assigned: {item.assignedTo}</p>}
-                      {item.closedDate && <p>Closed: {format(new Date(item.closedDate), "MMM d, yyyy")}</p>}
-                    </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm">{item.assignedTo}</TableCell>
-                  <TableCell className="hidden md:table-cell text-sm whitespace-nowrap">
+                  <TableCell className="text-sm">{item.assignedTo}</TableCell>
+                  <TableCell className="text-sm whitespace-nowrap">
                     {item.closedDate ? format(new Date(item.closedDate), "MMM d, yyyy") : <span className="text-muted-foreground/60">—</span>}
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm whitespace-nowrap text-muted-foreground">
+                  <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
                     {item.meetingDate ?? <span className="text-muted-foreground/60">—</span>}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell>
                     {isAdmin ? (
                       <Select
                         value={(item as any).assignedVerifierId ? String((item as any).assignedVerifierId) : "none"}
@@ -324,19 +320,15 @@ export default function ClosedItemsLogPage() {
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       <StatusBadge status={(item as any).verifiedAt ? "Verified" : "Pending"} />
-                      {(item as any).verifiedAt ? (
+                      {(item as any).verifiedAt && (
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                           {(item as any).verifiedBy} · {format(new Date((item as any).verifiedAt), "MMM d, yyyy")}
                         </span>
-                      ) : (item as any).assignedVerifierName ? (
-                        <span className="text-[10px] text-muted-foreground md:hidden">
-                          → {(item as any).assignedVerifierName}
-                        </span>
-                      ) : null}
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-end gap-1">
                       {!(item as any).verifiedAt && (
                         !((item as any).assignedVerifierId) ||
                         (item as any).assignedVerifierId === currentUser?.id ||
