@@ -172,6 +172,16 @@ function parseClosedItemsSheet(
       const assignedTo = str(row[5]) || str(row[4]) || str(row[3]) || "Unassigned";
       const dept = str(row[7]) || str(row[6]) || "";
 
+      // Notes: try columns after dept and before closedDate, then column right after description
+      // Log raw row to help identify correct column if nothing found
+      const notesRaw =
+        str(row[9]) || str(row[10]) || str(row[8]) || str(row[2]) || "";
+      if (!notesRaw) {
+        const rowSummary = row.slice(0, 16).map((v, idx) => `[${idx}]=${String(v).slice(0, 30)}`).join(" ");
+        console.log(`[closedSheet] No notes found. Row: ${rowSummary}`);
+      }
+      const notes = notesRaw || undefined;
+
       items.push({
         date: closedDate || meetingDate || new Date().toISOString().split("T")[0],
         department: mapDept(dept),
@@ -181,6 +191,7 @@ function parseClosedItemsSheet(
         priority: "Low",
         status: "Closed",
         closedDate,
+        notes,
         source: "Closed Items",
       });
     }
@@ -319,6 +330,13 @@ export async function parseMinutesFile(buffer: Buffer): Promise<ParsedMinutes> {
     } else if (section === "closed") {
       if (typeof cell0 === "number" && cell0 >= 1 && str(row[1])) {
         const closedDate = excelDateToISO(row[13]);
+        // Notes: try columns between dept(7) and closedDate(13), then right after description(1)
+        const notesRaw =
+          str(row[9]) || str(row[10]) || str(row[8]) || str(row[11]) || str(row[12]) || str(row[2]) || "";
+        if (!notesRaw) {
+          const rowSummary = row.slice(0, 16).map((v, idx) => `[${idx}]=${String(v).slice(0, 30)}`).join(" ");
+          console.log(`[completedSection] No notes found. Row: ${rowSummary}`);
+        }
         result.actionItems.push({
           date:
             closedDate ||
@@ -331,6 +349,7 @@ export async function parseMinutesFile(buffer: Buffer): Promise<ParsedMinutes> {
           priority: "Low",
           status: "Closed",
           closedDate,
+          notes: notesRaw || undefined,
           source: "Closed Items",
         });
       }
