@@ -1,11 +1,61 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import Sidebar from "./Sidebar";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/contexts/AuthContext";
+
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+const WARN_BEFORE_MS = 2 * 60 * 1000;
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const { user, logout } = useAuth();
+
+  const logoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimers = useCallback(() => {
+    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+    if (warnTimerRef.current) clearTimeout(warnTimerRef.current);
+  }, []);
+
+  const resetTimers = useCallback(() => {
+    clearTimers();
+    setShowWarning(false);
+    warnTimerRef.current = setTimeout(() => {
+      setShowWarning(true);
+    }, IDLE_TIMEOUT_MS - WARN_BEFORE_MS);
+    logoutTimerRef.current = setTimeout(() => {
+      logout();
+    }, IDLE_TIMEOUT_MS);
+  }, [clearTimers, logout]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart", "click"];
+
+    const handleActivity = () => resetTimers();
+
+    events.forEach((e) => window.addEventListener(e, handleActivity, { passive: true }));
+    resetTimers();
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, handleActivity));
+      clearTimers();
+    };
+  }, [user, resetTimers, clearTimers]);
 
   return (
     <div className="flex min-h-screen bg-background w-full">
@@ -60,6 +110,20 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           {children}
         </div>
       </main>
+
+      <AlertDialog open={showWarning} onOpenChange={() => {}}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Still there?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You've been inactive for 13 minutes. You'll be signed out automatically in 2 minutes to keep your account secure.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={resetTimers}>Stay signed in</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
