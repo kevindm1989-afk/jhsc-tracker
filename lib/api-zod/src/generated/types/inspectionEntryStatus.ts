@@ -10,7 +10,9 @@ export type InspectionEntryStatus =
   (typeof InspectionEntryStatus)[keyof typeof InspectionEntryStatus];
 
 export const InspectionEntryStatus = {
+  Pending: "Pending",
   Open: "Open",
   In_Progress: "In Progress",
   Closed: "Closed",
+  Verified: "Verified",
 } as const;

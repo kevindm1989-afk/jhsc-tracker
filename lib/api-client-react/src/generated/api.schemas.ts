@@ -276,9 +276,11 @@ export type InspectionEntryStatus =
   (typeof InspectionEntryStatus)[keyof typeof InspectionEntryStatus];
 
 export const InspectionEntryStatus = {
+  Pending: "Pending",
   Open: "Open",
   In_Progress: "In Progress",
   Closed: "Closed",
+  Verified: "Verified",
 } as const;
 
 export interface InspectionEntry {
@@ -293,9 +295,13 @@ export interface InspectionEntry {
   priority: InspectionEntryPriority;
   assignedTo?: string | null;
   followUpDate?: string | null;
+  correctiveAction?: string | null;
+  inspector?: string | null;
   status: InspectionEntryStatus;
   closedDate?: string | null;
   notes?: string | null;
+  verifiedAt?: string | null;
+  verifiedBy?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -313,9 +319,11 @@ export type CreateInspectionEntryStatus =
   (typeof CreateInspectionEntryStatus)[keyof typeof CreateInspectionEntryStatus];
 
 export const CreateInspectionEntryStatus = {
+  Pending: "Pending",
   Open: "Open",
   In_Progress: "In Progress",
   Closed: "Closed",
+  Verified: "Verified",
 } as const;
 
 export interface CreateInspectionEntry {
@@ -323,6 +331,8 @@ export interface CreateInspectionEntry {
   zone: string;
   area?: string | null;
   finding: string;
+  correctiveAction?: string | null;
+  inspector?: string | null;
   priority: CreateInspectionEntryPriority;
   assignedTo?: string | null;
   followUpDate?: string | null;
@@ -343,9 +353,11 @@ export type UpdateInspectionEntryStatus =
   (typeof UpdateInspectionEntryStatus)[keyof typeof UpdateInspectionEntryStatus];
 
 export const UpdateInspectionEntryStatus = {
+  Pending: "Pending",
   Open: "Open",
   In_Progress: "In Progress",
   Closed: "Closed",
+  Verified: "Verified",
 } as const;
 
 export interface UpdateInspectionEntry {
@@ -353,6 +365,8 @@ export interface UpdateInspectionEntry {
   zone?: string;
   area?: string | null;
   finding?: string;
+  correctiveAction?: string | null;
+  inspector?: string | null;
   priority?: UpdateInspectionEntryPriority;
   assignedTo?: string | null;
   followUpDate?: string | null;

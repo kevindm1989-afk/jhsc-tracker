@@ -20,9 +20,13 @@ export interface InspectionEntry {
   priority: InspectionEntryPriority;
   assignedTo?: string | null;
   followUpDate?: Date | null;
+  correctiveAction?: string | null;
+  inspector?: string | null;
   status: InspectionEntryStatus;
   closedDate?: Date | null;
   notes?: string | null;
+  verifiedAt?: Date | null;
+  verifiedBy?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
