@@ -171,7 +171,8 @@ export default function MemberActionsPage() {
     updateMutation.mutate({ id: item.id, data: { status } });
   };
 
-  const filtered = (actions ?? []).filter((a) => statusFilter === "all" || a.status === statusFilter);
+  const myActions = isAdmin ? (actions ?? []) : (actions ?? []).filter((a) => a.assignedToUserId === user?.id);
+  const filtered = myActions.filter((a) => statusFilter === "all" || a.status === statusFilter);
 
   const isOverdue = (item: MemberAction) =>
     item.dueDate && item.status !== "completed" && new Date(item.dueDate) < new Date();
@@ -198,10 +199,10 @@ export default function MemberActionsPage() {
       </div>
 
       {/* Summary cards */}
-      {actions && actions.length > 0 && (
+      {myActions.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           {(["pending", "in-progress", "completed"] as const).map((s) => {
-            const count = actions.filter((a) => a.status === s).length;
+            const count = myActions.filter((a) => a.status === s).length;
             const cfg = STATUS_CONFIG[s];
             return (
               <button
