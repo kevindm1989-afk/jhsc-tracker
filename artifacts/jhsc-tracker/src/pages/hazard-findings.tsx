@@ -191,7 +191,8 @@ export default function HazardFindingsPage() {
             <TableRow>
               <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider">ID</TableHead>
               <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Date</TableHead>
-              <TableHead className="font-bold text-xs uppercase tracking-wider">Hazard Description, OHSA Ref & Notes</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider">Hazard Description & OHSA Ref</TableHead>
+              <TableHead className="w-[200px] font-bold text-xs uppercase tracking-wider">Notes / Update</TableHead>
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Severity</TableHead>
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Deadline</TableHead>
               <TableHead className="w-[150px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
@@ -205,6 +206,7 @@ export default function HazardFindingsPage() {
                   <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-full max-w-[180px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-24" /></TableCell>
@@ -213,7 +215,7 @@ export default function HazardFindingsPage() {
               ))
             ) : items?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                   No hazard findings found.
                 </TableCell>
               </TableRow>
@@ -237,13 +239,10 @@ export default function HazardFindingsPage() {
                         )}
                         <DeptBadge dept={item.department} />
                       </div>
-                      {item.notes && (
-                        <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1 border-l-2 border-muted-foreground/30">
-                          <span className="font-semibold uppercase tracking-wider text-[10px]">Notes: </span>
-                          {item.notes}
-                        </div>
-                      )}
                     </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground align-top">
+                    {item.notes ? item.notes : <span className="text-xs">—</span>}
                   </TableCell>
                   <TableCell>
                     <PriorityBadge priority={item.severity} />
