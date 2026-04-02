@@ -72,9 +72,15 @@ router.put("/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const body = req.body;
 
+    const sanitized = {
+      ...body,
+      dueDate: body.dueDate === "" ? null : body.dueDate ?? null,
+      closedDate: body.closedDate === "" ? null : body.closedDate ?? null,
+    };
+
     const [updated] = await db
       .update(actionItemsTable)
-      .set({ ...body, updatedAt: new Date() })
+      .set({ ...sanitized, updatedAt: new Date() })
       .where(eq(actionItemsTable.id, id))
       .returning();
 
