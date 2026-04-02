@@ -2,11 +2,10 @@ import { useState, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, XCircle,
-  Users, MapPin, SkipForward, ClipboardList,
+  Users, MapPin, SkipForward,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -66,43 +65,6 @@ interface MinutesResult {
   skipped: { actionItems: number; hazardFindings: number };
 }
 
-// ─── Inspection types ─────────────────────────────────────────────────────────
-
-interface InspectionFinding {
-  zone: string;
-  date: string;
-  area: string;
-  finding: string;
-  hazardRating: "A" | "B" | "C";
-  priority: "High" | "Medium" | "Low";
-  assignedTo: string;
-  inspector: string;
-  notes: string;
-}
-
-interface InspectionSheet {
-  sheetName: string;
-  zone: string;
-  date: string;
-  inspector: string;
-  findings: InspectionFinding[];
-  additionalComments: string;
-}
-
-interface InspectionPreview {
-  sheets: InspectionSheet[];
-  totalFindings: number;
-  isBlank: boolean;
-}
-
-interface InspectionResult {
-  success: boolean;
-  imported: { inspectionEntries: number };
-  skipped: { inspectionEntries: number };
-  totalSheets: number;
-  message?: string;
-}
-
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -123,12 +85,6 @@ const sourceColors: Record<string, string> = {
   "New Business": "bg-indigo-100 text-indigo-800 border-indigo-200",
   "Old Business": "bg-purple-100 text-purple-800 border-purple-200",
   "Closed Items": "bg-green-100 text-green-800 border-green-200",
-};
-
-const ratingLabel: Record<string, string> = {
-  A: "Major (A)",
-  B: "Moderate (B)",
-  C: "Minor (C)",
 };
 
 // ─── Shared upload area component ────────────────────────────────────────────
@@ -486,261 +442,6 @@ function MinutesTab() {
   );
 }
 
-// ─── Inspection tab ───────────────────────────────────────────────────────────
-
-function InspectionTab() {
-  const [isDragging, setIsDragging] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<InspectionPreview | null>(null);
-  const [result, setResult] = useState<InspectionResult | null>(null);
-  const [isPreviewing, setIsPreviewing] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const handleFile = useCallback(async (f: File) => {
-    if (!f.name.match(/\.(xlsx|xlsm|xls)$/i)) {
-      setError("Please upload an Excel file (.xlsx, .xlsm, or .xls)");
-      return;
-    }
-    setFile(f);
-    setPreview(null);
-    setResult(null);
-    setError(null);
-    setIsPreviewing(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", f);
-      const resp = await fetch(`${BASE}/api/import/inspection?preview=true`, { method: "POST", body: formData });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || `Server error ${resp.status}`);
-      }
-      setPreview(await resp.json());
-    } catch (e: any) {
-      setError(e.message || "Failed to parse file");
-    } finally {
-      setIsPreviewing(false);
-    }
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const f = e.dataTransfer.files[0];
-    if (f) handleFile(f);
-  }, [handleFile]);
-
-  const handleImport = async () => {
-    if (!file) return;
-    setIsImporting(true);
-    setError(null);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const resp = await fetch(`${BASE}/api/import/inspection`, { method: "POST", body: formData });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || `Server error ${resp.status}`);
-      }
-      const data: InspectionResult = await resp.json();
-      setResult(data);
-      setPreview(null);
-      queryClient.invalidateQueries();
-      toast({ title: "Import complete", description: data.message || `${data.imported.inspectionEntries} inspection entries imported.` });
-    } catch (e: any) {
-      setError(e.message || "Import failed");
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
-  const reset = () => {
-    setFile(null);
-    setPreview(null);
-    setResult(null);
-    setError(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const sheetsWithFindings = preview?.sheets.filter(s => s.findings.length > 0) ?? [];
-
-  return (
-    <div className="space-y-5">
-      {result && (
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-8 h-8 text-green-600 shrink-0" />
-              <div>
-                <p className="font-bold text-green-900 text-lg">Import Successful</p>
-                {result.message && <p className="text-sm text-green-700">{result.message}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="bg-white rounded-md border border-green-200 p-3 text-center">
-                <p className="text-2xl font-bold text-green-700">{result.imported.inspectionEntries}</p>
-                <p className="text-xs text-muted-foreground mt-1">Entries Imported</p>
-              </div>
-              <div className="bg-white rounded-md border border-slate-200 p-3 text-center">
-                <p className="text-2xl font-bold text-muted-foreground">{result.skipped.inspectionEntries}</p>
-                <p className="text-xs text-muted-foreground mt-1">Entries Skipped</p>
-              </div>
-              <div className="bg-white rounded-md border border-slate-200 p-3 text-center">
-                <p className="text-2xl font-bold text-slate-600">{result.totalSheets}</p>
-                <p className="text-xs text-muted-foreground mt-1">Zones Scanned</p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={reset}>Import Another File</Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {!result && (
-        <UploadArea
-          file={file}
-          isDragging={isDragging}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          fileInputRef={fileInputRef}
-          onFileChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-          hint="or click to browse — JHSC Monthly Inspection Form (.xlsx)"
-        />
-      )}
-
-      {error && (
-        <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-md text-destructive text-sm">
-          <XCircle className="w-4 h-4 shrink-0" />
-          {error}
-        </div>
-      )}
-
-      {isPreviewing && (
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-4 w-64 mt-1" />
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
-          </CardContent>
-        </Card>
-      )}
-
-      {preview && !result && (
-        <div className="space-y-4">
-          {/* Summary card */}
-          <Card className="border-sidebar-border shadow-sm">
-            <CardHeader className="bg-muted/30 pb-3 border-b">
-              <CardTitle className="text-base font-bold uppercase tracking-wide flex items-center gap-2">
-                <ClipboardList className="w-4 h-4 text-primary" />
-                Inspection Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-              <div><p className="text-xs font-bold uppercase text-muted-foreground mb-1">Zones Scanned</p><p className="font-medium">{preview.sheets.length}</p></div>
-              <div><p className="text-xs font-bold uppercase text-muted-foreground mb-1">Total Findings</p><p className="font-medium">{preview.totalFindings}</p></div>
-              <div>
-                <p className="text-xs font-bold uppercase text-muted-foreground mb-1">Breakdown</p>
-                <div className="flex gap-1 flex-wrap">
-                  {(["High", "Medium", "Low"] as const).map(p => {
-                    const count = preview.sheets.flatMap(s => s.findings).filter(f => f.priority === p).length;
-                    return count > 0 ? (
-                      <span key={p} className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", priorityColors[p])}>
-                        {p}: {count}
-                      </span>
-                    ) : null;
-                  })}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {preview.isBlank ? (
-            <Card className="border-amber-200 bg-amber-50">
-              <CardContent className="p-5 flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-amber-900">Blank Template Detected</p>
-                  <p className="text-sm text-amber-800 mt-0.5">This file appears to be an empty inspection template with no findings recorded. Fill in hazard ratings (A, B, or C) in the checklist and corrective actions before importing.</p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              {sheetsWithFindings.map((sheet) => (
-                <Card key={sheet.sheetName} className="border-sidebar-border shadow-sm">
-                  <CardHeader className="pb-3 border-b bg-muted/20">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <CardTitle className="text-sm font-bold uppercase tracking-wide">{sheet.zone}</CardTitle>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {sheet.date && <span className="text-[10px] border rounded px-1.5 py-0.5 text-muted-foreground">{sheet.date}</span>}
-                        {sheet.inspector && <span className="text-[10px] border rounded px-1.5 py-0.5 text-muted-foreground">{sheet.inspector}</span>}
-                        <span className="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 rounded px-1.5 py-0.5">{sheet.findings.length} finding{sheet.findings.length !== 1 ? "s" : ""}</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="divide-y max-h-64 overflow-y-auto">
-                      {sheet.findings.map((finding, i) => (
-                        <div key={i} className="px-4 py-2.5 flex flex-col sm:flex-row sm:items-start gap-2 text-sm hover:bg-muted/30">
-                          <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
-                            <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", priorityColors[finding.priority])}>
-                              {ratingLabel[finding.hazardRating]}
-                            </span>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-foreground leading-snug">{finding.finding}</p>
-                            {finding.area && <p className="text-xs text-muted-foreground mt-0.5">Section: {finding.area}</p>}
-                          </div>
-                          {finding.assignedTo && (
-                            <span className="text-xs text-muted-foreground shrink-0">→ {finding.assignedTo}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button onClick={handleImport} disabled={isImporting} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
-                  <Upload className="w-4 h-4 mr-2" />
-                  {isImporting ? "Importing..." : `Import ${preview.totalFindings} Inspection Finding${preview.totalFindings !== 1 ? "s" : ""}`}
-                </Button>
-                <Button variant="outline" onClick={reset} disabled={isImporting}>Cancel</Button>
-              </div>
-            </>
-          )}
-
-          {preview.isBlank && (
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={reset}>Upload Different File</Button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {!file && !isPreviewing && !error && !result && (
-        <Card className="border-dashed bg-muted/20">
-          <CardContent className="p-6 text-center text-sm text-muted-foreground space-y-2">
-            <p className="font-medium">Supported format</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs mt-3">
-              <div className="space-y-1"><p className="font-bold text-foreground">1. Fill in the form</p><p>Complete the JHSC Monthly Workplace Inspection Form, rating items A (Major), B (Moderate), or C (Minor).</p></div>
-              <div className="space-y-1"><p className="font-bold text-foreground">2. Upload here</p><p>Drop the saved .xlsx file — all 11 zones are scanned automatically.</p></div>
-              <div className="space-y-1"><p className="font-bold text-foreground">3. Review &amp; import</p><p>Preview findings by zone before confirming. Each finding is added to the Inspection Log.</p></div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ImportDataPage() {
@@ -748,29 +449,9 @@ export default function ImportDataPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Import Data</h1>
-        <p className="text-muted-foreground mt-1 text-sm">Upload JHSC workbooks to sync records into the tracker.</p>
+        <p className="text-muted-foreground mt-1 text-sm">Upload JHSC meeting minutes to sync records into the tracker.</p>
       </div>
-
-      <Tabs defaultValue="minutes">
-        <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-grid">
-          <TabsTrigger value="minutes" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            <span>Meeting Minutes</span>
-          </TabsTrigger>
-          <TabsTrigger value="inspection" className="flex items-center gap-2">
-            <ClipboardList className="w-4 h-4" />
-            <span>Inspection Form</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="minutes" className="mt-5">
-          <MinutesTab />
-        </TabsContent>
-
-        <TabsContent value="inspection" className="mt-5">
-          <InspectionTab />
-        </TabsContent>
-      </Tabs>
+      <MinutesTab />
     </div>
   );
 }
