@@ -191,7 +191,7 @@ export default function HazardFindingsPage() {
             <TableRow>
               <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider">ID</TableHead>
               <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Date</TableHead>
-              <TableHead className="font-bold text-xs uppercase tracking-wider">Hazard Description & OHSA Ref</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider">Hazard Description, OHSA Ref & Notes</TableHead>
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Severity</TableHead>
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Deadline</TableHead>
               <TableHead className="w-[150px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
@@ -237,6 +237,12 @@ export default function HazardFindingsPage() {
                         )}
                         <DeptBadge dept={item.department} />
                       </div>
+                      {item.notes && (
+                        <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1 border-l-2 border-muted-foreground/30">
+                          <span className="font-semibold uppercase tracking-wider text-[10px]">Notes: </span>
+                          {item.notes}
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
