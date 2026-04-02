@@ -8,16 +8,11 @@ import {
   useCreateClosedItem,
   useUpdateClosedItem,
   useDeleteClosedItem,
-  useVerifyClosedItem,
-  useAssignClosedItemVerifier,
   getListClosedItemsQueryKey,
   ClosedItem,
   ClosedItemDepartment,
 } from "@workspace/api-client-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-type UserInfo = { id: number; displayName: string; username: string; role: string };
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,25 +59,6 @@ export default function ClosedItemsLogPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: currentUser } = useQuery<UserInfo>({
-    queryKey: ["current-user"],
-    queryFn: async () => {
-      const res = await fetch(`${BASE}/api/auth/me`, { credentials: "include" });
-      return res.json();
-    },
-  });
-
-  const { data: users } = useQuery<UserInfo[]>({
-    queryKey: ["users-list"],
-    queryFn: async () => {
-      const res = await fetch(`${BASE}/api/users`, { credentials: "include" });
-      return res.json();
-    },
-    enabled: currentUser?.role === "admin",
-  });
-
-  const isAdmin = currentUser?.role === "admin";
-
   const queryParams = {
     ...(deptFilter !== "all" && { department: deptFilter }),
     ...(searchText.length > 1 && { search: searchText }),
@@ -121,24 +97,6 @@ export default function ClosedItemsLogPage() {
         invalidateList();
         setDeletingItem(null);
         toast({ title: "Closed item deleted" });
-      },
-    },
-  });
-
-  const verifyMutation = useVerifyClosedItem({
-    mutation: {
-      onSuccess: () => {
-        invalidateList();
-        toast({ title: "Item verified", description: "Marked as verified." });
-      },
-    },
-  });
-
-  const assignMutation = useAssignClosedItemVerifier({
-    mutation: {
-      onSuccess: () => {
-        invalidateList();
-        toast({ title: "Verifier assigned" });
       },
     },
   });
@@ -252,12 +210,12 @@ export default function ClosedItemsLogPage() {
               <TableHead className="w-24">Date</TableHead>
               <TableHead className="w-28">Department</TableHead>
               <TableHead>Description</TableHead>
+              <TableHead className="w-48">Notes</TableHead>
               <TableHead className="w-32">Assigned To</TableHead>
               <TableHead className="w-28">Closed Date</TableHead>
               <TableHead className="hidden w-28">Meeting Date</TableHead>
-              <TableHead className="w-36">Verifier</TableHead>
-              <TableHead className="w-32">Status</TableHead>
-              <TableHead className="w-36 text-right">Actions</TableHead>
+              <TableHead className="w-24">Status</TableHead>
+              <TableHead className="w-24 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -286,6 +244,13 @@ export default function ClosedItemsLogPage() {
                       {item.description}
                     </p>
                   </TableCell>
+                  <TableCell className="text-sm text-muted-foreground max-w-[12rem]">
+                    {item.notes ? (
+                      <p className="line-clamp-2" title={item.notes}>{item.notes}</p>
+                    ) : (
+                      <span className="text-muted-foreground/50">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-sm">{item.assignedTo}</TableCell>
                   <TableCell className="text-sm whitespace-nowrap">
                     {item.closedDate ? format(new Date(item.closedDate), "MMM d, yyyy") : <span className="text-muted-foreground/60">—</span>}
@@ -294,63 +259,10 @@ export default function ClosedItemsLogPage() {
                     {item.meetingDate ?? <span className="text-muted-foreground/60">—</span>}
                   </TableCell>
                   <TableCell>
-                    {isAdmin ? (
-                      <Select
-                        value={(item as any).assignedVerifierId ? String((item as any).assignedVerifierId) : "none"}
-                        onValueChange={(val) => {
-                          const user = val === "none" ? null : users?.find(u => String(u.id) === val);
-                          assignMutation.mutate({
-                            id: item.id,
-                            data: {
-                              assignedVerifierId: user ? user.id : null,
-                              assignedVerifierName: user ? user.displayName : null,
-                            },
-                          });
-                        }}
-                      >
-                        <SelectTrigger className="h-7 text-xs w-32 border-dashed">
-                          <SelectValue placeholder="Unassigned" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none"><span className="text-muted-foreground">Unassigned</span></SelectItem>
-                          {(users ?? []).map(u => (
-                            <SelectItem key={u.id} value={String(u.id)}>{u.displayName}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">
-                        {(item as any).assignedVerifierName ?? <span className="text-muted-foreground/50">—</span>}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <StatusBadge status={(item as any).verifiedAt ? "Verified" : "Pending"} />
-                      {(item as any).verifiedAt && (
-                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                          {(item as any).verifiedBy} · {format(new Date((item as any).verifiedAt), "MMM d, yyyy")}
-                        </span>
-                      )}
-                    </div>
+                    <StatusBadge status="Closed" />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {!(item as any).verifiedAt && (
-                        !((item as any).assignedVerifierId) ||
-                        (item as any).assignedVerifierId === currentUser?.id ||
-                        isAdmin
-                      ) && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs px-2 text-teal-700 border-teal-300 hover:bg-teal-50"
-                          onClick={() => verifyMutation.mutate({ id: item.id })}
-                          disabled={verifyMutation.isPending}
-                        >
-                          Verify
-                        </Button>
-                      )}
                       <Button
                         variant="ghost"
                         size="icon"
