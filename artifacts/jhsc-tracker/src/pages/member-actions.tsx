@@ -301,24 +301,41 @@ export default function MemberActionsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Select
-                        value={item.status}
-                        onValueChange={(val) => updateStatus(item, val)}
-                        disabled={!isAdmin && item.assignedToUserId !== user?.id}
-                      >
-                        <SelectTrigger className={cn("h-7 text-xs border rounded-full px-2 w-auto gap-1", cfg.className)}>
+                      {isAdmin ? (
+                        <Select
+                          value={item.status}
+                          onValueChange={(val) => updateStatus(item, val)}
+                        >
+                          <SelectTrigger className={cn("h-7 text-xs border rounded-full px-2 w-auto gap-1", cfg.className)}>
+                            <cfg.icon className="w-3 h-3 shrink-0" />
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="in-progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className={cn("inline-flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-1", cfg.className)}>
                           <cfg.icon className="w-3 h-3 shrink-0" />
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in-progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
+                          {cfg.label}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1">
+                        {!isAdmin && item.status !== "completed" && (
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs px-2 bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => updateStatus(item, "completed")}
+                            disabled={updateMutation.isPending}
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                            Mark Complete
+                          </Button>
+                        )}
                         {isAdmin && (
                           <>
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item)}>
