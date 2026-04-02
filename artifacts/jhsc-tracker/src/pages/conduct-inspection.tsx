@@ -152,7 +152,6 @@ type Rating = "A" | "B" | "C" | "X";
 interface ItemResponse {
   rating: Rating | null;
   correctiveAction: string;
-  responsibleParty: string;
 }
 
 // ─── Rating button config ─────────────────────────────────────────────────────
@@ -200,14 +199,14 @@ export default function ConductInspectionPage() {
   const setRating = (row: number, rating: Rating | null) => {
     setResponses(prev => ({
       ...prev,
-      [row]: { ...prev[row], rating, correctiveAction: prev[row]?.correctiveAction ?? "", responsibleParty: prev[row]?.responsibleParty ?? "" },
+      [row]: { ...prev[row], rating, correctiveAction: prev[row]?.correctiveAction ?? "" },
     }));
   };
 
-  const setField = (row: number, field: "correctiveAction" | "responsibleParty", value: string) => {
+  const setField = (row: number, value: string) => {
     setResponses(prev => ({
       ...prev,
-      [row]: { ...prev[row], rating: prev[row]?.rating ?? null, correctiveAction: prev[row]?.correctiveAction ?? "", responsibleParty: prev[row]?.responsibleParty ?? "", [field]: value },
+      [row]: { ...prev[row], rating: prev[row]?.rating ?? null, correctiveAction: value },
     }));
   };
 
@@ -216,7 +215,7 @@ export default function ConductInspectionPage() {
     date,
     inspector,
     responses: Object.fromEntries(
-      Object.entries(responses).map(([k, v]) => [k, { rating: v.rating, correctiveAction: v.correctiveAction, responsibleParty: v.responsibleParty }])
+      Object.entries(responses).map(([k, v]) => [k, { rating: v.rating, correctiveAction: v.correctiveAction }])
     ),
     additionalComments,
   });
@@ -386,7 +385,7 @@ export default function ConductInspectionPage() {
               {/* Column headers — only visible on large screens */}
               <div className="hidden lg:flex px-4 py-1.5 bg-muted/40 border-b gap-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 <div className="w-[38%]">Inspection Item</div>
-                <div className="flex-1">Corrective Action / Responsible Party</div>
+                <div className="flex-1">Corrective Action</div>
                 <div className="w-[168px] text-right">Rating</div>
               </div>
               {section.items.map(item => {
@@ -420,23 +419,15 @@ export default function ConductInspectionPage() {
                         </div>
                       </div>
 
-                      {/* Col 2 — Corrective action (always visible) + responsible party (when issue) */}
-                      <div className="lg:flex-1 min-w-0 space-y-2">
+                      {/* Col 2 — Corrective action (always visible) */}
+                      <div className="lg:flex-1 min-w-0">
                         <Textarea
                           rows={2}
                           placeholder="Corrective action..."
                           value={resp?.correctiveAction ?? ""}
-                          onChange={e => setField(item.row, "correctiveAction", e.target.value)}
+                          onChange={e => setField(item.row, e.target.value)}
                           className="text-sm resize-none w-full"
                         />
-                        {hasIssue && (
-                          <Input
-                            placeholder="Responsible party (name or role)"
-                            value={resp?.responsibleParty ?? ""}
-                            onChange={e => setField(item.row, "responsibleParty", e.target.value)}
-                            className="text-sm"
-                          />
-                        )}
                       </div>
 
                       {/* Col 3 — Rating buttons */}
