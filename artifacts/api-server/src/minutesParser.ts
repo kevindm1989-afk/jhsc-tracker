@@ -226,7 +226,10 @@ export async function parseMinutesFile(buffer: Buffer): Promise<ParsedMinutes> {
   for (let i = 0; i < Math.min(10, rows.length); i++) {
     const row = rows[i];
     const cell0 = str(row[0]);
-    if (cell0 === "Meeting Date:") result.meetingDate = str(row[3]);
+    if (cell0 === "Meeting Date:") {
+      // Prefer ISO conversion (handles Date objects and numeric serials); fall back to raw string
+      result.meetingDate = excelDateToISO(row[3]) || str(row[3]);
+    }
     if (cell0 === "Facility / Plant:") result.facility = str(row[3]);
     if (cell0 === "Quorum Met:") result.quorumMet = str(row[3]);
   }

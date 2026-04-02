@@ -44,15 +44,18 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     const closedItemsFromSheet = parsed.actionItems.filter((a) => a.source === "Closed Items");
     const regularActionItems = parsed.actionItems.filter((a) => a.source !== "Closed Items");
 
+    const isIsoDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+
     // Import regular action items (dedup by description + date)
     for (const item of regularActionItems) {
       const existing = await db
         .select({ id: actionItemsTable.id })
         .from(actionItemsTable)
-        .where(and(
-          eq(actionItemsTable.description, item.description),
-          eq(actionItemsTable.date, item.date)
-        ));
+        .where(
+          isIsoDate(item.date)
+            ? and(eq(actionItemsTable.description, item.description), eq(actionItemsTable.date, item.date))
+            : eq(actionItemsTable.description, item.description)
+        );
 
       if (existing.length > 0) {
         skippedActionItems++;
@@ -130,10 +133,11 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       const existing = await db
         .select({ id: hazardFindingsTable.id })
         .from(hazardFindingsTable)
-        .where(and(
-          eq(hazardFindingsTable.hazardDescription, finding.hazardDescription),
-          eq(hazardFindingsTable.date, finding.date)
-        ));
+        .where(
+          isIsoDate(finding.date)
+            ? and(eq(hazardFindingsTable.hazardDescription, finding.hazardDescription), eq(hazardFindingsTable.date, finding.date))
+            : eq(hazardFindingsTable.hazardDescription, finding.hazardDescription)
+        );
 
       if (existing.length > 0) {
         skippedHazardFindings++;
