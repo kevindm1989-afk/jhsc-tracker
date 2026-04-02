@@ -76,6 +76,10 @@ export default function ActionItemsPage() {
         setIsFormOpen(false);
         setEditingItem(null);
         toast({ title: "Action item updated" });
+      },
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : "Failed to save changes";
+        toast({ title: "Save failed", description: msg, variant: "destructive" });
       }
     }
   });
@@ -302,7 +306,7 @@ export default function ActionItemsPage() {
                 <FormField control={form.control} name="department" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Department</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
                         {Object.values(ActionItemDepartment).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
@@ -349,7 +353,7 @@ export default function ActionItemsPage() {
                 <FormField control={form.control} name="priority" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
                         {Object.values(ActionItemPriority).map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
@@ -361,7 +365,7 @@ export default function ActionItemsPage() {
                 <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
                         {Object.values(ActionItemStatus).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
