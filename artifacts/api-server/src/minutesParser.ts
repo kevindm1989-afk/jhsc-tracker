@@ -198,12 +198,10 @@ export async function parseMinutesFile(buffer: Buffer): Promise<ParsedMinutes> {
   await workbook.xlsx.load(buffer as any);
 
   const sheetNames = workbook.worksheets.map((ws) => ws.name);
-  console.log(`[parser] sheets in workbook: ${JSON.stringify(sheetNames)}`);
 
   const sheetName = sheetNames.includes("Meeting Minutes")
     ? "Meeting Minutes"
     : sheetNames[0];
-  console.log(`[parser] main sheet: "${sheetName}"`);
 
   const worksheet = workbook.getWorksheet(sheetName);
   if (!worksheet) {
@@ -385,13 +383,8 @@ export async function parseMinutesFile(buffer: Buffer): Promise<ParsedMinutes> {
     );
   });
 
-  const fromCompletedSection = result.actionItems.filter((a) => a.source === "Closed Items").length;
-  console.log(`[parser] closed items from COMPLETED section: ${fromCompletedSection}`);
-  console.log(`[parser] dedicated closed sheet found: ${closedSheet ? `"${closedSheet.name}"` : "none"}`);
-
   if (closedSheet) {
     const extra = parseClosedItemsSheet(closedSheet, result.meetingDate);
-    console.log(`[parser] dedicated sheet parsed ${extra.length} items; sample notes: ${extra.slice(0,3).map(i=>`"${i.notes??'(none)'}"`)}`);
     // Merge: avoid duplicates already parsed from the COMPLETED section inside Meeting Minutes
     const existingDescs = new Set(
       result.actionItems
