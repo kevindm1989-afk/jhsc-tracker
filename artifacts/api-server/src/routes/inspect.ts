@@ -96,6 +96,7 @@ interface SaveBody {
   date: string;
   inspector: string;
   responses: Record<string, ItemResponse>;
+  additionalComments?: string;
 }
 
 router.post("/save", async (req, res) => {
@@ -134,10 +135,6 @@ router.post("/save", async (req, res) => {
       if (!itemInfo) continue;
 
       const priority = priorityMap[resp.rating] ?? "Low";
-      const findingText = resp.correctiveAction
-        ? `${itemInfo.description} — ${resp.correctiveAction}`
-        : itemInfo.description;
-
       const [created] = await db
         .insert(inspectionLogTable)
         .values({
@@ -145,10 +142,12 @@ router.post("/save", async (req, res) => {
           date: entryDate,
           zone: zoneName,
           area: itemInfo.sectionName,
-          finding: findingText,
+          finding: itemInfo.description,
+          correctiveAction: resp.correctiveAction || null,
+          inspector: body.inspector || null,
           priority,
-          assignedTo: resp.responsibleParty || null,
-          status: "Open",
+          assignedTo: null,
+          status: "Pending",
           notes: null,
         })
         .returning()

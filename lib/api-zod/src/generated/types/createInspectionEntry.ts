@@ -13,6 +13,8 @@ export interface CreateInspectionEntry {
   zone: string;
   area?: string | null;
   finding: string;
+  correctiveAction?: string | null;
+  inspector?: string | null;
   priority: CreateInspectionEntryPriority;
   assignedTo?: string | null;
   followUpDate?: Date | null;

@@ -96,4 +96,28 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.post("/:id/verify", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const verifierName = (req.session as any)?.displayName ?? (req.session as any)?.username ?? "Unknown";
+
+    const [updated] = await db
+      .update(inspectionLogTable)
+      .set({
+        status: "Verified",
+        verifiedAt: new Date(),
+        verifiedBy: verifierName,
+        updatedAt: new Date(),
+      })
+      .where(eq(inspectionLogTable.id, id))
+      .returning();
+
+    if (!updated) return res.status(404).json({ error: "Not found" });
+    res.json(updated);
+  } catch (err) {
+    req.log.error({ err }, "Failed to verify inspection entry");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

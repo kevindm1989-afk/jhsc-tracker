@@ -538,9 +538,13 @@ export const ListInspectionEntriesResponseItem = zod.object({
   priority: zod.enum(["High", "Medium", "Low"]),
   assignedTo: zod.string().nullish(),
   followUpDate: zod.coerce.date().nullish(),
-  status: zod.enum(["Open", "In Progress", "Closed"]),
+  correctiveAction: zod.string().nullish(),
+  inspector: zod.string().nullish(),
+  status: zod.enum(["Pending", "Open", "In Progress", "Closed", "Verified"]),
   closedDate: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -556,11 +560,41 @@ export const CreateInspectionEntryBody = zod.object({
   zone: zod.string(),
   area: zod.string().nullish(),
   finding: zod.string(),
+  correctiveAction: zod.string().nullish(),
+  inspector: zod.string().nullish(),
   priority: zod.enum(["High", "Medium", "Low"]),
   assignedTo: zod.string().nullish(),
   followUpDate: zod.coerce.date().nullish(),
-  status: zod.enum(["Open", "In Progress", "Closed"]),
+  status: zod.enum(["Pending", "Open", "In Progress", "Closed", "Verified"]),
   notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Mark an inspection finding as verified
+ */
+export const VerifyInspectionEntryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const VerifyInspectionEntryResponse = zod.object({
+  id: zod.number(),
+  itemCode: zod.string().describe("IL-001 format identifier"),
+  date: zod.coerce.date(),
+  zone: zod.string().describe("Zone 1 – Receiving \/ Shipping Dock, etc."),
+  area: zod.string().nullish(),
+  finding: zod.string(),
+  priority: zod.enum(["High", "Medium", "Low"]),
+  assignedTo: zod.string().nullish(),
+  followUpDate: zod.coerce.date().nullish(),
+  correctiveAction: zod.string().nullish(),
+  inspector: zod.string().nullish(),
+  status: zod.enum(["Pending", "Open", "In Progress", "Closed", "Verified"]),
+  closedDate: zod.coerce.date().nullish(),
+  notes: zod.string().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
 });
 
 /**
@@ -580,9 +614,13 @@ export const GetInspectionEntryResponse = zod.object({
   priority: zod.enum(["High", "Medium", "Low"]),
   assignedTo: zod.string().nullish(),
   followUpDate: zod.coerce.date().nullish(),
-  status: zod.enum(["Open", "In Progress", "Closed"]),
+  correctiveAction: zod.string().nullish(),
+  inspector: zod.string().nullish(),
+  status: zod.enum(["Pending", "Open", "In Progress", "Closed", "Verified"]),
   closedDate: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -599,10 +637,14 @@ export const UpdateInspectionEntryBody = zod.object({
   zone: zod.string().optional(),
   area: zod.string().nullish(),
   finding: zod.string().optional(),
+  correctiveAction: zod.string().nullish(),
+  inspector: zod.string().nullish(),
   priority: zod.enum(["High", "Medium", "Low"]).optional(),
   assignedTo: zod.string().nullish(),
   followUpDate: zod.coerce.date().nullish(),
-  status: zod.enum(["Open", "In Progress", "Closed"]).optional(),
+  status: zod
+    .enum(["Pending", "Open", "In Progress", "Closed", "Verified"])
+    .optional(),
   closedDate: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
 });
@@ -617,9 +659,13 @@ export const UpdateInspectionEntryResponse = zod.object({
   priority: zod.enum(["High", "Medium", "Low"]),
   assignedTo: zod.string().nullish(),
   followUpDate: zod.coerce.date().nullish(),
-  status: zod.enum(["Open", "In Progress", "Closed"]),
+  correctiveAction: zod.string().nullish(),
+  inspector: zod.string().nullish(),
+  status: zod.enum(["Pending", "Open", "In Progress", "Closed", "Verified"]),
   closedDate: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });

@@ -2136,6 +2136,90 @@ export const useCreateInspectionEntry = <
 };
 
 /**
+ * @summary Mark an inspection finding as verified
+ */
+export const getVerifyInspectionEntryUrl = (id: number) => {
+  return `/api/inspection-log/${id}/verify`;
+};
+
+export const verifyInspectionEntry = async (
+  id: number,
+  options?: RequestInit,
+): Promise<InspectionEntry> => {
+  return customFetch<InspectionEntry>(getVerifyInspectionEntryUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getVerifyInspectionEntryMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyInspectionEntry>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof verifyInspectionEntry>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["verifyInspectionEntry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof verifyInspectionEntry>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return verifyInspectionEntry(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type VerifyInspectionEntryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof verifyInspectionEntry>>
+>;
+
+export type VerifyInspectionEntryMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark an inspection finding as verified
+ */
+export const useVerifyInspectionEntry = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyInspectionEntry>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof verifyInspectionEntry>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getVerifyInspectionEntryMutationOptions(options));
+};
+
+/**
  * @summary Get an inspection entry by ID
  */
 export const getGetInspectionEntryUrl = (id: number) => {
