@@ -56,6 +56,7 @@ export default function ClosedItemsLogPage() {
   const [editingItem, setEditingItem] = useState<ClosedItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ClosedItem | null>(null);
   const [expandedDescId, setExpandedDescId] = useState<number | null>(null);
+  const [expandedNotesId, setExpandedNotesId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -256,7 +257,13 @@ export default function ClosedItemsLogPage() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-[12rem]">
                     {item.notes ? (
-                      <p className="line-clamp-2" title={item.notes}>{item.notes}</p>
+                      <p
+                        className={expandedNotesId === item.id ? "cursor-pointer whitespace-pre-wrap" : "line-clamp-2 cursor-pointer"}
+                        title={expandedNotesId === item.id ? undefined : "Click to expand"}
+                        onClick={() => setExpandedNotesId(expandedNotesId === item.id ? null : item.id)}
+                      >
+                        {item.notes}
+                      </p>
                     ) : (
                       <span className="text-muted-foreground/50">—</span>
                     )}
