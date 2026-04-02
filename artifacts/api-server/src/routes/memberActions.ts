@@ -3,7 +3,60 @@ import { db } from "@workspace/db";
 import { memberActionsTable, usersTable } from "@workspace/db/schema";
 import { eq, and, desc, or } from "drizzle-orm";
 import { requireAdmin } from "../middleware/requireAuth";
+import { createTransporter, getSenderAddress } from "../emailClient";
 import "../sessionTypes";
+
+function sendMemberChangeNotification(opts: {
+  memberName: string;
+  actionCode: string;
+  title: string;
+  statusChanged?: { from: string | null; to: string };
+  notesChanged?: { to: string | null };
+  zone?: string | null;
+}) {
+  const adminEmail = process.env.GMAIL_USER;
+  if (!adminEmail) return;
+
+  const statusLabel = (s: string | null) => {
+    if (!s) return "—";
+    if (s === "pending") return "Pending";
+    if (s === "in-progress") return "In Progress";
+    if (s === "completed") return "Completed";
+    return s;
+  };
+
+  const lines: string[] = [];
+  if (opts.statusChanged) {
+    lines.push(`Status changed: ${statusLabel(opts.statusChanged.from)} → ${statusLabel(opts.statusChanged.to)}`);
+  }
+  if (opts.notesChanged) {
+    lines.push(`Notes updated: ${opts.notesChanged.to || "(cleared)"}`);
+  }
+  const changeDetails = lines.join("\n");
+
+  const zoneStr = opts.zone ? ` (Zone ${opts.zone})` : "";
+  const subject = `JHSC Member Update — ${opts.actionCode}: ${opts.memberName}`;
+  const text = [
+    `Member: ${opts.memberName}`,
+    `Action: ${opts.actionCode} — ${opts.title}${zoneStr}`,
+    ``,
+    changeDetails,
+    ``,
+    `Time: ${new Date().toLocaleString("en-CA", { timeZone: "America/Toronto" })}`,
+  ].join("\n");
+
+  try {
+    const transporter = createTransporter();
+    transporter.sendMail({
+      from: getSenderAddress(),
+      to: adminEmail,
+      subject,
+      text,
+    }).catch(() => {});
+  } catch {
+    // Email config missing — skip silently
+  }
+}
 
 const router: IRouter = Router();
 
@@ -135,6 +188,29 @@ router.put("/:id", async (req, res) => {
       .set(updates)
       .where(eq(memberActionsTable.id, id))
       .returning();
+
+    // Notify admin by email whenever a member (non-admin) makes any change
+    if (user.role !== "admin") {
+      const statusChanged =
+        body.status !== undefined && body.status !== existing.status
+          ? { from: existing.status, to: body.status }
+          : undefined;
+      const notesChanged =
+        body.notes !== undefined && (body.notes || null) !== existing.notes
+          ? { to: body.notes || null }
+          : undefined;
+
+      if (statusChanged || notesChanged) {
+        sendMemberChangeNotification({
+          memberName: user.displayName ?? user.username,
+          actionCode: existing.actionCode,
+          title: existing.title,
+          zone: existing.zone,
+          statusChanged,
+          notesChanged,
+        });
+      }
+    }
 
     res.json(updated);
   } catch (err) {
