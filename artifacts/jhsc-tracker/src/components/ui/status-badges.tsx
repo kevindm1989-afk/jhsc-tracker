@@ -21,6 +21,9 @@ export function StatusBadge({ status, className }: { status: string, className?:
     case 'Closed':
       colorClass = "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800";
       break;
+    case 'Closed & Verified':
+      colorClass = "bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/30 dark:text-teal-400 dark:border-teal-800";
+      break;
   }
 
   return (

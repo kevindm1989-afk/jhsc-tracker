@@ -1,4 +1,5 @@
 import { pgTable, serial, text, date, timestamp } from "drizzle-orm/pg-core";
+
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -14,6 +15,8 @@ export const actionItemsTable = pgTable("action_items", {
   priority: text("priority").notNull(),
   status: text("status").notNull().default("Open"),
   closedDate: date("closed_date"),
+  verifiedAt: timestamp("verified_at"),
+  verifiedBy: text("verified_by"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

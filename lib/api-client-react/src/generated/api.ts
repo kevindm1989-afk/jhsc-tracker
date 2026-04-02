@@ -569,6 +569,90 @@ export const useDeleteActionItem = <
 };
 
 /**
+ * @summary Mark a closed action item as verified
+ */
+export const getVerifyActionItemUrl = (id: number) => {
+  return `/api/action-items/${id}/verify`;
+};
+
+export const verifyActionItem = async (
+  id: number,
+  options?: RequestInit,
+): Promise<ActionItem> => {
+  return customFetch<ActionItem>(getVerifyActionItemUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getVerifyActionItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyActionItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof verifyActionItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["verifyActionItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof verifyActionItem>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return verifyActionItem(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type VerifyActionItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof verifyActionItem>>
+>;
+
+export type VerifyActionItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark a closed action item as verified
+ */
+export const useVerifyActionItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyActionItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof verifyActionItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getVerifyActionItemMutationOptions(options));
+};
+
+/**
  * @summary List member actions (admins see all; members see their own)
  */
 export const getListMemberActionsUrl = () => {

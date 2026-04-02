@@ -96,4 +96,29 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.post("/:id/verify", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [item] = await db.select().from(actionItemsTable).where(eq(actionItemsTable.id, id));
+    if (!item) return res.status(404).json({ error: "Not found" });
+    if (item.status !== "Closed") {
+      return res.status(400).json({ error: "Only closed items can be verified" });
+    }
+
+    const user = (req as any).user;
+    const verifiedBy = user?.name || user?.email || "Unknown";
+
+    const [updated] = await db
+      .update(actionItemsTable)
+      .set({ verifiedAt: new Date(), verifiedBy, updatedAt: new Date() })
+      .where(eq(actionItemsTable.id, id))
+      .returning();
+
+    res.json(updated);
+  } catch (err) {
+    req.log.error({ err }, "Failed to verify action item");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

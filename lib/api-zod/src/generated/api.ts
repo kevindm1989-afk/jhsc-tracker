@@ -34,6 +34,8 @@ export const ListActionItemsResponseItem = zod.object({
   priority: zod.enum(["High", "Medium", "Low"]),
   status: zod.enum(["Open", "In Progress", "Overdue", "Closed"]),
   closedDate: zod.coerce.date().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
   notes: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
@@ -74,6 +76,8 @@ export const GetActionItemResponse = zod.object({
   priority: zod.enum(["High", "Medium", "Low"]),
   status: zod.enum(["Open", "In Progress", "Overdue", "Closed"]),
   closedDate: zod.coerce.date().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
   notes: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
@@ -111,6 +115,8 @@ export const UpdateActionItemResponse = zod.object({
   priority: zod.enum(["High", "Medium", "Low"]),
   status: zod.enum(["Open", "In Progress", "Overdue", "Closed"]),
   closedDate: zod.coerce.date().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
   notes: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
@@ -121,6 +127,32 @@ export const UpdateActionItemResponse = zod.object({
  */
 export const DeleteActionItemParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary Mark a closed action item as verified
+ */
+export const VerifyActionItemParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const VerifyActionItemResponse = zod.object({
+  id: zod.number(),
+  itemCode: zod.string().describe("AI-001 format identifier"),
+  date: zod.coerce.date(),
+  department: zod.enum(["Warehouse", "Production", "Both"]),
+  description: zod.string(),
+  raisedBy: zod.string(),
+  assignedTo: zod.string(),
+  dueDate: zod.coerce.date().nullish(),
+  priority: zod.enum(["High", "Medium", "Low"]),
+  status: zod.enum(["Open", "In Progress", "Overdue", "Closed"]),
+  closedDate: zod.coerce.date().nullish(),
+  verifiedAt: zod.coerce.date().nullish(),
+  verifiedBy: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
 });
 
 /**
