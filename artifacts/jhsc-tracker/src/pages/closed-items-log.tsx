@@ -253,7 +253,7 @@ export default function ClosedItemsLogPage() {
               <TableHead>Description</TableHead>
               <TableHead className="w-32">Assigned To</TableHead>
               <TableHead className="w-28">Closed Date</TableHead>
-              <TableHead className="w-28">Meeting Date</TableHead>
+              <TableHead className="hidden w-28">Meeting Date</TableHead>
               <TableHead className="w-36">Verifier</TableHead>
               <TableHead className="w-32">Status</TableHead>
               <TableHead className="w-36 text-right">Actions</TableHead>
@@ -277,13 +277,13 @@ export default function ClosedItemsLogPage() {
                   </TableCell>
                   <TableCell><DeptBadge dept={item.department} /></TableCell>
                   <TableCell className="text-sm max-w-xs">
-                    <p className="line-clamp-2">{item.description}</p>
+                    <p className="line-clamp-2 cursor-default" title={item.description}>{item.description}</p>
                   </TableCell>
                   <TableCell className="text-sm">{item.assignedTo}</TableCell>
                   <TableCell className="text-sm whitespace-nowrap">
                     {item.closedDate ? format(new Date(item.closedDate), "MMM d, yyyy") : <span className="text-muted-foreground/60">—</span>}
                   </TableCell>
-                  <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
+                  <TableCell className="hidden text-sm whitespace-nowrap text-muted-foreground">
                     {item.meetingDate ?? <span className="text-muted-foreground/60">—</span>}
                   </TableCell>
                   <TableCell>
