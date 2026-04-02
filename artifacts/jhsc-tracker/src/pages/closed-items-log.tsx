@@ -9,11 +9,15 @@ import {
   useUpdateClosedItem,
   useDeleteClosedItem,
   useVerifyClosedItem,
+  useAssignClosedItemVerifier,
   getListClosedItemsQueryKey,
   ClosedItem,
   ClosedItemDepartment,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+type UserInfo = { id: number; displayName: string; username: string; role: string };
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +62,25 @@ export default function ClosedItemsLogPage() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const { data: currentUser } = useQuery<UserInfo>({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/auth/me`, { credentials: "include" });
+      return res.json();
+    },
+  });
+
+  const { data: users } = useQuery<UserInfo[]>({
+    queryKey: ["users-list"],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/users`, { credentials: "include" });
+      return res.json();
+    },
+    enabled: currentUser?.role === "admin",
+  });
+
+  const isAdmin = currentUser?.role === "admin";
 
   const queryParams = {
     ...(deptFilter !== "all" && { department: deptFilter }),
@@ -106,6 +129,15 @@ export default function ClosedItemsLogPage() {
       onSuccess: () => {
         invalidateList();
         toast({ title: "Item verified", description: "Marked as verified." });
+      },
+    },
+  });
+
+  const assignMutation = useAssignClosedItemVerifier({
+    mutation: {
+      onSuccess: () => {
+        invalidateList();
+        toast({ title: "Verifier assigned" });
       },
     },
   });
@@ -222,6 +254,7 @@ export default function ClosedItemsLogPage() {
               <TableHead className="hidden md:table-cell w-32">Assigned To</TableHead>
               <TableHead className="hidden md:table-cell w-28">Closed Date</TableHead>
               <TableHead className="hidden lg:table-cell w-28">Meeting Date</TableHead>
+              <TableHead className="hidden md:table-cell w-36">Verifier</TableHead>
               <TableHead className="w-32">Status</TableHead>
               <TableHead className="w-24 text-right">Actions</TableHead>
             </TableRow>
@@ -230,7 +263,7 @@ export default function ClosedItemsLogPage() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 9 }).map((_, j) => (
+                  {Array.from({ length: 10 }).map((_, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
@@ -257,6 +290,37 @@ export default function ClosedItemsLogPage() {
                   <TableCell className="hidden lg:table-cell text-sm whitespace-nowrap text-muted-foreground">
                     {item.meetingDate ?? <span className="text-muted-foreground/60">—</span>}
                   </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {isAdmin ? (
+                      <Select
+                        value={(item as any).assignedVerifierId ? String((item as any).assignedVerifierId) : "none"}
+                        onValueChange={(val) => {
+                          const user = val === "none" ? null : users?.find(u => String(u.id) === val);
+                          assignMutation.mutate({
+                            id: item.id,
+                            data: {
+                              assignedVerifierId: user ? user.id : null,
+                              assignedVerifierName: user ? user.displayName : null,
+                            },
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="h-7 text-xs w-32 border-dashed">
+                          <SelectValue placeholder="Unassigned" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none"><span className="text-muted-foreground">Unassigned</span></SelectItem>
+                          {(users ?? []).map(u => (
+                            <SelectItem key={u.id} value={String(u.id)}>{u.displayName}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        {(item as any).assignedVerifierName ?? <span className="text-muted-foreground/50">—</span>}
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       <StatusBadge status={(item as any).verifiedAt ? "Verified" : "Pending"} />
@@ -264,12 +328,20 @@ export default function ClosedItemsLogPage() {
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                           {(item as any).verifiedBy} · {format(new Date((item as any).verifiedAt), "MMM d, yyyy")}
                         </span>
+                      ) : (item as any).assignedVerifierName ? (
+                        <span className="text-[10px] text-muted-foreground md:hidden">
+                          → {(item as any).assignedVerifierName}
+                        </span>
                       ) : null}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       {!(item as any).verifiedAt && (
+                        !((item as any).assignedVerifierId) ||
+                        (item as any).assignedVerifierId === currentUser?.id ||
+                        isAdmin
+                      ) && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -302,7 +374,7 @@ export default function ClosedItemsLogPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                   No closed items found.{" "}
                   {deptFilter !== "all" || searchText
                     ? "Try clearing the filters."
