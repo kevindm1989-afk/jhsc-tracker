@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { actionItemsTable } from "@workspace/db/schema";
 import { eq, desc, and } from "drizzle-orm";
+import "../sessionTypes";
 
 const router: IRouter = Router();
 
@@ -105,8 +106,7 @@ router.post("/:id/verify", async (req, res) => {
       return res.status(400).json({ error: "Only closed items can be verified" });
     }
 
-    const user = (req as any).user;
-    const verifiedBy = user?.name || user?.email || "Unknown";
+    const verifiedBy = req.session?.displayName ?? req.session?.username ?? "Unknown";
 
     const [updated] = await db
       .update(actionItemsTable)
