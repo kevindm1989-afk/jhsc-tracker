@@ -87,19 +87,14 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       importedActionItems++;
     }
 
-    // Import closed items into the dedicated closed_items_log table (dedup by description + closed date)
+    // Import closed items into the dedicated closed_items_log table (dedup by description only)
     let importedClosedItems = 0;
     let skippedClosedItems = 0;
     for (const item of closedItemsFromSheet) {
-      const conditions = [eq(closedItemsLogTable.description, item.description)];
-      if (item.closedDate) {
-        conditions.push(eq(closedItemsLogTable.closedDate, item.closedDate));
-      }
-
       const existing = await db
         .select({ id: closedItemsLogTable.id })
         .from(closedItemsLogTable)
-        .where(and(...conditions));
+        .where(eq(closedItemsLogTable.description, item.description));
 
       if (existing.length > 0) {
         skippedClosedItems++;
