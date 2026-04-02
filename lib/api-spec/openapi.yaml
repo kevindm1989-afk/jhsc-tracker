@@ -135,6 +135,25 @@ paths:
         "204":
           description: Deleted
 
+  /action-items/{id}/verify:
+    post:
+      operationId: verifyActionItem
+      tags: [action-items]
+      summary: Mark a closed action item as verified
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Verified action item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionItem"
+
   # ── MEMBER ACTIONS ──
   /member-actions:
     get:
@@ -663,6 +682,13 @@ components:
         closedDate:
           type: string
           format: date
+          nullable: true
+        verifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+        verifiedBy:
+          type: string
           nullable: true
         notes:
           type: string

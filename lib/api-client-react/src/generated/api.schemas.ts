@@ -50,6 +50,8 @@ export interface ActionItem {
   priority: ActionItemPriority;
   status: ActionItemStatus;
   closedDate?: string | null;
+  verifiedAt?: string | null;
+  verifiedBy?: string | null;
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
