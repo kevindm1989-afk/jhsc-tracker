@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Download, Save, ClipboardCheck, Info, Mail } from "lucide-react";
+import { ClipboardCheck, Info, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -175,13 +175,10 @@ export default function ConductInspectionPage() {
   const [inspector, setInspector] = useState("");
   const [responses, setResponses] = useState<Record<number, ItemResponse>>({});
   const [additionalComments, setAdditionalComments] = useState("");
-  const [isExporting, setIsExporting] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
   const handleZoneChange = (newIndex: number) => {
     const hasData = Object.values(responses).some(r => r.rating !== null) || additionalComments.trim();
     if (hasData) {
-      if (!window.confirm(`Switch to ${ZONES[newIndex]}?\n\nThis will clear all responses for the current zone. Export or save your work first if needed.`)) return;
+      if (!window.confirm(`Switch to ${ZONES[newIndex]}?\n\nThis will clear all responses for the current zone. Email the Co-Chair first to save your work.`)) return;
     }
     setZoneIndex(newIndex);
     setResponses({});
@@ -220,68 +217,11 @@ export default function ConductInspectionPage() {
     additionalComments,
   });
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      const resp = await fetch(`${BASE}/api/inspect/export`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPayload()),
-      });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || `Export failed: ${resp.status}`);
-      }
-      const blob = await resp.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const disposition = resp.headers.get("Content-Disposition") ?? "";
-      const fileNameMatch = disposition.match(/filename="(.+)"/);
-      a.href = url;
-      a.download = fileNameMatch?.[1] ?? "inspection.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast({ title: "Form exported", description: "The filled inspection form has been downloaded." });
-    } catch (e: any) {
-      toast({ title: "Export failed", description: e.message, variant: "destructive" });
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (findingCount === 0) {
-      toast({ title: "No findings to save", description: "Mark at least one item A, B, or C to save to the Inspection Log.", variant: "destructive" });
-      return;
-    }
-    setIsSaving(true);
-    try {
-      const resp = await fetch(`${BASE}/api/inspect/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPayload()),
-      });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || `Save failed: ${resp.status}`);
-      }
-      const data = await resp.json();
-      queryClient.invalidateQueries();
-      toast({ title: "Saved to Inspection Log", description: `${data.imported} finding${data.imported !== 1 ? "s" : ""} added.` });
-    } catch (e: any) {
-      toast({ title: "Save failed", description: e.message, variant: "destructive" });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const [isEmailing, setIsEmailing] = useState(false);
 
   const handleEmail = async () => {
     if (ratedCount === 0) {
-      toast({ title: "Nothing to email", description: "Rate at least one checklist item before emailing.", variant: "destructive" });
+      toast({ title: "Nothing to submit", description: "Rate at least one checklist item before submitting.", variant: "destructive" });
       return;
     }
     setIsEmailing(true);
@@ -293,11 +233,16 @@ export default function ConductInspectionPage() {
       });
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || `Email failed: ${resp.status}`);
+        throw new Error(err.error || `Submit failed: ${resp.status}`);
       }
-      toast({ title: "Email sent", description: `Inspection form emailed to Kevin (kevin_de_melo@hotmail.com).` });
+      const data = await resp.json();
+      queryClient.invalidateQueries();
+      const parts: string[] = [`Email sent to Kevin (Co-Chair)`];
+      if (data.imported > 0) parts.push(`${data.imported} finding${data.imported !== 1 ? "s" : ""} logged`);
+      if (data.docSaved) parts.push("form saved to Documents");
+      toast({ title: "Inspection submitted", description: parts.join(" · ") });
     } catch (e: any) {
-      toast({ title: "Email failed", description: e.message, variant: "destructive" });
+      toast({ title: "Submission failed", description: e.message, variant: "destructive" });
     } finally {
       setIsEmailing(false);
     }
@@ -315,7 +260,7 @@ export default function ConductInspectionPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Conduct Inspection</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Complete the checklist, then export the filled form or save findings to the log.</p>
+          <p className="text-muted-foreground mt-1 text-sm">Complete the checklist, then click Email Co-Chair to send the report, log all findings, and save the form to Documents.</p>
         </div>
       </div>
 
@@ -478,36 +423,23 @@ export default function ConductInspectionPage() {
             <span className="font-medium">{ZONES[zoneIndex]}</span>
             {date && <span className="ml-2 text-xs">· {date}</span>}
             {inspector && <span className="ml-2 text-xs">· {inspector}</span>}
+            {ratedCount > 0 && (
+              <span className="ml-2 text-xs text-muted-foreground">
+                · {ratedCount} rated{findingCount > 0 ? `, ${findingCount} finding${findingCount !== 1 ? "s" : ""}` : ""}
+              </span>
+            )}
           </div>
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <div className="flex gap-2 w-full sm:w-auto">
             <Button variant="outline" onClick={handleReset} className="text-xs px-3 shrink-0">
               Reset
             </Button>
             <Button
-              onClick={handleSave}
-              disabled={isSaving || findingCount === 0}
-              variant="outline"
-              className="font-semibold flex-1 min-w-[130px] sm:flex-none"
-            >
-              <Save className="w-4 h-4 mr-1.5 shrink-0" />
-              <span className="truncate">{isSaving ? "Saving..." : `Save${findingCount > 0 ? ` (${findingCount})` : ""}`}</span>
-            </Button>
-            <Button
-              onClick={handleExport}
-              disabled={isExporting || ratedCount === 0}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold flex-1 min-w-[130px] sm:flex-none"
-            >
-              <Download className="w-4 h-4 mr-1.5 shrink-0" />
-              <span className="truncate">{isExporting ? "Exporting..." : "Export (.xlsx)"}</span>
-            </Button>
-            <Button
               onClick={handleEmail}
               disabled={isEmailing || ratedCount === 0}
-              variant="outline"
-              className="border-primary text-primary hover:bg-primary/10 font-semibold flex-1 min-w-[130px] sm:flex-none"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold flex-1 sm:flex-none sm:min-w-[200px]"
             >
               <Mail className="w-4 h-4 mr-1.5 shrink-0" />
-              <span className="truncate">{isEmailing ? "Sending..." : "Email Co-Chair"}</span>
+              <span className="truncate">{isEmailing ? "Submitting..." : "Email Co-Chair"}</span>
             </Button>
           </div>
         </div>
