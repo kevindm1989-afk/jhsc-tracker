@@ -5,6 +5,7 @@ import {
   hazardFindingsTable,
   inspectionLogTable,
   workerStatementsTable,
+  healthSafetyReportsTable,
 } from "@workspace/db/schema";
 import { ne, and, lt, or, isNotNull, desc } from "drizzle-orm";
 
@@ -18,11 +19,12 @@ router.get("/summary", async (req, res) => {
     const today = todayStr();
     const thisMonth = thisMonthStr();
 
-    const [aiItems, hfItems, ilItems, wsItems] = await Promise.all([
+    const [aiItems, hfItems, ilItems, wsItems, hsItems] = await Promise.all([
       db.select().from(actionItemsTable),
       db.select().from(hazardFindingsTable),
       db.select().from(inspectionLogTable),
       db.select().from(workerStatementsTable),
+      db.select({ id: healthSafetyReportsTable.id }).from(healthSafetyReportsTable),
     ]);
 
     const isOverdue = (dueDate: string | null, status: string) =>
@@ -44,6 +46,7 @@ router.get("/summary", async (req, res) => {
       openActionItems: openAI,
       openHazardFindings: openHF,
       totalWorkerStatements: wsItems.length,
+      totalHSReports: hsItems.length,
       closedThisMonth: closedAI + closedHF + closedIL,
     });
   } catch (err) {
