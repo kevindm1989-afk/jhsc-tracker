@@ -351,7 +351,7 @@ export default function DocumentsPage() {
 
       {/* Upload Dialog */}
       <Dialog open={uploadOpen} onOpenChange={(open) => { if (!open && !isUploading) setUploadOpen(false); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[calc(100vw-32px)] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
           </DialogHeader>
@@ -436,7 +436,7 @@ export default function DocumentsPage() {
 
       {/* Delete Confirm Dialog */}
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[calc(100vw-32px)] sm:max-w-sm max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Remove Document</DialogTitle>
           </DialogHeader>

@@ -81,8 +81,8 @@ function FieldRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[160px_1fr] items-center gap-3">
-      <Label className="text-sm text-muted-foreground text-right">
+    <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] items-start sm:items-center gap-1 sm:gap-3">
+      <Label className="text-sm text-muted-foreground sm:text-right">
         {label}
         {required && <span className="text-destructive ml-0.5">*</span>}
       </Label>

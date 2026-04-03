@@ -147,7 +147,7 @@ export default function HazardFindingsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <ShieldAlert className="w-8 h-8 text-destructive" />
             Hazard Findings
           </h1>
@@ -158,14 +158,14 @@ export default function HazardFindingsPage() {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-4 items-center bg-card p-4 rounded-md border shadow-sm">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center bg-card p-4 rounded-md border shadow-sm">
         <div className="flex items-center gap-2">
           <Search className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium">Filter:</span>
         </div>
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px] h-8 text-xs font-medium">
+          <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs font-medium">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -175,7 +175,7 @@ export default function HazardFindingsPage() {
         </Select>
 
         <Select value={deptFilter} onValueChange={setDeptFilter}>
-          <SelectTrigger className="w-[180px] h-8 text-xs font-medium">
+          <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs font-medium">
             <SelectValue placeholder="All Departments" />
           </SelectTrigger>
           <SelectContent>
@@ -283,7 +283,7 @@ export default function HazardFindingsPage() {
       </div></div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl border-sidebar-border shadow-2xl">
+        <DialogContent className="w-[calc(100vw-32px)] sm:max-w-2xl max-h-[90vh] overflow-y-auto border-sidebar-border shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-destructive" />

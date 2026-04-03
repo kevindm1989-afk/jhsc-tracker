@@ -222,7 +222,7 @@ export default function HSReportsLogPage() {
             type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background pl-8 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full sm:w-auto h-9 rounded-md border border-input bg-background pl-8 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           {filterDate && (
             <button
@@ -237,7 +237,7 @@ export default function HSReportsLogPage() {
         <select
           value={filterConcern}
           onChange={(e) => setFilterConcern(e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full sm:w-auto h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="all">All Concern Types</option>
           {ALL_CONCERNS.map((k) => (
