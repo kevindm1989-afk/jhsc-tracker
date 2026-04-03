@@ -81,6 +81,8 @@ export default function ManageUsersPage() {
 
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [regsLoading, setRegsLoading] = useState(true);
+  const [approvingReg, setApprovingReg] = useState<Registration | null>(null);
+  const [approvePerms, setApprovePerms] = useState<string[]>([...ALL_PERMISSIONS]);
   const [decliningReg, setDecliningReg] = useState<Registration | null>(null);
   const [declineNote, setDeclineNote] = useState("");
   const [reviewingId, setReviewingId] = useState<number | null>(null);
@@ -110,18 +112,31 @@ export default function ManageUsersPage() {
     loadRegistrations();
   }, []);
 
-  async function handleApprove(reg: Registration) {
-    setReviewingId(reg.id);
+  function openApprove(reg: Registration) {
+    setApprovingReg(reg);
+    setApprovePerms([...ALL_PERMISSIONS]);
+  }
+
+  function toggleApprovePermission(p: string) {
+    setApprovePerms((prev) =>
+      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
+    );
+  }
+
+  async function handleApproveConfirm() {
+    if (!approvingReg) return;
+    setReviewingId(approvingReg.id);
     try {
-      const resp = await fetch(`${BASE}/api/registrations/${reg.id}`, {
+      const resp = await fetch(`${BASE}/api/registrations/${approvingReg.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ action: "approve" }),
+        body: JSON.stringify({ action: "approve", permissions: approvePerms }),
       });
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(data.error || "Failed to approve");
-      toast({ title: "Access granted", description: `${reg.name} can now sign in.` });
+      toast({ title: "Access granted", description: `${approvingReg.name} can now sign in.` });
+      setApprovingReg(null);
       await Promise.all([loadRegistrations(), loadUsers()]);
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -334,7 +349,7 @@ export default function ManageUsersPage() {
                             size="sm"
                             className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white"
                             disabled={reviewingId === reg.id}
-                            onClick={() => handleApprove(reg)}
+                            onClick={() => openApprove(reg)}
                           >
                             <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
                             Approve
@@ -539,6 +554,65 @@ export default function ManageUsersPage() {
               onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
             >
               Remove User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve Registration — set permissions dialog */}
+      <Dialog open={approvingReg !== null} onOpenChange={(open) => { if (!open) setApprovingReg(null); }}>
+        <DialogContent className="w-[calc(100vw-32px)] sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              Approve — {approvingReg?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <p className="text-sm text-muted-foreground">
+              Choose which pages <strong>{approvingReg?.name}</strong> will have access to.
+            </p>
+            <div className="rounded-md border divide-y divide-border">
+              {ALL_PERMISSIONS.map((p) => (
+                <label key={p} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/40">
+                  <Checkbox
+                    checked={approvePerms.includes(p)}
+                    onCheckedChange={() => toggleApprovePermission(p)}
+                    id={`approve-perm-${p}`}
+                  />
+                  <span className="text-sm">{PERMISSION_LABELS[p]}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                type="button"
+                className="text-xs text-primary underline"
+                onClick={() => setApprovePerms([...ALL_PERMISSIONS])}
+              >
+                Select all
+              </button>
+              <span className="text-xs text-muted-foreground">·</span>
+              <button
+                type="button"
+                className="text-xs text-primary underline"
+                onClick={() => setApprovePerms([])}
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setApprovingReg(null)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={reviewingId === approvingReg?.id}
+              onClick={handleApproveConfirm}
+            >
+              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+              {reviewingId === approvingReg?.id ? "Approving…" : "Grant Access"}
             </Button>
           </DialogFooter>
         </DialogContent>
