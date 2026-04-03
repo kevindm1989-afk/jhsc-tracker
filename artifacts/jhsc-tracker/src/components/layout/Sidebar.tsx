@@ -16,6 +16,7 @@ import {
   CheckCheck,
   ClipboardList,
   ShieldAlert,
+  ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,6 +37,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     { name: "Closed Items Log", href: "/closed-items-log", icon: CheckCheck, permission: "action-items" },
     { name: "Member Actions", href: "/member-actions", icon: ClipboardList, permission: null },
     { name: "H&S Concern Report", href: "/health-safety-report", icon: ShieldAlert, permission: null },
+    { name: "H&S Reports Log", href: "/hs-reports-log", icon: ScrollText, permission: null },
     { name: "Hazard Findings", href: "/hazard-findings", icon: AlertTriangle, permission: "hazard-findings", badge: summary?.openHazardFindings },
     { name: "Inspection Log", href: "/inspection-log", icon: Search, permission: "inspection-log" },
     { name: "Conduct Inspection", href: "/conduct-inspection", icon: ClipboardCheck, permission: "conduct-inspection" },
