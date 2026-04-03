@@ -36,7 +36,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     { name: "Action Items", href: "/action-items", icon: ListChecks, permission: "action-items", badge: summary?.openActionItems },
     { name: "Closed Items Log", href: "/closed-items-log", icon: CheckCheck, permission: "action-items" },
     { name: "Member Actions", href: "/member-actions", icon: ClipboardList, permission: null },
-    { name: "H&S Concern Report", href: "/health-safety-report", icon: ShieldAlert, permission: null },
+    { name: "Conduct A H&S Report", href: "/health-safety-report", icon: ShieldAlert, permission: null },
     { name: "H&S Reports Log", href: "/hs-reports-log", icon: ScrollText, permission: null },
     { name: "Hazard Findings", href: "/hazard-findings", icon: AlertTriangle, permission: "hazard-findings", badge: summary?.openHazardFindings },
     { name: "Inspection Log", href: "/inspection-log", icon: Search, permission: "inspection-log" },
