@@ -7,6 +7,7 @@ export const registrationsTable = pgTable("registrations", {
   passwordHash: text("password_hash").notNull(),
   department: text("department").notNull(),
   shift: text("shift").notNull(),
+  email: text("email").notNull().default(""),
   status: text("status").notNull().default("pending"),
   reviewNote: text("review_note"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

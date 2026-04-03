@@ -4,6 +4,7 @@ import { db } from "@workspace/db";
 import { registrationsTable, usersTable } from "@workspace/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { requireAdmin } from "../middleware/requireAuth";
+import { getUncachableResendClient } from "../resendClient";
 import "../sessionTypes";
 
 const router: IRouter = Router();
