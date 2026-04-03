@@ -28,7 +28,7 @@ async function seedAdminIfNeeded() {
         username: "admin",
         displayName: "Worker Co-Chair",
         passwordHash,
-        email: "kevindm1989@gmail.com",
+        email: "jhsc1285app@gmail.com",
         role: "admin",
         permissions: [],
       });
@@ -43,11 +43,15 @@ async function ensureAdminEmail() {
   try {
     await db
       .update(usersTable)
-      .set({ email: "kevindm1989@gmail.com" })
+      .set({ email: "jhsc1285app@gmail.com" })
       .where(
         and(
           eq(usersTable.username, "admin"),
-          or(isNull(usersTable.email), eq(usersTable.email, ""))
+          or(
+            isNull(usersTable.email),
+            eq(usersTable.email, ""),
+            eq(usersTable.email, "kevindm1989@gmail.com")
+          )
         )
       );
   } catch (err) {
