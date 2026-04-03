@@ -117,13 +117,13 @@ function Router() {
                 <ProtectedRoute component={ClosedItemsLogPage} permission="action-items" />
               </Route>
               <Route path="/member-actions">
-                <ProtectedRoute component={MemberActionsPage} />
+                <ProtectedRoute component={MemberActionsPage} permission="member-actions" />
               </Route>
               <Route path="/health-safety-report">
-                <ProtectedRoute component={HealthSafetyReportPage} />
+                <ProtectedRoute component={HealthSafetyReportPage} permission="health-safety-report" />
               </Route>
               <Route path="/hs-reports-log">
-                <ProtectedRoute component={HSReportsLogPage} />
+                <ProtectedRoute component={HSReportsLogPage} permission="hs-reports-log" />
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />

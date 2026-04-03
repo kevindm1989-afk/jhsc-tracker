@@ -23,6 +23,9 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const PERMISSION_LABELS: Record<string, string> = {
   "dashboard": "Dashboard",
   "action-items": "Action Items",
+  "member-actions": "Member Actions",
+  "health-safety-report": "Conduct A H&S Report",
+  "hs-reports-log": "H&S Reports Log",
   "hazard-findings": "Hazard Findings",
   "inspection-log": "Inspection Log",
   "conduct-inspection": "Conduct Inspection",
