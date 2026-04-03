@@ -297,7 +297,8 @@ export default function ManageUsersPage() {
       {/* Pending Access Requests */}
       {(() => {
         const pending = registrations.filter((r) => r.status === "pending");
-        const reviewed = registrations.filter((r) => r.status !== "pending");
+        const declined = registrations.filter((r) => r.status === "declined");
+        const visible = [...pending, ...declined];
         return (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -314,11 +315,11 @@ export default function ManageUsersPage() {
             <CardContent className="p-0">
               {regsLoading ? (
                 <div className="px-6 py-4 text-sm text-muted-foreground">Loading…</div>
-              ) : registrations.length === 0 ? (
+              ) : visible.length === 0 ? (
                 <div className="px-6 py-4 text-sm text-muted-foreground">No registration requests yet.</div>
               ) : (
                 <div className="divide-y divide-border">
-                  {[...pending, ...reviewed].map((reg) => (
+                  {visible.map((reg) => (
                     <div key={reg.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -327,11 +328,6 @@ export default function ManageUsersPage() {
                           {reg.status === "pending" && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
                               <Clock className="w-2.5 h-2.5" /> Pending
-                            </span>
-                          )}
-                          {reg.status === "approved" && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">
-                              <CheckCircle2 className="w-2.5 h-2.5" /> Approved
                             </span>
                           )}
                           {reg.status === "declined" && (
