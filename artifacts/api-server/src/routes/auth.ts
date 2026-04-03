@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { db } from "@workspace/db";
 import { usersTable, registrationsTable, passwordResetTokensTable } from "@workspace/db/schema";
-import { eq, and, gt, isNull } from "drizzle-orm";
+import { eq, and, gt, isNull, or } from "drizzle-orm";
 import { createTransporter, getSenderAddress } from "../emailClient";
 import "../sessionTypes";
 
@@ -18,10 +18,11 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Username and password are required" });
     }
 
+    const identifier = username.trim().toLowerCase();
     const [user] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.username, username.trim().toLowerCase()));
+      .where(or(eq(usersTable.username, identifier), eq(usersTable.email, identifier)));
 
     if (!user) {
       return res.status(401).json({ error: "Invalid username or password" });
