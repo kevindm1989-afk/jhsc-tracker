@@ -36,7 +36,11 @@ router.get("/", requireAdmin, async (_req, res) => {
 router.patch("/:id", requireAdmin, async (req, res) => {
   try {
     const id = parseInt((req.params as Record<string, string>).id, 10);
-    const { action, reviewNote } = req.body as { action: "approve" | "decline"; reviewNote?: string };
+    const { action, reviewNote, permissions } = req.body as {
+      action: "approve" | "decline";
+      reviewNote?: string;
+      permissions?: string[];
+    };
 
     if (action !== "approve" && action !== "decline") {
       return res.status(400).json({ error: "action must be 'approve' or 'decline'" });
@@ -62,12 +66,16 @@ router.patch("/:id", requireAdmin, async (req, res) => {
         return res.status(409).json({ error: "Username is already taken" });
       }
 
+      const grantedPermissions = Array.isArray(permissions) && permissions.length >= 0
+        ? permissions.filter((p) => DEFAULT_MEMBER_PERMISSIONS.includes(p))
+        : DEFAULT_MEMBER_PERMISSIONS;
+
       await db.insert(usersTable).values({
         username: reg.username,
         displayName: reg.name,
         passwordHash: reg.passwordHash,
         role: "member",
-        permissions: DEFAULT_MEMBER_PERMISSIONS,
+        permissions: grantedPermissions,
       });
     }
 
