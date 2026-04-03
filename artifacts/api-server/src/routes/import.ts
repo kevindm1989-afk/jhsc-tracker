@@ -1,14 +1,11 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { db } from "@workspace/db";
-import { actionItemsTable, hazardFindingsTable, inspectionLogTable, closedItemsLogTable, documentsTable } from "@workspace/db/schema";
+import { actionItemsTable, hazardFindingsTable, inspectionLogTable, closedItemsLogTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 import { parseMinutesFile } from "../minutesParser";
 import { parseInspectionFile } from "../inspectionParser";
-import { ObjectStorageService } from "../lib/objectStorage";
 import "../sessionTypes";
-
-const objectStorage = new ObjectStorageService();
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -174,49 +171,6 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         .where(eq(hazardFindingsTable.id, created.id));
 
       importedHazardFindings++;
-    }
-
-    // ── Save uploaded file to Documents ──────────────────────────────────────
-    try {
-      const uploaderName =
-        (req.session as any)?.displayName ?? (req.session as any)?.username ?? "Unknown";
-      const originalName = req.file.originalname;
-      const mimeType = req.file.mimetype ||
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-      const displayDate = parsed.meetingDate
-        ? new Date(parsed.meetingDate + "T12:00:00").toLocaleDateString("en-CA", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
-        : null;
-
-      const title = displayDate
-        ? `JHSC Minutes — ${displayDate}`
-        : `JHSC Minutes — ${originalName}`;
-
-      const totalImported =
-        importedActionItems + importedHazardFindings + importedClosedItems;
-
-      const { objectPath } = await objectStorage.uploadBufferAsDocument(
-        req.file.buffer,
-        originalName,
-        mimeType
-      );
-
-      await db.insert(documentsTable).values({
-        title,
-        description: `${totalImported} item${totalImported !== 1 ? "s" : ""} imported`,
-        category: "Meeting Minutes",
-        fileName: originalName,
-        fileSize: req.file.size,
-        mimeType,
-        objectPath,
-        uploadedBy: uploaderName,
-      });
-    } catch (docErr) {
-      console.error("Minutes document save error (non-fatal):", docErr);
     }
 
     res.json({

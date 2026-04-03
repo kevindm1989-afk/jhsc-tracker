@@ -37,7 +37,6 @@ import {
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const CATEGORIES = [
-  "Meeting Minutes",
   "Inspection Reports",
   "Hazard Reports",
   "OHSA References",
@@ -47,7 +46,6 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  "Meeting Minutes": "bg-blue-100 text-blue-800",
   "Inspection Reports": "bg-green-100 text-green-800",
   "Hazard Reports": "bg-red-100 text-red-800",
   "OHSA References": "bg-purple-100 text-purple-800",
@@ -123,10 +121,11 @@ export default function DocumentsPage() {
   });
 
   const filtered = docs.filter((d) =>
-    search.trim() === "" ||
+    d.category !== "Meeting Minutes" &&
+    (search.trim() === "" ||
     d.title.toLowerCase().includes(search.toLowerCase()) ||
     d.category.toLowerCase().includes(search.toLowerCase()) ||
-    d.uploadedBy.toLowerCase().includes(search.toLowerCase())
+    d.uploadedBy.toLowerCase().includes(search.toLowerCase()))
   );
 
   function openUpload() {
