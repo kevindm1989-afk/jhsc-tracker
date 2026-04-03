@@ -5,10 +5,13 @@ import connectPg from "connect-pg-simple";
 import pinoHttp from "pino-http";
 import path from "path";
 import { existsSync } from "fs";
+import { fileURLToPath } from "url";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import "./sessionTypes";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app: Express = express();
 
@@ -61,13 +64,18 @@ app.use("/api", router);
 
 // In production, serve the JHSC tracker frontend static build
 if (process.env.NODE_ENV === "production") {
-  const staticDir = path.join(process.cwd(), "artifacts/jhsc-tracker/dist/public");
+  // Resolve relative to the compiled bundle file (artifacts/api-server/dist/index.mjs)
+  // so the path is correct regardless of process.cwd()
+  const staticDir = path.resolve(__dirname, "../../jhsc-tracker/dist/public");
+  logger.info({ staticDir, exists: existsSync(staticDir) }, "Static file serving setup");
   if (existsSync(staticDir)) {
     app.use(express.static(staticDir));
     // SPA fallback — all non-API routes return index.html
     app.get("*", (_req, res) => {
       res.sendFile(path.join(staticDir, "index.html"));
     });
+  } else {
+    logger.warn({ staticDir }, "Static dir not found — frontend will not be served");
   }
 }
 
