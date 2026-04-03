@@ -45,6 +45,7 @@ interface Registration {
   id: number;
   name: string;
   username: string;
+  email: string;
   department: string;
   shift: string;
   status: string;
@@ -337,7 +338,7 @@ export default function ManageUsersPage() {
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
-                          {reg.department} · {reg.shift} · {new Date(reg.createdAt).toLocaleDateString("en-CA")}
+                          {reg.email && <span>{reg.email} · </span>}{reg.department} · {reg.shift} · {new Date(reg.createdAt).toLocaleDateString("en-CA")}
                         </div>
                         {reg.reviewNote && (
                           <div className="text-xs text-muted-foreground italic mt-0.5">Note: {reg.reviewNote}</div>

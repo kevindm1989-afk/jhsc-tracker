@@ -22,6 +22,7 @@ const SHIFTS = ["Days", "Afternoons", "Nights", "Rotating"];
 
 const emptyReg = () => ({
   name: "",
+  email: "",
   username: "",
   password: "",
   confirmPassword: "",
@@ -71,8 +72,11 @@ export default function LoginPage() {
     e.preventDefault();
     setRegError("");
 
-    if (!regForm.name.trim() || !regForm.username.trim() || !regForm.password || !regForm.department || !regForm.shift) {
+    if (!regForm.name.trim() || !regForm.email.trim() || !regForm.username.trim() || !regForm.password || !regForm.department || !regForm.shift) {
       return setRegError("All fields are required.");
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regForm.email.trim())) {
+      return setRegError("Please enter a valid email address.");
     }
     if (regForm.password.length < 6) {
       return setRegError("Password must be at least 6 characters.");
@@ -89,6 +93,7 @@ export default function LoginPage() {
         credentials: "include",
         body: JSON.stringify({
           name: regForm.name.trim(),
+          email: regForm.email.trim().toLowerCase(),
           username: regForm.username.trim(),
           password: regForm.password,
           department: regForm.department,
@@ -233,6 +238,17 @@ export default function LoginPage() {
                   onChange={(e) => setReg("name", e.target.value)}
                   placeholder="Your full name"
                   autoFocus
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="reg-email">Email <span className="text-destructive">*</span></Label>
+                <Input
+                  id="reg-email"
+                  type="email"
+                  value={regForm.email}
+                  onChange={(e) => setReg("email", e.target.value)}
+                  placeholder="you@example.com"
                 />
               </div>
 

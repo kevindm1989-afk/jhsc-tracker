@@ -4,7 +4,7 @@ import { db } from "@workspace/db";
 import { registrationsTable, usersTable } from "@workspace/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { requireAdmin } from "../middleware/requireAuth";
-import { getUncachableResendClient } from "../resendClient";
+import { createTransporter, getSenderAddress } from "../emailClient";
 import "../sessionTypes";
 
 const router: IRouter = Router();
@@ -84,6 +84,28 @@ router.patch("/:id", requireAdmin, async (req, res) => {
       .update(registrationsTable)
       .set({ status: action === "approve" ? "approved" : "declined", reviewNote: reviewNote ?? null })
       .where(eq(registrationsTable.id, id));
+
+    if (action === "approve" && reg.email) {
+      try {
+        const transporter = createTransporter();
+        const fromEmail = getSenderAddress();
+        await transporter.sendMail({
+          from: fromEmail,
+          to: reg.email,
+          subject: "Your JHSC Co-Chair Tracker access has been approved",
+          html: `
+            <p>Hi ${reg.name},</p>
+            <p>Your request for access to the <strong>JHSC Co-Chair Tracker</strong> (Unifor Local 1285 — Saputo Georgetown) has been <strong>approved</strong>.</p>
+            <p>You can now sign in using your username: <strong>${reg.username}</strong></p>
+            <p>If you have any questions, please contact your JHSC Co-Chair.</p>
+            <br/>
+            <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker &mdash; Unifor Local 1285</p>
+          `,
+        });
+      } catch (emailErr) {
+        console.error("Approval email send error (non-fatal):", emailErr);
+      }
+    }
 
     res.json({ success: true });
   } catch (err) {
