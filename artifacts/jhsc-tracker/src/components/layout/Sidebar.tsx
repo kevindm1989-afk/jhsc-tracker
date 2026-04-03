@@ -50,7 +50,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     href === "/" ? location === "/" : location.startsWith(href);
 
   return (
-    <div className="flex flex-col w-64 h-full min-h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
+    <div className="flex flex-col w-64 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
       <div className="p-4 md:p-6 flex flex-col gap-1 border-b border-sidebar-border">
         <h1 className="font-bold text-lg text-sidebar-foreground uppercase tracking-wider leading-tight">
           JHSC Co-Chair Tracker

@@ -66,7 +66,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile drawer */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="p-0 w-64 border-0">
+        <SheetContent side="left" className="p-0 w-64 border-0 h-full">
           <Sidebar onNavigate={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
