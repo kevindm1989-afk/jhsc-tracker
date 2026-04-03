@@ -12,6 +12,7 @@ import importRouter from "./import";
 import inspectRouter from "./inspect";
 import authRouter from "./auth";
 import usersRouter from "./users";
+import registrationsRouter from "./registrations";
 import storageRouter from "./storage";
 import documentsRouter from "./documents";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
@@ -40,5 +41,6 @@ router.use("/documents", requirePermission("documents"), documentsRouter);
 
 // Admin-only routes
 router.use("/users", usersRouter);
+router.use("/registrations", registrationsRouter);
 
 export default router;

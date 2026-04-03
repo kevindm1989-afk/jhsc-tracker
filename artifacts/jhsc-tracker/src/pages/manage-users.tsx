@@ -12,10 +12,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Pencil, Trash2, ShieldCheck, User } from "lucide-react";
+import { UserPlus, Pencil, Trash2, ShieldCheck, User, Clock, CheckCircle2, XCircle, Inbox } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -37,6 +38,17 @@ interface AppUser {
   displayName: string;
   role: string;
   permissions: string[];
+  createdAt: string;
+}
+
+interface Registration {
+  id: number;
+  name: string;
+  username: string;
+  department: string;
+  shift: string;
+  status: string;
+  reviewNote: string | null;
   createdAt: string;
 }
 
@@ -67,6 +79,12 @@ export default function ManageUsersPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<AppUser | null>(null);
 
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [regsLoading, setRegsLoading] = useState(true);
+  const [decliningReg, setDecliningReg] = useState<Registration | null>(null);
+  const [declineNote, setDeclineNote] = useState("");
+  const [reviewingId, setReviewingId] = useState<number | null>(null);
+
   async function loadUsers() {
     setIsLoading(true);
     try {
@@ -77,7 +95,63 @@ export default function ManageUsersPage() {
     }
   }
 
-  useEffect(() => { loadUsers(); }, []);
+  async function loadRegistrations() {
+    setRegsLoading(true);
+    try {
+      const resp = await fetch(`${BASE}/api/registrations`, { credentials: "include" });
+      if (resp.ok) setRegistrations(await resp.json());
+    } finally {
+      setRegsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadUsers();
+    loadRegistrations();
+  }, []);
+
+  async function handleApprove(reg: Registration) {
+    setReviewingId(reg.id);
+    try {
+      const resp = await fetch(`${BASE}/api/registrations/${reg.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action: "approve" }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data.error || "Failed to approve");
+      toast({ title: "Access granted", description: `${reg.name} can now sign in.` });
+      await Promise.all([loadRegistrations(), loadUsers()]);
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setReviewingId(null);
+    }
+  }
+
+  async function handleDeclineConfirm() {
+    if (!decliningReg) return;
+    setReviewingId(decliningReg.id);
+    try {
+      const resp = await fetch(`${BASE}/api/registrations/${decliningReg.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action: "decline", reviewNote: declineNote.trim() || undefined }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data.error || "Failed to decline");
+      toast({ title: "Request declined" });
+      setDecliningReg(null);
+      setDeclineNote("");
+      await loadRegistrations();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setReviewingId(null);
+    }
+  }
 
   if (currentUser?.role !== "admin") {
     return (
@@ -200,6 +274,91 @@ export default function ManageUsersPage() {
           Add User
         </Button>
       </div>
+
+      {/* Pending Access Requests */}
+      {(() => {
+        const pending = registrations.filter((r) => r.status === "pending");
+        const reviewed = registrations.filter((r) => r.status !== "pending");
+        return (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Inbox className="w-4 h-4" />
+                Access Requests
+                {pending.length > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                    {pending.length}
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {regsLoading ? (
+                <div className="px-6 py-4 text-sm text-muted-foreground">Loading…</div>
+              ) : registrations.length === 0 ? (
+                <div className="px-6 py-4 text-sm text-muted-foreground">No registration requests yet.</div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {[...pending, ...reviewed].map((reg) => (
+                    <div key={reg.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-sm">{reg.name}</span>
+                          <span className="text-xs text-muted-foreground font-mono">@{reg.username}</span>
+                          {reg.status === "pending" && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                              <Clock className="w-2.5 h-2.5" /> Pending
+                            </span>
+                          )}
+                          {reg.status === "approved" && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">
+                              <CheckCircle2 className="w-2.5 h-2.5" /> Approved
+                            </span>
+                          )}
+                          {reg.status === "declined" && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-800">
+                              <XCircle className="w-2.5 h-2.5" /> Declined
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {reg.department} · {reg.shift} · {new Date(reg.createdAt).toLocaleDateString("en-CA")}
+                        </div>
+                        {reg.reviewNote && (
+                          <div className="text-xs text-muted-foreground italic mt-0.5">Note: {reg.reviewNote}</div>
+                        )}
+                      </div>
+                      {reg.status === "pending" && (
+                        <div className="flex gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white"
+                            disabled={reviewingId === reg.id}
+                            onClick={() => handleApprove(reg)}
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs border-destructive text-destructive hover:bg-destructive/10"
+                            disabled={reviewingId === reg.id}
+                            onClick={() => { setDecliningReg(reg); setDeclineNote(""); }}
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1" />
+                            Decline
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       <Card>
         <CardHeader>
@@ -380,6 +539,42 @@ export default function ManageUsersPage() {
               onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
             >
               Remove User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Decline Registration Dialog */}
+      <Dialog open={decliningReg !== null} onOpenChange={(open) => { if (!open) { setDecliningReg(null); setDeclineNote(""); } }}>
+        <DialogContent className="w-[calc(100vw-32px)] sm:max-w-sm max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Decline Request</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <p className="text-sm text-muted-foreground">
+              Decline access request from <strong>{decliningReg?.name}</strong>?
+            </p>
+            <div className="space-y-1.5">
+              <Label htmlFor="decline-note">Note (optional)</Label>
+              <Textarea
+                id="decline-note"
+                value={declineNote}
+                onChange={(e) => setDeclineNote(e.target.value)}
+                placeholder="Reason for declining…"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setDecliningReg(null); setDeclineNote(""); }}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={reviewingId === decliningReg?.id}
+              onClick={handleDeclineConfirm}
+            >
+              Decline Request
             </Button>
           </DialogFooter>
         </DialogContent>
