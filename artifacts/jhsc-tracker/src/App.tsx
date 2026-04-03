@@ -19,6 +19,7 @@ import ClosedItemsLogPage from "@/pages/closed-items-log";
 import MemberActionsPage from "@/pages/member-actions";
 import HealthSafetyReportPage from "@/pages/health-safety-report";
 import HSReportsLogPage from "@/pages/hs-reports-log";
+import ResetPasswordPage from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -81,6 +82,10 @@ function Router() {
     <Switch>
       <Route path="/login">
         {user ? <Redirect to="/" /> : <LoginPage />}
+      </Route>
+
+      <Route path="/reset-password">
+        <ResetPasswordPage />
       </Route>
 
       <Route>

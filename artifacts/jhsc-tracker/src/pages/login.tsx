@@ -13,7 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShieldCheck, Eye, EyeOff, UserPlus, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Eye, EyeOff, UserPlus, CheckCircle2, KeyRound } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -40,6 +40,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Forgot password dialog state
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+
   // Register dialog state
   const [registerOpen, setRegisterOpen] = useState(false);
   const [regForm, setRegForm] = useState(emptyReg());
@@ -65,6 +72,27 @@ export default function LoginPage() {
   function setReg(field: string, value: string) {
     setRegForm((f) => ({ ...f, [field]: value }));
     setRegError("");
+  }
+
+  async function handleForgotPassword(e: FormEvent) {
+    e.preventDefault();
+    setForgotError("");
+    if (!forgotEmail.trim()) return setForgotError("Please enter your email address.");
+    setForgotLoading(true);
+    try {
+      const resp = await fetch(`${BASE}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || "Request failed");
+      setForgotSent(true);
+    } catch (err: any) {
+      setForgotError(err.message || "Something went wrong");
+    } finally {
+      setForgotLoading(false);
+    }
   }
 
   async function handleRegister(e: FormEvent) {
@@ -173,6 +201,16 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+              </div>
+
+              <div className="flex justify-end -mt-1">
+                <button
+                  type="button"
+                  className="text-xs text-primary underline hover:no-underline"
+                  onClick={() => { setForgotOpen(true); setForgotEmail(""); setForgotError(""); setForgotSent(false); }}
+                >
+                  Forgot password?
+                </button>
               </div>
 
               {error && (
@@ -327,6 +365,53 @@ export default function LoginPage() {
                 </Button>
                 <Button type="submit" disabled={regLoading}>
                   {regLoading ? "Submitting…" : "Submit Request"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={forgotOpen} onOpenChange={(o) => { setForgotOpen(o); if (!o) { setForgotEmail(""); setForgotError(""); setForgotSent(false); } }}>
+        <DialogContent className="max-w-sm w-[calc(100vw-32px)]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-4 h-4" /> Forgot Password
+            </DialogTitle>
+          </DialogHeader>
+
+          {forgotSent ? (
+            <div className="space-y-4 py-2">
+              <div className="flex items-start gap-2 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md px-3 py-2.5">
+                <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>If that email is registered, you'll receive a reset link within a few minutes. Check your inbox (and spam folder).</span>
+              </div>
+              <Button className="w-full" onClick={() => setForgotOpen(false)}>Close</Button>
+            </div>
+          ) : (
+            <form onSubmit={handleForgotPassword} className="space-y-4 py-1">
+              <p className="text-sm text-muted-foreground">Enter the email address on your account and we'll send you a link to reset your password.</p>
+              <div className="space-y-1.5">
+                <Label htmlFor="forgot-email">Email Address</Label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  autoFocus
+                />
+              </div>
+              {forgotError && (
+                <p className="text-sm text-destructive">{forgotError}</p>
+              )}
+              <DialogFooter className="gap-2 pt-1">
+                <Button type="button" variant="outline" onClick={() => setForgotOpen(false)} disabled={forgotLoading}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={forgotLoading}>
+                  {forgotLoading ? "Sending…" : "Send Reset Link"}
                 </Button>
               </DialogFooter>
             </form>

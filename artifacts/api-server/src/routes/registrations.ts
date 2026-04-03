@@ -79,6 +79,7 @@ router.patch("/:id", requireAdmin, async (req, res) => {
         username: reg.username,
         displayName: reg.name,
         passwordHash: reg.passwordHash,
+        email: reg.email ?? "",
         role: "member",
         permissions: grantedPermissions,
       });

@@ -1,8 +1,10 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { db } from "@workspace/db";
-import { usersTable, registrationsTable } from "@workspace/db/schema";
-import { eq } from "drizzle-orm";
+import { usersTable, registrationsTable, passwordResetTokensTable } from "@workspace/db/schema";
+import { eq, and, gt, isNull } from "drizzle-orm";
+import { createTransporter, getSenderAddress } from "../emailClient";
 import "../sessionTypes";
 
 const router: IRouter = Router();
@@ -117,6 +119,113 @@ router.post("/register", async (req, res) => {
   } catch (err) {
     console.error("Register error:", err);
     res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+// POST /api/auth/forgot-password — public, sends reset email
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body as { email: string };
+    if (!email?.trim()) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+    const emailTrimmed = email.trim().toLowerCase();
+
+    const [user] = await db
+      .select({ id: usersTable.id, email: usersTable.email, displayName: usersTable.displayName })
+      .from(usersTable)
+      .where(eq(usersTable.email, emailTrimmed));
+
+    // Always respond with success to avoid revealing whether email exists
+    if (user) {
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await db.insert(passwordResetTokensTable).values({
+        userId: user.id,
+        token,
+        expiresAt,
+      });
+
+      const proto = (req.headers["x-forwarded-proto"] as string) || req.protocol;
+      const host = (req.headers["x-forwarded-host"] as string) || req.headers.host;
+      const basePath = (process.env.BASE_PATH || "").replace(/\/$/, "");
+      const resetUrl = `${proto}://${host}${basePath}/reset-password?token=${token}`;
+
+      try {
+        const transporter = createTransporter();
+        const from = getSenderAddress();
+        await transporter.sendMail({
+          from,
+          to: user.email,
+          subject: "Reset your JHSC Co-Chair Tracker password",
+          html: `
+            <p>Hi ${user.displayName},</p>
+            <p>We received a request to reset your password for the <strong>JHSC Co-Chair Tracker</strong>.</p>
+            <p><a href="${resetUrl}" style="background:#1d4ed8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;margin:12px 0;">Reset Password</a></p>
+            <p>Or copy this link into your browser:</p>
+            <p style="word-break:break-all;font-size:13px;color:#555;">${resetUrl}</p>
+            <p>This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>
+            <br/>
+            <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker &mdash; Unifor Local 1285</p>
+          `,
+        });
+      } catch (emailErr) {
+        console.error("Password reset email error:", emailErr);
+      }
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+// POST /api/auth/reset-password — public, updates password using token
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body as { token: string; newPassword: string };
+    if (!token?.trim() || !newPassword) {
+      return res.status(400).json({ error: "Token and new password are required" });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+
+    const now = new Date();
+    const [resetToken] = await db
+      .select()
+      .from(passwordResetTokensTable)
+      .where(
+        and(
+          eq(passwordResetTokensTable.token, token.trim()),
+          gt(passwordResetTokensTable.expiresAt, now)
+        )
+      );
+
+    if (!resetToken) {
+      return res.status(400).json({ error: "This reset link is invalid or has expired" });
+    }
+    if (resetToken.usedAt) {
+      return res.status(400).json({ error: "This reset link has already been used" });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await db
+      .update(usersTable)
+      .set({ passwordHash, updatedAt: now })
+      .where(eq(usersTable.id, resetToken.userId));
+
+    await db
+      .update(passwordResetTokensTable)
+      .set({ usedAt: now })
+      .where(eq(passwordResetTokensTable.id, resetToken.id));
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ error: "Something went wrong" });
   }
 });
 
