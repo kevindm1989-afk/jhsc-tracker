@@ -81,6 +81,7 @@ if (existsSync(staticDir)) {
 export async function ensureSessionTable(): Promise<void> {
   const client = await pool.connect();
   try {
+    // Session table (required by connect-pg-simple)
     await client.query(`
       CREATE TABLE IF NOT EXISTS "session" (
         "sid" varchar NOT NULL COLLATE "default",
@@ -91,6 +92,25 @@ export async function ensureSessionTable(): Promise<void> {
     `);
     await client.query(`
       CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+    `);
+
+    // Password reset tokens table — ensures it exists in production
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "password_reset_tokens" (
+        "id" serial PRIMARY KEY,
+        "user_id" integer NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "token" text NOT NULL UNIQUE,
+        "expires_at" timestamp NOT NULL,
+        "used_at" timestamp
+      );
+    `);
+
+    // Ensure users table has email and updated_at columns (added after initial deploy)
+    await client.query(`
+      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email" text NOT NULL DEFAULT '';
+    `);
+    await client.query(`
+      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" timestamp NOT NULL DEFAULT now();
     `);
   } finally {
     client.release();
