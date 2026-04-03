@@ -62,21 +62,20 @@ app.use(
 
 app.use("/api", router);
 
-// In production, serve the JHSC tracker frontend static build
-if (process.env.NODE_ENV === "production") {
-  // Resolve relative to the compiled bundle file (artifacts/api-server/dist/index.mjs)
-  // so the path is correct regardless of process.cwd()
-  const staticDir = path.resolve(__dirname, "../../jhsc-tracker/dist/public");
-  logger.info({ staticDir, exists: existsSync(staticDir) }, "Static file serving setup");
-  if (existsSync(staticDir)) {
-    app.use(express.static(staticDir));
-    // SPA fallback — all non-API routes return index.html
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(staticDir, "index.html"));
-    });
-  } else {
-    logger.warn({ staticDir }, "Static dir not found — frontend will not be served");
-  }
+// Always attempt to serve the JHSC tracker frontend static build.
+// In development the dist directory won't exist so express.static is a no-op;
+// in production (or after a local build) it serves the SPA correctly.
+const staticDir = path.resolve(__dirname, "../../jhsc-tracker/dist/public");
+logger.info({ staticDir, exists: existsSync(staticDir), NODE_ENV: process.env.NODE_ENV }, "Static file serving setup");
+
+if (existsSync(staticDir)) {
+  app.use(express.static(staticDir));
+  // SPA fallback — all non-API routes return index.html (Express 5 wildcard syntax)
+  app.get("/{*splat}", (_req, res) => {
+    res.sendFile(path.join(staticDir, "index.html"));
+  });
+} else {
+  logger.warn({ staticDir }, "Static dir not found — frontend will not be served");
 }
 
 export async function ensureSessionTable(): Promise<void> {
