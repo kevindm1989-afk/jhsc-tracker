@@ -18,14 +18,15 @@ localPort = 25745
 run = "pnpm --filter @workspace/jhsc-tracker run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/jhsc-tracker", "run", "build" ]
-publicDir = "artifacts/jhsc-tracker/dist/public"
-serve = "static"
-
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+build = ["sh", "-c", "BASE_PATH=/ pnpm --filter @workspace/jhsc-tracker run build && pnpm --filter @workspace/api-server run build"]
+run = ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]
 
 [services.env]
 PORT = "25745"
 BASE_PATH = "/"
+
+[services.production.env]
+NODE_ENV = "production"
+
+[services.production.health.startup]
+path = "/api/healthz"
