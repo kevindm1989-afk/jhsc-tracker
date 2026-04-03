@@ -1,7 +1,7 @@
 import { useGetDashboardSummary, useGetDashboardOverdue, useGetDashboardRecent } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Clock, ListChecks, CheckCircle2, MessageSquareWarning } from "lucide-react";
+import { AlertTriangle, Clock, ListChecks, CheckCircle2, MessageSquareWarning, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
@@ -18,7 +18,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         <StatCard 
           title="Overdue Items" 
           value={summary?.overdueCount} 
@@ -43,6 +43,12 @@ export default function DashboardPage() {
           value={summary?.totalWorkerStatements} 
           icon={MessageSquareWarning} 
           isLoading={isLoadingSummary} 
+        />
+        <StatCard
+          title="H&S Reports"
+          value={(summary as any)?.totalHSReports}
+          icon={ShieldAlert}
+          isLoading={isLoadingSummary}
         />
         <StatCard 
           title="Closed This Month" 
