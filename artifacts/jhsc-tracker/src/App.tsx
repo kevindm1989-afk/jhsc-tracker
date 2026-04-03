@@ -17,6 +17,7 @@ import ManageUsersPage from "@/pages/manage-users";
 import DocumentsPage from "@/pages/documents";
 import ClosedItemsLogPage from "@/pages/closed-items-log";
 import MemberActionsPage from "@/pages/member-actions";
+import HealthSafetyReportPage from "@/pages/health-safety-report";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -116,6 +117,9 @@ function Router() {
               </Route>
               <Route path="/member-actions">
                 <ProtectedRoute component={MemberActionsPage} />
+              </Route>
+              <Route path="/health-safety-report">
+                <ProtectedRoute component={HealthSafetyReportPage} />
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />
