@@ -7,3 +7,4 @@ export * from "./documents";
 export * from "./closedItemsLog";
 export * from "./memberActions";
 export * from "./healthSafetyReports";
+export * from "./registrations";

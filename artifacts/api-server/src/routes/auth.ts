@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db/schema";
+import { usersTable, registrationsTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import "../sessionTypes";
 
@@ -52,6 +52,60 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Login failed" });
+  }
+});
+
+// POST /api/auth/register — public, creates a pending registration
+router.post("/register", async (req, res) => {
+  try {
+    const { name, username, password, department, shift } = req.body as {
+      name: string;
+      username: string;
+      password: string;
+      department: string;
+      shift: string;
+    };
+
+    if (!name?.trim() || !username?.trim() || !password || !department?.trim() || !shift?.trim()) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+
+    const normalized = username.trim().toLowerCase();
+
+    const [existingUser] = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.username, normalized));
+    if (existingUser) {
+      return res.status(409).json({ error: "That username is already taken" });
+    }
+
+    const [existingReg] = await db
+      .select({ id: registrationsTable.id, status: registrationsTable.status })
+      .from(registrationsTable)
+      .where(eq(registrationsTable.username, normalized));
+    if (existingReg && existingReg.status === "pending") {
+      return res.status(409).json({ error: "A registration request for that username is already pending" });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await db.insert(registrationsTable).values({
+      name: name.trim(),
+      username: normalized,
+      passwordHash,
+      department: department.trim(),
+      shift: shift.trim(),
+      status: "pending",
+    });
+
+    res.status(201).json({ success: true });
+  } catch (err) {
+    console.error("Register error:", err);
+    res.status(500).json({ error: "Registration failed" });
   }
 });
 
