@@ -157,7 +157,7 @@ export default function ActionItemsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Action Items</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Action Items</h1>
           <p className="text-muted-foreground mt-1 text-sm">Track safety corrections and assigned tasks.</p>
         </div>
         <Button onClick={handleCreate} className="shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
@@ -165,14 +165,14 @@ export default function ActionItemsPage() {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-4 items-center bg-card p-4 rounded-md border shadow-sm">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center bg-card p-4 rounded-md border shadow-sm">
         <div className="flex items-center gap-2">
           <Search className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium">Filter:</span>
         </div>
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px] h-8 text-xs font-medium">
+          <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs font-medium">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -182,7 +182,7 @@ export default function ActionItemsPage() {
         </Select>
 
         <Select value={deptFilter} onValueChange={setDeptFilter}>
-          <SelectTrigger className="w-[180px] h-8 text-xs font-medium">
+          <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs font-medium">
             <SelectValue placeholder="All Departments" />
           </SelectTrigger>
           <SelectContent>
@@ -287,7 +287,7 @@ export default function ActionItemsPage() {
       </div></div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl border-sidebar-border shadow-2xl">
+        <DialogContent className="w-[calc(100vw-32px)] sm:max-w-2xl max-h-[90vh] overflow-y-auto border-sidebar-border shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold uppercase tracking-tight">
               {editingItem ? `Edit ${editingItem.itemCode}` : "New Action Item"}

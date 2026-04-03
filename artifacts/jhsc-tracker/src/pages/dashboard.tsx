@@ -13,7 +13,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Cockpit Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Cockpit Dashboard</h1>
         <p className="text-muted-foreground mt-1">Facility safety overview and compliance tracking.</p>
       </div>
 

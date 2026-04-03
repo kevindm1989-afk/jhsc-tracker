@@ -274,7 +274,7 @@ export default function ManageUsersPage() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogMode !== null} onOpenChange={(open) => { if (!open) setDialogMode(null); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[calc(100vw-32px)] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{dialogMode === "create" ? "Add New User" : `Edit — ${editingUser?.displayName}`}</DialogTitle>
           </DialogHeader>
@@ -366,7 +366,7 @@ export default function ManageUsersPage() {
 
       {/* Delete Confirm Dialog */}
       <Dialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[calc(100vw-32px)] sm:max-w-sm max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Remove User</DialogTitle>
           </DialogHeader>
