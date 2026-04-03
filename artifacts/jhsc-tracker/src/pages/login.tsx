@@ -23,7 +23,6 @@ const SHIFTS = ["Days", "Afternoons", "Nights", "Rotating"];
 const emptyReg = () => ({
   name: "",
   email: "",
-  username: "",
   password: "",
   confirmPassword: "",
   department: "",
@@ -72,7 +71,7 @@ export default function LoginPage() {
     e.preventDefault();
     setRegError("");
 
-    if (!regForm.name.trim() || !regForm.email.trim() || !regForm.username.trim() || !regForm.password || !regForm.department || !regForm.shift) {
+    if (!regForm.name.trim() || !regForm.email.trim() || !regForm.password || !regForm.department || !regForm.shift) {
       return setRegError("All fields are required.");
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regForm.email.trim())) {
@@ -94,7 +93,6 @@ export default function LoginPage() {
         body: JSON.stringify({
           name: regForm.name.trim(),
           email: regForm.email.trim().toLowerCase(),
-          username: regForm.username.trim(),
           password: regForm.password,
           department: regForm.department,
           shift: regForm.shift,
@@ -280,17 +278,6 @@ export default function LoginPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="reg-username">Username <span className="text-destructive">*</span></Label>
-                <Input
-                  id="reg-username"
-                  value={regForm.username}
-                  onChange={(e) => setReg("username", e.target.value)}
-                  placeholder="Choose a username"
-                  autoComplete="off"
-                />
               </div>
 
               <div className="space-y-1.5">

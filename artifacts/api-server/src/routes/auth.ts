@@ -58,16 +58,15 @@ router.post("/login", async (req, res) => {
 // POST /api/auth/register — public, creates a pending registration
 router.post("/register", async (req, res) => {
   try {
-    const { name, username, password, department, shift, email } = req.body as {
+    const { name, password, department, shift, email } = req.body as {
       name: string;
-      username: string;
       password: string;
       department: string;
       shift: string;
       email: string;
     };
 
-    if (!name?.trim() || !username?.trim() || !password || !department?.trim() || !shift?.trim() || !email?.trim()) {
+    if (!name?.trim() || !password || !department?.trim() || !shift?.trim() || !email?.trim()) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -79,22 +78,27 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
-    const normalized = username.trim().toLowerCase();
+    // Auto-generate username: firstName + firstLetterOfLastName (lowercase, letters only)
+    const nameParts = name.trim().toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter(Boolean);
+    const firstName = nameParts[0] ?? "";
+    const lastInitial = nameParts.length > 1 ? nameParts[nameParts.length - 1][0] : "";
+    const baseUsername = firstName + lastInitial;
 
-    const [existingUser] = await db
-      .select({ id: usersTable.id })
-      .from(usersTable)
-      .where(eq(usersTable.username, normalized));
-    if (existingUser) {
-      return res.status(409).json({ error: "That username is already taken" });
-    }
-
-    const [existingReg] = await db
-      .select({ id: registrationsTable.id, status: registrationsTable.status })
-      .from(registrationsTable)
-      .where(eq(registrationsTable.username, normalized));
-    if (existingReg && existingReg.status === "pending") {
-      return res.status(409).json({ error: "A registration request for that username is already pending" });
+    // Find a unique username by appending a number if needed
+    let normalized = baseUsername;
+    let suffix = 2;
+    while (true) {
+      const [takenUser] = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.username, normalized));
+      const [takenReg] = await db
+        .select({ id: registrationsTable.id, status: registrationsTable.status })
+        .from(registrationsTable)
+        .where(eq(registrationsTable.username, normalized));
+      if (!takenUser && (!takenReg || takenReg.status !== "pending")) break;
+      normalized = baseUsername + suffix;
+      suffix++;
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
