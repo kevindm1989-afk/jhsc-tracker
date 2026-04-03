@@ -30,6 +30,8 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
+  CalendarIcon,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -120,6 +122,7 @@ export default function HSReportsLogPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterConcern, setFilterConcern] = useState("all");
+  const [filterDate, setFilterDate] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [deletingReport, setDeletingReport] = useState<HSReport | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -173,7 +176,8 @@ export default function HSReportsLogPage() {
       r.submittedByName.toLowerCase().includes(q);
     const matchConcern =
       filterConcern === "all" || (r.concernTypes as string[]).includes(filterConcern);
-    return matchSearch && matchConcern;
+    const matchDate = !filterDate || r.incidentDate === filterDate;
+    return matchSearch && matchConcern && matchDate;
   });
 
   const fmtDate = (d: string) => {
@@ -211,6 +215,24 @@ export default function HSReportsLogPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
           />
+        </div>
+        <div className="relative">
+          <CalendarIcon className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="h-9 rounded-md border border-input bg-background pl-8 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          {filterDate && (
+            <button
+              onClick={() => setFilterDate("")}
+              className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear date filter"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
         <select
           value={filterConcern}
