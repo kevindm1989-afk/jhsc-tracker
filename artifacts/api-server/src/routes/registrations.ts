@@ -12,10 +12,14 @@ const router: IRouter = Router();
 const DEFAULT_MEMBER_PERMISSIONS = [
   "dashboard",
   "action-items",
+  "member-actions",
+  "health-safety-report",
+  "hs-reports-log",
   "hazard-findings",
   "inspection-log",
   "conduct-inspection",
   "worker-statements",
+  "import-data",
   "documents",
 ];
 
