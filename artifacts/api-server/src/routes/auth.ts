@@ -58,16 +58,22 @@ router.post("/login", async (req, res) => {
 // POST /api/auth/register — public, creates a pending registration
 router.post("/register", async (req, res) => {
   try {
-    const { name, username, password, department, shift } = req.body as {
+    const { name, username, password, department, shift, email } = req.body as {
       name: string;
       username: string;
       password: string;
       department: string;
       shift: string;
+      email: string;
     };
 
-    if (!name?.trim() || !username?.trim() || !password || !department?.trim() || !shift?.trim()) {
+    if (!name?.trim() || !username?.trim() || !password || !department?.trim() || !shift?.trim() || !email?.trim()) {
       return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const emailTrimmed = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+      return res.status(400).json({ error: "Please enter a valid email address" });
     }
     if (password.length < 6) {
       return res.status(400).json({ error: "Password must be at least 6 characters" });
@@ -99,6 +105,7 @@ router.post("/register", async (req, res) => {
       passwordHash,
       department: department.trim(),
       shift: shift.trim(),
+      email: emailTrimmed,
       status: "pending",
     });
 
