@@ -116,6 +116,31 @@ router.post("/register", async (req, res) => {
       status: "pending",
     });
 
+    // Notify admin of new access request (non-fatal)
+    try {
+      const transporter = createTransporter();
+      const adminEmail = getSenderAddress();
+      await transporter.sendMail({
+        from: adminEmail,
+        to: adminEmail,
+        subject: "New Access Request — JHSC Co-Chair Tracker",
+        html: `
+          <p>A new access request has been submitted and is waiting for your review.</p>
+          <table style="border-collapse:collapse;margin:12px 0;">
+            <tr><td style="padding:4px 12px 4px 0;color:#555;font-size:13px;">Name</td><td style="padding:4px 0;font-size:13px;font-weight:600;">${name.trim()}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#555;font-size:13px;">Email</td><td style="padding:4px 0;font-size:13px;">${emailTrimmed}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#555;font-size:13px;">Department</td><td style="padding:4px 0;font-size:13px;">${department.trim()}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#555;font-size:13px;">Shift</td><td style="padding:4px 0;font-size:13px;">${shift.trim()}</td></tr>
+          </table>
+          <p>Sign in to the tracker to approve or decline this request.</p>
+          <br/>
+          <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker &mdash; Unifor Local 1285</p>
+        `,
+      });
+    } catch (emailErr) {
+      console.error("Admin notification email error (non-fatal):", emailErr);
+    }
+
     res.status(201).json({ success: true });
   } catch (err) {
     console.error("Register error:", err);
