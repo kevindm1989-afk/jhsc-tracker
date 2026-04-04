@@ -6,7 +6,7 @@ export interface AuthUser {
   id: number;
   username: string;
   displayName: string;
-  role: "admin" | "member";
+  role: "admin" | "member" | "worker-rep";
   permissions: string[];
 }
 
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasPermission = useCallback(
     (permission: string) => {
       if (!user) return false;
-      if (user.role === "admin") return true;
+      if (user.role === "admin" || user.role === "worker-rep") return true;
       return user.permissions.includes(permission);
     },
     [user],

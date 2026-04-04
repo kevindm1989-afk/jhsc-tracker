@@ -51,7 +51,7 @@ router.post("/", requireAdmin, async (req, res) => {
       username: string;
       displayName: string;
       password: string;
-      role: "admin" | "member";
+      role: "admin" | "member" | "worker-rep";
       permissions: string[];
     };
 
@@ -98,7 +98,7 @@ router.patch("/:id", requireAdmin, async (req, res) => {
     const id = parseInt(req.params.id, 10);
     const { displayName, role, permissions, password } = req.body as {
       displayName?: string;
-      role?: "admin" | "member";
+      role?: "admin" | "member" | "worker-rep";
       permissions?: string[];
       password?: string;
     };
