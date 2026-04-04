@@ -13,7 +13,6 @@ import {
   LogOut,
   ShieldCheck,
   User,
-  FolderOpen,
   CheckCheck,
   ClipboardList,
   ShieldAlert,
@@ -70,7 +69,6 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { name: "Submit a Suggestion", href: "/suggestions", icon: Lightbulb, permission: "suggestions" },
   { name: "Suggestions Log", href: "/suggestions-log", icon: ScrollText, permission: "suggestions" },
   { name: "Import Data", href: "/import-minutes", icon: Upload, permission: "import-data" },
-  { name: "Documents", href: "/documents", icon: FolderOpen, permission: "documents" },
   { name: "Manage Users", href: "/manage-users", icon: Users, permission: null, adminOnly: true },
 ];
 

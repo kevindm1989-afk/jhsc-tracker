@@ -14,8 +14,6 @@ import inspectRouter from "./inspect";
 import authRouter from "./auth";
 import usersRouter from "./users";
 import registrationsRouter from "./registrations";
-import storageRouter from "./storage";
-import documentsRouter from "./documents";
 import settingsRouter from "./settings";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
 
@@ -24,9 +22,6 @@ const router: IRouter = Router();
 // Public routes (no auth required)
 router.use(healthRouter);
 router.use("/auth", authRouter);
-
-// Storage (presigned URL + object serving — auth required, handled inside router)
-router.use(storageRouter);
 
 // Protected routes — require login
 router.use("/dashboard", requireAuth, requirePermission("dashboard"), dashboardRouter);
@@ -40,8 +35,6 @@ router.use("/health-safety-reports", requireAuth, healthSafetyReportsRouter);
 router.use("/suggestions", requireAuth, suggestionsRouter);
 router.use("/import", requireAuth, requirePermission("import-data"), importRouter);
 router.use("/inspect", requireAuth, requirePermission("conduct-inspection"), inspectRouter);
-router.use("/documents", requirePermission("documents"), documentsRouter);
-
 // Settings (nav order etc — auth required)
 router.use("/settings", requireAuth, settingsRouter);
 

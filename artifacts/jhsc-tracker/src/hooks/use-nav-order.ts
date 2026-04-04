@@ -16,7 +16,6 @@ export const DEFAULT_NAV_ORDER = [
   "/suggestions",
   "/suggestions-log",
   "/import-minutes",
-  "/documents",
   "/manage-users",
 ];
 
