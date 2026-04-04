@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Upload,
   FileText,
@@ -300,7 +301,7 @@ export default function DocumentsPage() {
                       <div className="min-w-0">
                         <p className="font-semibold text-foreground leading-tight">{doc.title}</p>
                         {doc.description && (
-                          <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{doc.description}</p>
+                          <TruncatedText text={doc.description} lines={2} label="Description" className="text-sm text-muted-foreground mt-0.5" />
                         )}
                       </div>
                       <div className="flex gap-1.5 shrink-0">

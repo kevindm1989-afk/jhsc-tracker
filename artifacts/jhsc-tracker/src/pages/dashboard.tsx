@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, ListChecks, CheckCircle2, MessageSquareWarning, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export default function DashboardPage() {
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
@@ -142,7 +143,7 @@ export default function DashboardPage() {
                             {item.status}
                           </Badge>
                         </div>
-                        <p className="text-sm font-medium leading-snug text-foreground/80 line-clamp-2">{item.description}</p>
+                        <TruncatedText text={item.description} lines={2} label="Description" className="text-sm font-medium leading-snug text-foreground/80" />
                       </div>
                       <div className="text-right shrink-0">
                         <span className="text-xs text-muted-foreground block font-mono">
