@@ -34,7 +34,6 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     // --- Import to DB ---
     let importedActionItems = 0;
     let importedHazardFindings = 0;
-    let skippedHazardFindings = 0;
 
     // Separate closed items (from the "Closed Items" sheet) from regular action items
     const closedItemsFromSheet = parsed.actionItems.filter((a) => a.source === "Closed Items");
@@ -119,22 +118,10 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       importedClosedItems++;
     }
 
-    // Import hazard findings (dedup by description + date)
+    // Clear ALL existing hazard findings, then insert fresh from the import
+    await db.delete(hazardFindingsTable);
+
     for (const finding of parsed.hazardFindings) {
-      const existing = await db
-        .select({ id: hazardFindingsTable.id })
-        .from(hazardFindingsTable)
-        .where(
-          isIsoDate(finding.date)
-            ? and(eq(hazardFindingsTable.hazardDescription, finding.hazardDescription), eq(hazardFindingsTable.date, finding.date))
-            : eq(hazardFindingsTable.hazardDescription, finding.hazardDescription)
-        );
-
-      if (existing.length > 0) {
-        skippedHazardFindings++;
-        continue;
-      }
-
       const [created] = await db
         .insert(hazardFindingsTable)
         .values({
@@ -174,7 +161,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       },
       skipped: {
         actionItems: 0,
-        hazardFindings: skippedHazardFindings,
+        hazardFindings: 0,
       },
     });
   } catch (err) {
