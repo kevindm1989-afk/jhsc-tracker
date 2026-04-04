@@ -21,6 +21,7 @@ import HealthSafetyReportPage from "@/pages/health-safety-report";
 import HSReportsLogPage from "@/pages/hs-reports-log";
 import SuggestionsPage from "@/pages/suggestions";
 import ResetPasswordPage from "@/pages/reset-password";
+import ChangePasswordPage from "@/pages/change-password";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -136,6 +137,9 @@ function Router() {
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />
+              </Route>
+              <Route path="/change-password">
+                <ProtectedRoute component={ChangePasswordPage} />
               </Route>
               <Route component={NotFound} />
             </Switch>

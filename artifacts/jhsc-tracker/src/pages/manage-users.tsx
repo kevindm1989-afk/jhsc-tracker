@@ -59,6 +59,7 @@ interface Registration {
 interface UserFormData {
   username: string;
   displayName: string;
+  email: string;
   password: string;
   role: "admin" | "member" | "worker-rep";
   permissions: string[];
@@ -67,6 +68,7 @@ interface UserFormData {
 const emptyForm = (): UserFormData => ({
   username: "",
   displayName: "",
+  email: "",
   password: "",
   role: "member",
   permissions: [...ALL_PERMISSIONS],
@@ -209,6 +211,7 @@ export default function ManageUsersPage() {
     setForm({
       username: u.username,
       displayName: u.displayName,
+      email: u.email ?? "",
       password: "",
       role: u.role as "admin" | "member" | "worker-rep",
       permissions: [...u.permissions],
@@ -253,6 +256,7 @@ export default function ManageUsersPage() {
       } else {
         const payload: Record<string, any> = {
           displayName: form.displayName,
+          email: form.email.trim() || "",
           role: form.role,
           permissions: form.permissions,
         };
@@ -510,6 +514,16 @@ export default function ManageUsersPage() {
                 value={form.displayName}
                 onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
                 placeholder="e.g. Jane Smith"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email Address <span className="text-muted-foreground font-normal">(for password reset)</span></Label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="e.g. jsmith@example.com"
+                autoComplete="off"
               />
             </div>
             <div className="space-y-1.5">
