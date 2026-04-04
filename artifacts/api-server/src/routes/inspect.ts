@@ -3,14 +3,11 @@ import path from "path";
 import { readFile } from "fs/promises";
 import XlsxPopulate from "xlsx-populate";
 import { db } from "@workspace/db";
-import { inspectionLogTable, documentsTable } from "@workspace/db/schema";
+import { inspectionLogTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { CHECKLIST_SECTIONS, ZONE_NAMES, ADDITIONAL_COMMENTS_ROW } from "../checklistData";
 import { createTransporter, getSenderAddress } from "../emailClient";
-import { ObjectStorageService } from "../lib/objectStorage";
 import "../sessionTypes";
-
-const objectStorage = new ObjectStorageService();
 
 const CO_CHAIR_EMAIL = "kevin_de_melo@hotmail.com";
 
@@ -290,32 +287,7 @@ router.post("/email", async (req, res) => {
       imported++;
     }
 
-    // ── 3. Upload file to Documents ───────────────────────────────────────────
-    let docSaved = false;
-    try {
-      const uploaderName =
-        (req.session as any)?.displayName ?? (req.session as any)?.username ?? inspector ?? "Inspector";
-      const { objectPath } = await objectStorage.uploadBufferAsDocument(
-        outBuffer,
-        fileName,
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      );
-      await db.insert(documentsTable).values({
-        title: `${zoneName} Inspection — ${displayDate}`,
-        description: `Conducted by ${inspector || "Unknown"} · ${issueCount} finding${issueCount !== 1 ? "s" : ""}`,
-        category: "Inspection Forms",
-        fileName,
-        fileSize: outBuffer.length,
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        objectPath,
-        uploadedBy: uploaderName,
-      });
-      docSaved = true;
-    } catch (docErr) {
-      console.error("Inspection document save error (non-fatal):", docErr);
-    }
-
-    res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName, imported, docSaved });
+    res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName, imported });
   } catch (err) {
     console.error("Inspection email error:", err);
     res.status(500).json({ error: "Failed to send inspection email." });
