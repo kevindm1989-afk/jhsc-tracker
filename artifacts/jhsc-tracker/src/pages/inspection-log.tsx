@@ -80,6 +80,7 @@ export default function InspectionLogPage() {
   });
 
   const isAdmin = currentUser?.role === "admin";
+  const isWorkerRep = currentUser?.role === "worker-rep";
 
   const queryParams = {
     ...(statusFilter !== "all" && { status: statusFilter }),
@@ -190,7 +191,7 @@ export default function InspectionLogPage() {
 
   const canVerify = (item: InspectionEntry) => {
     if (item.status !== "Pending") return false;
-    if (isAdmin) return true;
+    if (isAdmin || isWorkerRep) return true;
     if (!item.inspector || !currentUser) return false;
     return item.inspector.trim().toLowerCase() === currentUser.displayName.trim().toLowerCase();
   };
@@ -204,9 +205,11 @@ export default function InspectionLogPage() {
             Findings from workplace inspections. Pending items require verification by the inspector.
           </p>
         </div>
-        <Button onClick={handleCreate} className="shrink-0 font-bold shadow-sm">
-          <Plus className="w-4 h-4 mr-2" /> Record Finding
-        </Button>
+        {isAdmin && (
+          <Button onClick={handleCreate} className="shrink-0 font-bold shadow-sm">
+            <Plus className="w-4 h-4 mr-2" /> Record Finding
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center bg-card p-4 rounded-md border shadow-sm">
@@ -334,26 +337,30 @@ export default function InspectionLogPage() {
                             Verify
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => {
-                            if (window.confirm("Delete this record?")) {
-                              deleteMutation.mutate({ id: item.id });
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => {
+                                if (window.confirm("Delete this record?")) {
+                                  deleteMutation.mutate({ id: item.id });
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
