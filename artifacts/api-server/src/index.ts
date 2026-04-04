@@ -5,19 +5,7 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db/schema";
 import { count, eq, or, isNull, and } from "drizzle-orm";
 
-const rawPort = process.env["PORT"];
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
+const port = Number(process.env["PORT"] || 3000);
 
 async function seedAdminIfNeeded() {
   try {
@@ -61,13 +49,13 @@ async function ensureAdminEmail() {
 
 ensureSessionTable()
   .then(() => {
-    app.listen(port, async (err) => {
+    app.listen(port, "0.0.0.0", async (err) => {
       if (err) {
         logger.error({ err }, "Error listening on port");
         process.exit(1);
       }
 
-      logger.info({ port }, "Server listening");
+      logger.info(`Server running on port ${port}`);
       await seedAdminIfNeeded();
       await ensureAdminEmail();
     });

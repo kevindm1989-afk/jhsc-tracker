@@ -146,4 +146,8 @@ export async function ensureSessionTable(): Promise<void> {
   }
 }
 
+app.get("/health", (_req, res) => {
+  res.status(200).send("OK");
+});
+
 export default app;
