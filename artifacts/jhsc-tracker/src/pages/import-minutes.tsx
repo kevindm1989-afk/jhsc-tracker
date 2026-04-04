@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 // ─── Minutes types ───────────────────────────────────────────────────────────
 
@@ -411,7 +412,7 @@ function MinutesTab() {
                         <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", priorityColors[hf.severity])}>{hf.severity}</span>
                         <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", statusColors[hf.status])}>{hf.status}</span>
                       </div>
-                      <span className="font-medium text-foreground leading-snug min-w-0 line-clamp-2">{hf.hazardDescription}</span>
+                      <TruncatedText text={hf.hazardDescription} lines={2} label="Hazard Description" className="font-medium text-foreground leading-snug min-w-0" />
                     </div>
                   ))}
                 </div>

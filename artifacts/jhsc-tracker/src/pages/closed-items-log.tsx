@@ -27,6 +27,7 @@ import { Plus, Search, Edit2, Trash2, CheckCheck } from "lucide-react";
 import { DeptBadge, StatusBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,9 +57,6 @@ export default function ClosedItemsLogPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ClosedItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ClosedItem | null>(null);
-  const [expandedDescId, setExpandedDescId] = useState<number | null>(null);
-  const [expandedNotesId, setExpandedNotesId] = useState<number | null>(null);
-
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -252,23 +250,11 @@ export default function ClosedItemsLogPage() {
                   </TableCell>
                   <TableCell><DeptBadge dept={item.department} /></TableCell>
                   <TableCell className="text-sm max-w-xs">
-                    <p
-                      className={expandedDescId === item.id ? "cursor-pointer whitespace-pre-wrap" : "line-clamp-2 cursor-pointer"}
-                      title={expandedDescId === item.id ? undefined : "Click to expand"}
-                      onClick={() => setExpandedDescId(expandedDescId === item.id ? null : item.id)}
-                    >
-                      {item.description}
-                    </p>
+                    <TruncatedText text={item.description} lines={2} label="Description" />
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-[12rem]">
                     {item.notes ? (
-                      <p
-                        className={expandedNotesId === item.id ? "cursor-pointer whitespace-pre-wrap" : "line-clamp-2 cursor-pointer"}
-                        title={expandedNotesId === item.id ? undefined : "Click to expand"}
-                        onClick={() => setExpandedNotesId(expandedNotesId === item.id ? null : item.id)}
-                      >
-                        {item.notes}
-                      </p>
+                      <TruncatedText text={item.notes} lines={2} label="Notes" className="text-muted-foreground" />
                     ) : (
                       <span className="text-muted-foreground/50">—</span>
                     )}
