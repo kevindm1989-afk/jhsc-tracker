@@ -20,6 +20,7 @@ import MemberActionsPage from "@/pages/member-actions";
 import HealthSafetyReportPage from "@/pages/health-safety-report";
 import HSReportsLogPage from "@/pages/hs-reports-log";
 import SuggestionsPage from "@/pages/suggestions";
+import SuggestionsLogPage from "@/pages/suggestions-log";
 import ResetPasswordPage from "@/pages/reset-password";
 import ChangePasswordPage from "@/pages/change-password";
 import NotFound from "@/pages/not-found";
@@ -134,6 +135,9 @@ function Router() {
               </Route>
               <Route path="/suggestions">
                 <ProtectedRoute component={SuggestionsPage} permission="suggestions" />
+              </Route>
+              <Route path="/suggestions-log">
+                <ProtectedRoute component={SuggestionsLogPage} permission="suggestions" />
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />
