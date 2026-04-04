@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useGetDashboardSummary } from "@workspace/api-client-react";
 import {
@@ -19,38 +20,174 @@ import {
   ScrollText,
   Lightbulb,
   KeyRound,
+  GripVertical,
+  ArrowUpDown,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { useNavOrder, DEFAULT_NAV_ORDER } from "@/hooks/use-nav-order";
 
 interface SidebarProps {
   onNavigate?: () => void;
 }
 
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+  permission: string | null;
+  badge?: number;
+  adminOnly?: boolean;
+}
+
+const ALL_NAV_ITEMS: NavItem[] = [
+  { name: "Dashboard", href: "/", icon: LayoutDashboard, permission: "dashboard" },
+  { name: "Action Items", href: "/action-items", icon: ListChecks, permission: "action-items" },
+  { name: "Closed Items Log", href: "/closed-items-log", icon: CheckCheck, permission: "action-items" },
+  { name: "Member Actions", href: "/member-actions", icon: ClipboardList, permission: "member-actions" },
+  { name: "Conduct A H&S Report", href: "/health-safety-report", icon: ShieldAlert, permission: "health-safety-report" },
+  { name: "H&S Reports Log", href: "/hs-reports-log", icon: ScrollText, permission: "hs-reports-log" },
+  { name: "Hazard Findings", href: "/hazard-findings", icon: AlertTriangle, permission: "hazard-findings" },
+  { name: "Inspection Log", href: "/inspection-log", icon: Search, permission: "inspection-log" },
+  { name: "Conduct Inspection", href: "/conduct-inspection", icon: ClipboardCheck, permission: "conduct-inspection" },
+  { name: "Worker Statements", href: "/worker-statements", icon: MessageSquareWarning, permission: "worker-statements" },
+  { name: "Submit a Suggestion", href: "/suggestions", icon: Lightbulb, permission: "suggestions" },
+  { name: "Import Data", href: "/import-minutes", icon: Upload, permission: "import-data" },
+  { name: "Documents", href: "/documents", icon: FolderOpen, permission: "documents" },
+  { name: "Manage Users", href: "/manage-users", icon: Users, permission: null, adminOnly: true },
+];
+
+// ─── Sortable nav item ────────────────────────────────────────────────────────
+
+interface SortableNavItemProps {
+  item: NavItem;
+  isActive: boolean;
+  badge?: number;
+  reorderMode: boolean;
+  onNavigate?: () => void;
+}
+
+function SortableNavItem({ item, isActive, badge, reorderMode, onNavigate }: SortableNavItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.href,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div
+        className={cn(
+          "flex items-center justify-between px-3 py-2.5 rounded-md transition-colors text-sm font-medium group",
+          isActive
+            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+          reorderMode && "cursor-default select-none"
+        )}
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          {reorderMode ? (
+            <button
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing text-sidebar-foreground/40 hover:text-sidebar-foreground/70 shrink-0 touch-none"
+              tabIndex={-1}
+            >
+              <GripVertical className="w-4 h-4" />
+            </button>
+          ) : (
+            <item.icon
+              className={cn(
+                "w-4 h-4 shrink-0",
+                isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80"
+              )}
+            />
+          )}
+          {reorderMode ? (
+            <span className="truncate">{item.name}</span>
+          ) : (
+            <Link href={item.href} onClick={onNavigate} className="flex-1 min-w-0">
+              <span className="truncate block">{item.name}</span>
+            </Link>
+          )}
+        </div>
+        {!reorderMode && badge !== undefined && badge > 0 && (
+          <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full min-w-6 text-center shrink-0">
+            {badge}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
+
 export default function Sidebar({ onNavigate }: SidebarProps) {
   const [location] = useLocation();
   const { data: summary } = useGetDashboardSummary();
   const { user, logout, hasPermission } = useAuth();
+  const { order, saveOrder } = useNavOrder();
+  const [reorderMode, setReorderMode] = useState(false);
 
-  const navItems = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard, permission: "dashboard" },
-    { name: "Action Items", href: "/action-items", icon: ListChecks, permission: "action-items", badge: summary?.openActionItems },
-    { name: "Closed Items Log", href: "/closed-items-log", icon: CheckCheck, permission: "action-items" },
-    { name: "Member Actions", href: "/member-actions", icon: ClipboardList, permission: "member-actions" },
-    { name: "Conduct A H&S Report", href: "/health-safety-report", icon: ShieldAlert, permission: "health-safety-report" },
-    { name: "H&S Reports Log", href: "/hs-reports-log", icon: ScrollText, permission: "hs-reports-log" },
-    { name: "Hazard Findings", href: "/hazard-findings", icon: AlertTriangle, permission: "hazard-findings", badge: summary?.openHazardFindings },
-    { name: "Inspection Log", href: "/inspection-log", icon: Search, permission: "inspection-log" },
-    { name: "Conduct Inspection", href: "/conduct-inspection", icon: ClipboardCheck, permission: "conduct-inspection" },
-    { name: "Worker Statements", href: "/worker-statements", icon: MessageSquareWarning, permission: "worker-statements", badge: summary?.totalWorkerStatements },
-    { name: "Submit a Suggestion", href: "/suggestions", icon: Lightbulb, permission: "suggestions" },
-    { name: "Import Data", href: "/import-minutes", icon: Upload, permission: "import-data" },
-    { name: "Documents", href: "/documents", icon: FolderOpen, permission: "documents" },
-  ].filter((item) => item.permission === null || hasPermission(item.permission));
+  const isAdmin = user?.role === "admin";
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  // Build badge map
+  const badges: Record<string, number | undefined> = {
+    "/action-items": summary?.openActionItems,
+    "/hazard-findings": summary?.openHazardFindings,
+    "/worker-statements": summary?.totalWorkerStatements,
+  };
+
+  // Sort items by stored order, filter by permission
+  const sortedItems = [...order, ...DEFAULT_NAV_ORDER.filter((h) => !order.includes(h))]
+    .map((href) => ALL_NAV_ITEMS.find((item) => item.href === href))
+    .filter((item): item is NavItem => {
+      if (!item) return false;
+      if (item.adminOnly && !isAdmin) return false;
+      if (item.permission === null) return true;
+      return hasPermission(item.permission);
+    });
 
   const isActive = (href: string) =>
     href === "/" ? location === "/" : location.startsWith(href);
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    // Reorder within the full stored order list
+    const oldIndex = order.indexOf(active.id as string);
+    const newIndex = order.indexOf(over.id as string);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    saveOrder(arrayMove(order, oldIndex, newIndex));
+  }
 
   return (
     <div className="flex flex-col w-64 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
@@ -66,68 +203,49 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       </div>
 
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link key={item.name} href={item.href} onClick={onNavigate}>
-              <div
-                className={cn(
-                  "flex items-center justify-between px-3 py-2.5 rounded-md transition-colors cursor-pointer group text-sm font-medium",
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon
-                    className={cn(
-                      "w-4 h-4",
-                      active
-                        ? "text-primary"
-                        : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80"
-                    )}
-                  />
-                  {item.name}
-                </div>
-                {item.badge !== undefined && item.badge > 0 && (
-                  <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full min-w-6 text-center">
-                    {item.badge}
-                  </span>
-                )}
-              </div>
-            </Link>
-          );
-        })}
+        {isAdmin && (
+          <div className="pb-2">
+            <button
+              onClick={() => setReorderMode((v) => !v)}
+              className={cn(
+                "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                reorderMode
+                  ? "bg-primary/10 text-primary"
+                  : "text-sidebar-foreground/50 hover:text-sidebar-foreground/80 hover:bg-sidebar-accent/30"
+              )}
+            >
+              <ArrowUpDown className="w-3.5 h-3.5" />
+              {reorderMode ? "Done Reordering" : "Reorder Pages"}
+            </button>
+          </div>
+        )}
 
-        {/* Admin: Manage Users */}
-        {user?.role === "admin" && (
-          <>
-            <div className="pt-2 pb-1 px-3">
-              <p className="text-[10px] uppercase tracking-widest text-sidebar-foreground/40 font-semibold">
-                Admin
-              </p>
-            </div>
-            <Link href="/manage-users" onClick={onNavigate}>
-              <div
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors cursor-pointer group text-sm font-medium",
-                  isActive("/manage-users")
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                )}
-              >
-                <Users
-                  className={cn(
-                    "w-4 h-4",
-                    isActive("/manage-users")
-                      ? "text-primary"
-                      : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80"
-                  )}
+        {reorderMode ? (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={sortedItems.map((i) => i.href)} strategy={verticalListSortingStrategy}>
+              {sortedItems.map((item) => (
+                <SortableNavItem
+                  key={item.href}
+                  item={item}
+                  isActive={isActive(item.href)}
+                  badge={badges[item.href]}
+                  reorderMode={reorderMode}
+                  onNavigate={onNavigate}
                 />
-                Manage Users
-              </div>
-            </Link>
-          </>
+              ))}
+            </SortableContext>
+          </DndContext>
+        ) : (
+          sortedItems.map((item) => (
+            <SortableNavItem
+              key={item.href}
+              item={item}
+              isActive={isActive(item.href)}
+              badge={badges[item.href]}
+              reorderMode={false}
+              onNavigate={onNavigate}
+            />
+          ))
         )}
       </nav>
 

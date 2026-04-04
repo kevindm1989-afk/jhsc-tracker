@@ -16,6 +16,7 @@ import usersRouter from "./users";
 import registrationsRouter from "./registrations";
 import storageRouter from "./storage";
 import documentsRouter from "./documents";
+import settingsRouter from "./settings";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
 
 const router: IRouter = Router();
@@ -40,6 +41,9 @@ router.use("/suggestions", requireAuth, suggestionsRouter);
 router.use("/import", requireAuth, requirePermission("import-data"), importRouter);
 router.use("/inspect", requireAuth, requirePermission("conduct-inspection"), inspectRouter);
 router.use("/documents", requirePermission("documents"), documentsRouter);
+
+// Settings (nav order etc — auth required)
+router.use("/settings", requireAuth, settingsRouter);
 
 // Admin-only routes
 router.use("/users", usersRouter);
