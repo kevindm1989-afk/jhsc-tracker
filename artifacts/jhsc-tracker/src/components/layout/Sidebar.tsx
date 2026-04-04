@@ -68,6 +68,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { name: "Conduct Inspection", href: "/conduct-inspection", icon: ClipboardCheck, permission: "conduct-inspection" },
   { name: "Worker Statements", href: "/worker-statements", icon: MessageSquareWarning, permission: "worker-statements" },
   { name: "Submit a Suggestion", href: "/suggestions", icon: Lightbulb, permission: "suggestions" },
+  { name: "Suggestions Log", href: "/suggestions-log", icon: ScrollText, permission: "suggestions" },
   { name: "Import Data", href: "/import-minutes", icon: Upload, permission: "import-data" },
   { name: "Documents", href: "/documents", icon: FolderOpen, permission: "documents" },
   { name: "Manage Users", href: "/manage-users", icon: Users, permission: null, adminOnly: true },
