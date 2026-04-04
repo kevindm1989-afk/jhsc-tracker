@@ -211,7 +211,7 @@ function MinutesTab() {
       setResult(data);
       setPreview(null);
       queryClient.invalidateQueries();
-      toast({ title: "Import complete", description: `${data.imported.actionItems} action items and ${data.imported.hazardFindings} hazard findings imported.` });
+      toast({ title: "Import complete", description: `${data.imported.actionItems} action items loaded, ${data.imported.hazardFindings} hazard findings imported.` });
     } catch (e: any) {
       setError(e.message || "Import failed");
     } finally {
@@ -241,11 +241,10 @@ function MinutesTab() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {[
-                { label: "Action Items Imported", val: result.imported.actionItems, cls: "text-green-700" },
+                { label: "Action Items Loaded", val: result.imported.actionItems, cls: "text-green-700" },
                 { label: "Hazard Findings Imported", val: result.imported.hazardFindings, cls: "text-green-700" },
                 { label: "Closed Items Imported", val: result.imported.closedItems, cls: "text-green-700" },
                 { label: "Closed Items Updated", val: result.updated.closedItems, cls: "text-blue-700" },
-                { label: "Action Items Skipped", val: result.skipped.actionItems, cls: "text-muted-foreground" },
                 { label: "Hazard Findings Skipped", val: result.skipped.hazardFindings, cls: "text-muted-foreground" },
               ].map(({ label, val, cls }) => (
                 <div key={label} className="bg-white rounded-md border border-green-200 p-3 text-center">
@@ -420,10 +419,16 @@ function MinutesTab() {
             </Card>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800">
+              <span className="font-semibold">This will replace all existing action items.</span> Every current action item will be deleted and replaced with the {preview.actionItems.length} item{preview.actionItems.length !== 1 ? "s" : ""} from this file. Hazard findings and closed items are not affected.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <Button onClick={handleImport} disabled={isImporting} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
               <Upload className="w-4 h-4 mr-2" />
-              {isImporting ? "Importing..." : `Import ${preview.actionItems.length} Action Items + ${preview.hazardFindings.length} Hazard Findings`}
+              {isImporting ? "Importing..." : `Replace Action Items + Import ${preview.hazardFindings.length} Hazard Findings`}
             </Button>
             <Button variant="outline" onClick={reset} disabled={isImporting}>Cancel</Button>
           </div>
@@ -437,7 +442,7 @@ function MinutesTab() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs mt-3">
               <div className="space-y-1"><p className="font-bold text-foreground">1. Upload</p><p>Drop your JHSC meeting minutes .xlsm or .xlsx file above.</p></div>
               <div className="space-y-1"><p className="font-bold text-foreground">2. Preview</p><p>Review the action items and hazard findings that will be imported.</p></div>
-              <div className="space-y-1"><p className="font-bold text-foreground">3. Confirm</p><p>Duplicates are skipped automatically — safe to re-import any time.</p></div>
+              <div className="space-y-1"><p className="font-bold text-foreground">3. Confirm</p><p>Existing action items are replaced with the ones in the file. Hazard findings and closed items are unaffected.</p></div>
             </div>
           </CardContent>
         </Card>
