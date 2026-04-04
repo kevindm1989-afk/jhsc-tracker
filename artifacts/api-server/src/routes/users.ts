@@ -98,8 +98,9 @@ router.post("/", requireAdmin, async (req, res) => {
 router.patch("/:id", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { displayName, role, permissions, password } = req.body as {
+    const { displayName, email, role, permissions, password } = req.body as {
       displayName?: string;
+      email?: string;
       role?: "admin" | "member" | "worker-rep";
       permissions?: string[];
       password?: string;
@@ -110,6 +111,7 @@ router.patch("/:id", requireAdmin, async (req, res) => {
     };
 
     if (displayName) updates.displayName = displayName.trim();
+    if (email !== undefined) updates.email = email.trim().toLowerCase();
     if (role) updates.role = role;
     if (permissions) {
       updates.permissions = permissions.filter((p) => ALL_PERMISSIONS.includes(p));

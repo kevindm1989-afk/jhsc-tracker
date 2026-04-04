@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   ScrollText,
   Lightbulb,
+  KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -143,10 +144,20 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-sidebar-foreground truncate">{user?.displayName}</p>
             <p className="text-[10px] text-sidebar-foreground/50 truncate font-mono">
-              {user?.role === "admin" ? "Admin" : "Member"} · @{user?.username}
+              {user?.role === "admin" ? "Admin" : user?.role === "worker-rep" ? "Worker Rep" : "Member"} · @{user?.username}
             </p>
           </div>
         </div>
+        <Link href="/change-password" onClick={onNavigate}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 text-xs h-8"
+          >
+            <KeyRound className="w-3.5 h-3.5 mr-2" />
+            Change Password
+          </Button>
+        </Link>
         <Button
           variant="ghost"
           size="sm"
