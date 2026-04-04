@@ -392,6 +392,8 @@ export default function ManageUsersPage() {
                     <div className="w-9 h-9 rounded-full bg-sidebar flex items-center justify-center shrink-0">
                       {u.role === "admin" ? (
                         <ShieldCheck className="w-4 h-4 text-primary" />
+                      ) : u.role === "worker-rep" ? (
+                        <ShieldCheck className="w-4 h-4 text-blue-500" />
                       ) : (
                         <User className="w-4 h-4 text-sidebar-foreground/70" />
                       )}
@@ -399,9 +401,15 @@ export default function ManageUsersPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-foreground">{u.displayName}</span>
-                        <Badge variant={u.role === "admin" ? "default" : "secondary"} className="text-[10px] px-1.5">
-                          {u.role === "admin" ? "Admin" : "Member"}
-                        </Badge>
+                        {u.role === "admin" && (
+                          <Badge variant="default" className="text-[10px] px-1.5">Admin</Badge>
+                        )}
+                        {u.role === "worker-rep" && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">Worker Rep</Badge>
+                        )}
+                        {u.role === "member" && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5">Member</Badge>
+                        )}
                         {u.id === currentUser?.id && (
                           <Badge variant="outline" className="text-[10px] px-1.5">You</Badge>
                         )}
@@ -422,6 +430,9 @@ export default function ManageUsersPage() {
                       )}
                       {u.role === "admin" && (
                         <span className="text-xs text-muted-foreground mt-1 block">Full access to all modules</span>
+                      )}
+                      {u.role === "worker-rep" && (
+                        <span className="text-xs text-muted-foreground mt-1 block">Can verify items — read-only access</span>
                       )}
                     </div>
                   </div>
@@ -485,12 +496,13 @@ export default function ManageUsersPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Role</Label>
-              <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v as "admin" | "member" }))}>
+              <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v as "admin" | "member" | "worker-rep" }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin (full access)</SelectItem>
+                  <SelectItem value="worker-rep">Worker Rep (verify items, read-only)</SelectItem>
                   <SelectItem value="member">Member (custom permissions)</SelectItem>
                 </SelectContent>
               </Select>

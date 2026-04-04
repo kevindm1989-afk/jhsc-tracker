@@ -61,6 +61,7 @@ export default function ClosedItemsLogPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const isWorkerRep = user?.role === "worker-rep";
 
   const queryParams = {
     ...(deptFilter !== "all" && { department: deptFilter }),
@@ -229,14 +230,14 @@ export default function ClosedItemsLogPage() {
               <TableHead className="w-28">Closed Date</TableHead>
               <TableHead className="hidden w-28">Meeting Date</TableHead>
               <TableHead className="w-24">Status</TableHead>
-              {isAdmin && <TableHead className="w-24 text-right">Actions</TableHead>}
+              {(isAdmin || isWorkerRep) && <TableHead className="w-24 text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: isAdmin ? 10 : 9 }).map((_, j) => (
+                  {Array.from({ length: (isAdmin || isWorkerRep) ? 10 : 9 }).map((_, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
@@ -276,7 +277,7 @@ export default function ClosedItemsLogPage() {
                       )}
                     </div>
                   </TableCell>
-                  {isAdmin && (
+                  {(isAdmin || isWorkerRep) && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         {!(item as any).verifiedAt && (
@@ -290,22 +291,26 @@ export default function ClosedItemsLogPage() {
                             Verify
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => openEdit(item)}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => setDeletingItem(item)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => openEdit(item)}
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-destructive hover:text-destructive"
+                              onClick={() => setDeletingItem(item)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   )}
@@ -313,7 +318,7 @@ export default function ClosedItemsLogPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 10 : 9} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={(isAdmin || isWorkerRep) ? 10 : 9} className="h-32 text-center text-muted-foreground">
                   No closed items found.{" "}
                   {deptFilter !== "all" || searchText
                     ? "Try clearing the filters."
