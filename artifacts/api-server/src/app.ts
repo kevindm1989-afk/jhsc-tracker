@@ -113,6 +113,15 @@ export async function ensureSessionTable(): Promise<void> {
       ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" timestamp NOT NULL DEFAULT now();
     `);
 
+    // App settings table — stores key/value pairs (e.g. nav order)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "app_settings" (
+        "key" text PRIMARY KEY,
+        "value" text NOT NULL,
+        "updated_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
     // Suggestions table
     await client.query(`
       CREATE TABLE IF NOT EXISTS "suggestions" (
