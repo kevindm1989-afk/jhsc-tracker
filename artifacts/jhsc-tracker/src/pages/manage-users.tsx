@@ -60,7 +60,7 @@ interface UserFormData {
   username: string;
   displayName: string;
   password: string;
-  role: "admin" | "member";
+  role: "admin" | "member" | "worker-rep";
   permissions: string[];
 }
 
@@ -191,7 +191,7 @@ export default function ManageUsersPage() {
       username: u.username,
       displayName: u.displayName,
       password: "",
-      role: u.role as "admin" | "member",
+      role: u.role as "admin" | "member" | "worker-rep",
       permissions: [...u.permissions],
     });
     setEditingUser(u);
