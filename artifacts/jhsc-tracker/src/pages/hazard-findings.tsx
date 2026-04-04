@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit2, Trash2, CalendarIcon, ShieldAlert } from "lucide-react";
 import { StatusBadge, PriorityBadge, DeptBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -50,6 +51,8 @@ export default function HazardFindingsPage() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const queryParams = {
     ...(statusFilter !== "all" && { status: statusFilter }),
@@ -153,9 +156,11 @@ export default function HazardFindingsPage() {
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">Formal recommendations to the employer.</p>
         </div>
-        <Button onClick={handleCreate} className="shrink-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold shadow-sm">
-          <Plus className="w-4 h-4 mr-2" /> Log Hazard
-        </Button>
+        {isAdmin && (
+          <Button onClick={handleCreate} className="shrink-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold shadow-sm">
+            <Plus className="w-4 h-4 mr-2" /> Log Hazard
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center bg-card p-4 rounded-md border shadow-sm">
@@ -196,7 +201,7 @@ export default function HazardFindingsPage() {
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Severity</TableHead>
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Deadline</TableHead>
               <TableHead className="w-[150px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
-              <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>
+              {isAdmin && <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -210,12 +215,12 @@ export default function HazardFindingsPage() {
                   <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                  {isAdmin && <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>}
                 </TableRow>
               ))
             ) : items?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={isAdmin ? 8 : 7} className="h-32 text-center text-muted-foreground">
                   No hazard findings found.
                 </TableCell>
               </TableRow>
@@ -260,21 +265,23 @@ export default function HazardFindingsPage() {
                   <TableCell>
                     <StatusBadge status={item.status} />
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" 
-                        onClick={() => {
-                          if(window.confirm('Delete this record?')) {
-                            deleteMutation.mutate({ id: item.id });
-                          }
-                        }}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {isAdmin && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => {
+                            if (window.confirm('Delete this record?')) {
+                              deleteMutation.mutate({ id: item.id });
+                            }
+                          }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}
