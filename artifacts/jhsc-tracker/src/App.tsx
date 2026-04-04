@@ -19,6 +19,7 @@ import ClosedItemsLogPage from "@/pages/closed-items-log";
 import MemberActionsPage from "@/pages/member-actions";
 import HealthSafetyReportPage from "@/pages/health-safety-report";
 import HSReportsLogPage from "@/pages/hs-reports-log";
+import SuggestionsPage from "@/pages/suggestions";
 import ResetPasswordPage from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 
@@ -129,6 +130,9 @@ function Router() {
               </Route>
               <Route path="/hs-reports-log">
                 <ProtectedRoute component={HSReportsLogPage} permission="hs-reports-log" />
+              </Route>
+              <Route path="/suggestions">
+                <ProtectedRoute component={SuggestionsPage} permission="suggestions" />
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />

@@ -7,6 +7,7 @@ import workerStatementsRouter from "./workerStatements";
 import closedItemsLogRouter from "./closedItemsLog";
 import memberActionsRouter from "./memberActions";
 import healthSafetyReportsRouter from "./healthSafetyReports";
+import suggestionsRouter from "./suggestions";
 import dashboardRouter from "./dashboard";
 import importRouter from "./import";
 import inspectRouter from "./inspect";
@@ -35,6 +36,7 @@ router.use("/worker-statements", requireAuth, requirePermission("worker-statemen
 router.use("/closed-items-log", requireAuth, requirePermission("action-items"), closedItemsLogRouter);
 router.use("/member-actions", requireAuth, memberActionsRouter);
 router.use("/health-safety-reports", requireAuth, healthSafetyReportsRouter);
+router.use("/suggestions", requireAuth, suggestionsRouter);
 router.use("/import", requireAuth, requirePermission("import-data"), importRouter);
 router.use("/inspect", requireAuth, requirePermission("conduct-inspection"), inspectRouter);
 router.use("/documents", requirePermission("documents"), documentsRouter);

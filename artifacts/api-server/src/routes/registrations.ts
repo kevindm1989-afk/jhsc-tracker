@@ -21,6 +21,7 @@ const DEFAULT_MEMBER_PERMISSIONS = [
   "worker-statements",
   "import-data",
   "documents",
+  "suggestions",
 ];
 
 // GET /api/registrations — admin only, list all registrations
