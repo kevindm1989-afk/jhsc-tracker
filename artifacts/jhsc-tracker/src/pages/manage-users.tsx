@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Pencil, Trash2, ShieldCheck, User, Clock, CheckCircle2, XCircle, Inbox } from "lucide-react";
+import { UserPlus, Pencil, Trash2, ShieldCheck, User, Clock, CheckCircle2, XCircle, Inbox, Mail } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -82,6 +82,7 @@ export default function ManageUsersPage() {
   const [form, setForm] = useState<UserFormData>(emptyForm());
   const [isSaving, setIsSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<AppUser | null>(null);
+  const [sendingResetId, setSendingResetId] = useState<number | null>(null);
 
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [regsLoading, setRegsLoading] = useState(true);
@@ -115,6 +116,24 @@ export default function ManageUsersPage() {
     loadUsers();
     loadRegistrations();
   }, []);
+
+  async function handleSendReset(u: AppUser) {
+    if (!window.confirm(`Send a password reset email to ${u.displayName}?`)) return;
+    setSendingResetId(u.id);
+    try {
+      const resp = await fetch(`${BASE}/api/users/${u.id}/send-reset-email`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || "Failed to send");
+      toast({ title: "Reset email sent", description: `A password reset link was sent to ${u.displayName}.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Could not send reset email", variant: "destructive" });
+    } finally {
+      setSendingResetId(null);
+    }
+  }
 
   function openApprove(reg: Registration) {
     setApprovingReg(reg);
@@ -437,6 +456,15 @@ export default function ManageUsersPage() {
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      title="Send password reset email"
+                      onClick={() => handleSendReset(u)}
+                      disabled={sendingResetId === u.id}
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => openEdit(u)}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>

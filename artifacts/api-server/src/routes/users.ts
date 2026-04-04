@@ -1,9 +1,11 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db/schema";
+import { usersTable, passwordResetTokensTable } from "@workspace/db/schema";
 import { eq, ne } from "drizzle-orm";
 import { requireAdmin } from "../middleware/requireAuth";
+import { createTransporter, getSenderAddress } from "../emailClient";
 import "../sessionTypes";
 
 const router: IRouter = Router();
@@ -174,6 +176,53 @@ router.delete("/:id", requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("Delete user error:", err);
     res.status(500).json({ error: "Failed to delete user" });
+  }
+});
+
+// POST /api/users/:id/send-reset-email — admin sends a password reset link to a user
+router.post("/:id/send-reset-email", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const [user] = await db
+      .select({ id: usersTable.id, email: usersTable.email, displayName: usersTable.displayName })
+      .from(usersTable)
+      .where(eq(usersTable.id, id));
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user.email) return res.status(400).json({ error: "This user has no email address on file" });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await db.insert(passwordResetTokensTable).values({ userId: user.id, token, expiresAt });
+
+    const proto = (req.headers["x-forwarded-proto"] as string) || req.protocol;
+    const host = (req.headers["x-forwarded-host"] as string) || req.headers.host;
+    const basePath = (process.env.BASE_PATH || "").replace(/\/$/, "");
+    const resetUrl = `${proto}://${host}${basePath}/reset-password?token=${token}`;
+
+    const transporter = createTransporter();
+    const from = getSenderAddress();
+    await transporter.sendMail({
+      from,
+      to: user.email,
+      subject: "Reset your JHSC Co-Chair Tracker password",
+      html: `
+        <p>Hi ${user.displayName},</p>
+        <p>An administrator has sent you a password reset link for the <strong>JHSC Co-Chair Tracker</strong>.</p>
+        <p><a href="${resetUrl}" style="background:#1d4ed8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;margin:12px 0;">Reset Password</a></p>
+        <p>Or copy this link into your browser:</p>
+        <p style="word-break:break-all;font-size:13px;color:#555;">${resetUrl}</p>
+        <p>This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>
+        <br/>
+        <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker &mdash; Unifor Local 1285</p>
+      `,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Send reset email error:", err);
+    res.status(500).json({ error: "Failed to send reset email" });
   }
 });
 
