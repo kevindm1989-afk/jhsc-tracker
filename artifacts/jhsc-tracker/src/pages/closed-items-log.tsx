@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit2, Trash2, CheckCheck } from "lucide-react";
 import { DeptBadge, StatusBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +61,8 @@ export default function ClosedItemsLogPage() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const queryParams = {
     ...(deptFilter !== "all" && { department: deptFilter }),
@@ -182,10 +185,12 @@ export default function ClosedItemsLogPage() {
             Items resolved and closed — imported from meeting minutes
           </p>
         </div>
-        <Button onClick={openCreate} size="sm" className="w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Closed Item
-        </Button>
+        {isAdmin && (
+          <Button onClick={openCreate} size="sm" className="w-full sm:w-auto">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Closed Item
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -226,14 +231,14 @@ export default function ClosedItemsLogPage() {
               <TableHead className="w-28">Closed Date</TableHead>
               <TableHead className="hidden w-28">Meeting Date</TableHead>
               <TableHead className="w-24">Status</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              {isAdmin && <TableHead className="w-24 text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 10 }).map((_, j) => (
+                  {Array.from({ length: isAdmin ? 10 : 9 }).map((_, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
@@ -285,42 +290,44 @@ export default function ClosedItemsLogPage() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {!(item as any).verifiedAt && (
+                  {isAdmin && (
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {!(item as any).verifiedAt && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs px-2 text-teal-700 border-teal-300 hover:bg-teal-50"
+                            onClick={() => verifyMutation.mutate({ id: item.id })}
+                            disabled={verifyMutation.isPending}
+                          >
+                            Verify
+                          </Button>
+                        )}
                         <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs px-2 text-teal-700 border-teal-300 hover:bg-teal-50"
-                          onClick={() => verifyMutation.mutate({ id: item.id })}
-                          disabled={verifyMutation.isPending}
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => openEdit(item)}
                         >
-                          Verify
+                          <Edit2 className="w-3.5 h-3.5" />
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => openEdit(item)}
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => setDeletingItem(item)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => setDeletingItem(item)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={isAdmin ? 10 : 9} className="h-32 text-center text-muted-foreground">
                   No closed items found.{" "}
                   {deptFilter !== "all" || searchText
                     ? "Try clearing the filters."
