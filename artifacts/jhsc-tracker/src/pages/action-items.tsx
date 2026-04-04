@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit2, Trash2, CalendarIcon } from "lucide-react";
 import { StatusBadge, PriorityBadge, DeptBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
@@ -51,6 +52,8 @@ export default function ActionItemsPage() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const queryParams = {
     ...(statusFilter !== "all" && { status: statusFilter }),
@@ -160,9 +163,11 @@ export default function ActionItemsPage() {
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Action Items</h1>
           <p className="text-muted-foreground mt-1 text-sm">Track safety corrections and assigned tasks.</p>
         </div>
-        <Button onClick={handleCreate} className="shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
-          <Plus className="w-4 h-4 mr-2" /> Add Action Item
-        </Button>
+        {isAdmin && (
+          <Button onClick={handleCreate} className="shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
+            <Plus className="w-4 h-4 mr-2" /> Add Action Item
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center bg-card p-4 rounded-md border shadow-sm">
@@ -203,7 +208,7 @@ export default function ActionItemsPage() {
               <TableHead className="w-[150px] font-bold text-xs uppercase tracking-wider">Assigned To</TableHead>
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Due Date</TableHead>
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
-              <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>
+              {isAdmin && <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -217,12 +222,12 @@ export default function ActionItemsPage() {
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                  {isAdmin && <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>}
                 </TableRow>
               ))
             ) : items?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={isAdmin ? 8 : 7} className="h-32 text-center text-muted-foreground">
                   No action items found.
                 </TableCell>
               </TableRow>
@@ -263,21 +268,23 @@ export default function ActionItemsPage() {
                     <TableCell>
                       <StatusBadge status={overdue ? "Overdue" : item.status} />
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" 
-                          onClick={() => {
-                            if(window.confirm('Delete this action item?')) {
-                              deleteMutation.mutate({ id: item.id });
-                            }
-                          }}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              if (window.confirm('Delete this action item?')) {
+                                deleteMutation.mutate({ id: item.id });
+                              }
+                            }}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })
