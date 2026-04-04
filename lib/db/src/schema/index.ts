@@ -9,3 +9,4 @@ export * from "./memberActions";
 export * from "./healthSafetyReports";
 export * from "./registrations";
 export * from "./passwordResetTokens";
+export * from "./suggestions";

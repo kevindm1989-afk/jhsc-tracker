@@ -112,6 +112,26 @@ export async function ensureSessionTable(): Promise<void> {
     await client.query(`
       ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" timestamp NOT NULL DEFAULT now();
     `);
+
+    // Suggestions table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "suggestions" (
+        "id" serial PRIMARY KEY,
+        "suggestion_code" text NOT NULL UNIQUE,
+        "employee_name" text NOT NULL,
+        "department" text NOT NULL,
+        "shift" text NOT NULL,
+        "date_submitted" date NOT NULL,
+        "date_observed" date NOT NULL,
+        "priority_level" text NOT NULL,
+        "location_of_concern" text NOT NULL,
+        "description" text NOT NULL,
+        "proposed_solution" text NOT NULL,
+        "submitted_by_user_id" integer,
+        "submitted_by_name" text NOT NULL,
+        "created_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
   } finally {
     client.release();
   }
