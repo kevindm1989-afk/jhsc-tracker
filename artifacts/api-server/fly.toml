@@ -1,4 +1,4 @@
-app = "YOUR-APP-NAME-HERE"
+app = "jhsctracker-api"
 primary_region = "yyz"
 
 [build]
