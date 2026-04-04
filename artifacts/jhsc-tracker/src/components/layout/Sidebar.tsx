@@ -182,12 +182,16 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    // Reorder within the full stored order list
-    const oldIndex = order.indexOf(active.id as string);
-    const newIndex = order.indexOf(over.id as string);
+    // Operate on the full visible list (handles pages added after the stored order was saved)
+    const visibleHrefs = sortedItems.map((i) => i.href);
+    const oldIndex = visibleHrefs.indexOf(active.id as string);
+    const newIndex = visibleHrefs.indexOf(over.id as string);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    saveOrder(arrayMove(order, oldIndex, newIndex));
+    const reordered = arrayMove(visibleHrefs, oldIndex, newIndex);
+    // Merge: reordered visible pages first, then any stored pages not currently visible
+    const newOrder = [...reordered, ...order.filter((h) => !reordered.includes(h))];
+    saveOrder(newOrder);
   }
 
   return (
