@@ -34,7 +34,6 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     // --- Import to DB ---
     let importedActionItems = 0;
     let importedHazardFindings = 0;
-    let skippedActionItems = 0;
     let skippedHazardFindings = 0;
 
     // Separate closed items (from the "Closed Items" sheet) from regular action items
@@ -43,22 +42,10 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
 
     const isIsoDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
-    // Import regular action items (dedup by description + date)
+    // Clear ALL existing action items, then insert fresh from the import
+    await db.delete(actionItemsTable);
+
     for (const item of regularActionItems) {
-      const existing = await db
-        .select({ id: actionItemsTable.id })
-        .from(actionItemsTable)
-        .where(
-          isIsoDate(item.date)
-            ? and(eq(actionItemsTable.description, item.description), eq(actionItemsTable.date, item.date))
-            : eq(actionItemsTable.description, item.description)
-        );
-
-      if (existing.length > 0) {
-        skippedActionItems++;
-        continue;
-      }
-
       const [created] = await db
         .insert(actionItemsTable)
         .values({
@@ -186,7 +173,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         closedItems: updatedClosedItems,
       },
       skipped: {
-        actionItems: skippedActionItems,
+        actionItems: 0,
         hazardFindings: skippedHazardFindings,
       },
     });
