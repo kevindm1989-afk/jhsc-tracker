@@ -1,4 +1,3 @@
-cat > artifacts/jhsc-tracker/vite.config.ts << 'EOF'
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -29,10 +28,6 @@ export default defineConfig({
     port,
     host: "0.0.0.0",
     allowedHosts: true,
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
-    },
   },
   preview: {
     port,
@@ -40,4 +35,3 @@ export default defineConfig({
     allowedHosts: true,
   },
 });
-EOF
