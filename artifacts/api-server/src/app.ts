@@ -62,6 +62,10 @@ app.use(
 
 app.use("/api", router);
 
+app.get("/health", (_req, res) => {
+  res.status(200).send("OK");
+});
+
 // Always attempt to serve the JHSC tracker frontend static build.
 // In development the dist directory won't exist so express.static is a no-op;
 // in production (or after a local build) it serves the SPA correctly.
@@ -323,9 +327,5 @@ export async function ensureSessionTable(): Promise<void> {
     client.release();
   }
 }
-
-app.get("/health", (_req, res) => {
-  res.status(200).send("OK");
-});
 
 export default app;
