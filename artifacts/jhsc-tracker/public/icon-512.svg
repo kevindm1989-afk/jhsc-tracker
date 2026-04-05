@@ -1,0 +1,8 @@
+<svg width="192" height="192" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg">
+  <rect x="140" y="140" width="400" height="400" rx="80" fill="#1e3a5f"/>
+  <circle cx="340" cy="310" r="100" fill="none" stroke="#ffffff" stroke-width="12"/>
+  <path d="M340 210 L340 310 L410 360" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="220" y="440" width="260" height="14" rx="7" fill="#c8a84b"/>
+  <rect x="260" y="464" width="180" height="10" rx="5" fill="rgba(255,255,255,0.5)"/>
+  <text x="340" y="510" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#ffffff">JHSC</text>
+</svg>
