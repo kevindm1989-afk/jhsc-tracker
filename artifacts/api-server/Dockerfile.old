@@ -1,0 +1,21 @@
+FROM node:20-alpine
+
+RUN corepack enable
+
+WORKDIR /app
+
+COPY . .
+
+RUN pnpm install --no-frozen-lockfile
+
+WORKDIR /app/artifacts/api-server
+RUN pnpm run build
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+EXPOSE 3000
+
+CMD ["node", "artifacts/api-server/dist/index.js"]

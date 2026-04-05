@@ -6,18 +6,18 @@ WORKDIR /app
 
 COPY . .
 
+# FIX: allow pnpm to run in CI (no prompt)
+ENV CI=true
 RUN pnpm install --no-frozen-lockfile
 
-# Build API
 WORKDIR /app/artifacts/api-server
 RUN pnpm run build
 
-# IMPORTANT: run from correct working directory
-WORKDIR /app/artifacts/api-server
+WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "artifacts/api-server/dist/index.js"]
