@@ -9,7 +9,11 @@ COPY . .
 ENV CI=true
 RUN pnpm install --no-frozen-lockfile
 
-# Build frontend first
+# Build shared db package first
+WORKDIR /app/lib/db
+RUN pnpm build
+
+# Build frontend
 WORKDIR /app/artifacts/jhsc-tracker
 RUN pnpm run build
 
