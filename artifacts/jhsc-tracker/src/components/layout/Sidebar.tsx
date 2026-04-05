@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useNavOrder, DEFAULT_NAV_ORDER } from "@/hooks/use-nav-order";
+import { NAV_CONFIGS } from "@/lib/nav-config";
 
 interface SidebarProps {
   onNavigate?: () => void;
@@ -55,22 +56,27 @@ interface NavItem {
   adminOnly?: boolean;
 }
 
-const ALL_NAV_ITEMS: NavItem[] = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard, permission: "dashboard" },
-  { name: "Action Items", href: "/action-items", icon: ListChecks, permission: "action-items" },
-  { name: "Closed Items Log", href: "/closed-items-log", icon: CheckCheck, permission: "action-items" },
-  { name: "Member Actions", href: "/member-actions", icon: ClipboardList, permission: "member-actions" },
-  { name: "Conduct A H&S Report", href: "/health-safety-report", icon: ShieldAlert, permission: "health-safety-report" },
-  { name: "H&S Reports Log", href: "/hs-reports-log", icon: ScrollText, permission: "hs-reports-log" },
-  { name: "Hazard Findings", href: "/hazard-findings", icon: AlertTriangle, permission: "hazard-findings" },
-  { name: "Inspection Log", href: "/inspection-log", icon: Search, permission: "inspection-log" },
-  { name: "Conduct Inspection", href: "/conduct-inspection", icon: ClipboardCheck, permission: "conduct-inspection" },
-  { name: "Worker Statements", href: "/worker-statements", icon: MessageSquareWarning, permission: "worker-statements" },
-  { name: "Submit a Suggestion", href: "/suggestions", icon: Lightbulb, permission: "suggestions" },
-  { name: "Suggestions Log", href: "/suggestions-log", icon: ScrollText, permission: "suggestions" },
-  { name: "Import Data", href: "/import-minutes", icon: Upload, permission: "import-data" },
-  { name: "Manage Users", href: "/manage-users", icon: Users, permission: null, adminOnly: true },
-];
+const ICON_MAP: Record<string, React.ElementType> = {
+  "/": LayoutDashboard,
+  "/action-items": ListChecks,
+  "/closed-items-log": CheckCheck,
+  "/member-actions": ClipboardList,
+  "/health-safety-report": ShieldAlert,
+  "/hs-reports-log": ScrollText,
+  "/hazard-findings": AlertTriangle,
+  "/inspection-log": Search,
+  "/conduct-inspection": ClipboardCheck,
+  "/worker-statements": MessageSquareWarning,
+  "/suggestions": Lightbulb,
+  "/suggestions-log": ScrollText,
+  "/import-minutes": Upload,
+  "/manage-users": Users,
+};
+
+const ALL_NAV_ITEMS: NavItem[] = NAV_CONFIGS.map((c) => ({
+  ...c,
+  icon: ICON_MAP[c.href] ?? LayoutDashboard,
+}));
 
 // ─── Sortable nav item ────────────────────────────────────────────────────────
 

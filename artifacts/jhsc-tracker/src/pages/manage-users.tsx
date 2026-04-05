@@ -17,23 +17,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Pencil, Trash2, ShieldCheck, User, Clock, CheckCircle2, XCircle, Inbox, Mail } from "lucide-react";
+import { PERMISSION_LABELS, ALL_PERMISSIONS } from "@/lib/nav-config";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-
-const PERMISSION_LABELS: Record<string, string> = {
-  "dashboard": "Dashboard",
-  "action-items": "Action Items",
-  "member-actions": "Member Actions",
-  "health-safety-report": "Conduct A H&S Report",
-  "hs-reports-log": "H&S Reports Log",
-  "hazard-findings": "Hazard Findings",
-  "inspection-log": "Inspection Log",
-  "conduct-inspection": "Conduct Inspection",
-  "worker-statements": "Worker Statements",
-  "import-data": "Import Data",
-  "documents": "Documents",
-};
-const ALL_PERMISSIONS = Object.keys(PERMISSION_LABELS);
 
 interface AppUser {
   id: number;
