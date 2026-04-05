@@ -17,10 +17,10 @@ run = "pnpm --filter @workspace/api-server run dev"
 
 [services.production]
 build = ["sh", "-c", "PORT=3000 BASE_PATH=/ pnpm --filter @workspace/jhsc-tracker run build && pnpm --filter @workspace/api-server run build"]
-run = ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]
+run = ["node", "--enable-source-maps", "artifacts/api-server/dist/index.js"]
 
 [services.production.env]
 NODE_ENV = "production"
 
 [services.production.health.startup]
-path = "/api/healthz"
+path = "/api/health"
