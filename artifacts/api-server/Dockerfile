@@ -1,15 +1,23 @@
 FROM node:20-alpine
 
-RUN npm install -g pnpm
+RUN corepack enable
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install
-
 COPY . .
+
+RUN pnpm install --no-frozen-lockfile
+
+# Build API
+WORKDIR /app/artifacts/api-server
 RUN pnpm run build
+
+# IMPORTANT: run from correct working directory
+WORKDIR /app/artifacts/api-server
+
+ENV NODE_ENV=production
+ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+CMD ["node", "dist/index.js"]
