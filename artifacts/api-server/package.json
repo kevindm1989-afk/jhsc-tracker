@@ -1,14 +1,13 @@
 {
-  "name": "jhsctracker-api",
+  "name": "@workspace/api-server",
   "version": "0.0.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
     "start": "node dist/index.js",
-    "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "private": true,
   "devDependencies": {
