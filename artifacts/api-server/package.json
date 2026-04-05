@@ -2,6 +2,7 @@
   "name": "jhsctracker-api",
   "version": "0.0.0",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "node ./build.mjs",
@@ -26,7 +27,23 @@
     }
   },
   "dependencies": {
+    "@workspace/db": "workspace:*",
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^10.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.0",
+    "drizzle-orm": "^0.45.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "multer": "^2.1.1",
+    "nodemailer": "^6.9.15",
+    "pg": "^8.20.0",
     "pino": "^10.3.1",
-    "thread-stream": "^4.0.0"
+    "pino-http": "^11.0.0",
+    "thread-stream": "^4.0.0",
+    "xlsx-populate": "^1.21.0",
+    "zod": "3.25.76"
   }
 }

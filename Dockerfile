@@ -6,11 +6,16 @@ WORKDIR /app
 
 COPY . .
 
-# FIX: allow pnpm to run in CI (no prompt)
 ENV CI=true
 RUN pnpm install --no-frozen-lockfile
 
+# Build frontend first
+WORKDIR /app/artifacts/jhsc-tracker
+RUN pnpm run build
+
+# Build backend
 WORKDIR /app/artifacts/api-server
+RUN rm -rf dist
 RUN pnpm run build
 
 WORKDIR /app
