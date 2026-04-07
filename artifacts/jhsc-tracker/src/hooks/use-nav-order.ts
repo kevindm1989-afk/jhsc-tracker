@@ -13,6 +13,8 @@ export const DEFAULT_NAV_ORDER = [
   "/inspection-log",
   "/conduct-inspection",
   "/worker-statements",
+  "/recommendations",
+  "/meeting-minutes",
   "/right-to-refuse",
   "/suggestions",
   "/suggestions-log",
