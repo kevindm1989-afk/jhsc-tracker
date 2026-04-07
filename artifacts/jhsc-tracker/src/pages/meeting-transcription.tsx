@@ -64,6 +64,7 @@ export default function MeetingTranscription() {
   const [audioUrl, setAudioUrl] = useState<string>("");
 
   const mrRef = useRef<MediaRecorder | null>(null);
+  const mimeRef = useRef<string>("");
   const chunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -89,10 +90,12 @@ export default function MeetingTranscription() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mime =
-        MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" :
         MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" :
         MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" :
-        "audio/ogg";
+        MediaRecorder.isTypeSupported("audio/ogg;codecs=opus") ? "audio/ogg;codecs=opus" :
+        MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" :
+        "";
+      mimeRef.current = mime;
       const mr = new MediaRecorder(stream, { mimeType: mime });
       chunksRef.current = [];
       mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
@@ -260,7 +263,7 @@ export default function MeetingTranscription() {
           {appState === "preview" && (
             <div>
               <p style={{ fontSize: "13px", color: "#666", marginBottom: "8px" }}>Preview before submitting:</p>
-              <audio ref={audioRef} src={audioUrl} controls preload="auto" autoPlay={false} style={{ width: "100%", marginBottom: "16px" }} />
+              <audio ref={audioRef} src={audioUrl} type={audioUrl ? mimeRef.current : undefined} controls preload="auto" autoPlay={false} style={{ width: "100%", marginBottom: "16px" }} />
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <button onClick={handleSubmit} style={btn("#1a2744", "#fff")}>Submit for Transcription</button>
                 <button onClick={handleDiscard} style={btn("transparent", "#888", "1px solid #ddd")}>Discard & Re-record</button>
