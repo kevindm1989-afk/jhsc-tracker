@@ -65,6 +65,8 @@ interface MinutesResult {
   imported: { actionItems: number; hazardFindings: number; closedItems: number };
   updated: { closedItems: number };
   skipped: { actionItems: number; hazardFindings: number };
+  fileSaved?: boolean;
+  savedToFolder?: string;
 }
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
@@ -237,6 +239,11 @@ function MinutesTab() {
               <div>
                 <p className="font-bold text-green-900 text-lg">Import Successful</p>
                 <p className="text-sm text-green-700">{result.meetingDate} — {result.facility}</p>
+                {result.fileSaved && result.savedToFolder && (
+                  <p className="text-xs text-green-600 mt-0.5">
+                    File saved to <span className="font-semibold">{result.savedToFolder}</span>
+                  </p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
