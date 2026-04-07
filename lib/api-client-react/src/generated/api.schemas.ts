@@ -713,11 +713,6 @@ export type ListActionItemsParams = {
   department?: string;
 };
 
-export type ListClosedItemsParams = {
-  department?: string;
-  search?: string;
-};
-
 export type AssignClosedItemVerifierBody = {
   assignedVerifierId?: number | null;
   assignedVerifierName?: string | null;

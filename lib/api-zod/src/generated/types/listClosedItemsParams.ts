@@ -10,8 +10,3 @@ export interface ListClosedItemsParams {
   department?: string;
   search?: string;
 }
-
-export type ListClosedItemsParams = {
-  department?: string;
-  search?: string;
-};
