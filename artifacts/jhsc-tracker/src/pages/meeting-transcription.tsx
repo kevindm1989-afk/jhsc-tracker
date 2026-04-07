@@ -93,9 +93,11 @@ export default function MeetingTranscription() {
       mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mr.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunksRef.current, { type: mime });
-        if (audioRef.current) audioRef.current.src = URL.createObjectURL(blob);
-        setAppState("preview");
+        setTimeout(() => {
+          const blob = new Blob(chunksRef.current, { type: mime });
+          if (audioRef.current) audioRef.current.src = URL.createObjectURL(blob);
+          setAppState("preview");
+        }, 300);
       };
       mr.start(1000);
       mrRef.current = mr;
