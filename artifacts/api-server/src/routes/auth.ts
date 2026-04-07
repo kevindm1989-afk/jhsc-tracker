@@ -134,7 +134,7 @@ router.post("/register", async (req, res) => {
           </table>
           <p>Sign in to the tracker to approve or decline this request.</p>
           <br/>
-          <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker &mdash; Unifor Local 1285</p>
+          <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker</p>
         `,
       });
     } catch (emailErr) {
@@ -193,7 +193,7 @@ router.post("/forgot-password", async (req, res) => {
             <p style="word-break:break-all;font-size:13px;color:#555;">${resetUrl}</p>
             <p>This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>
             <br/>
-            <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker &mdash; Unifor Local 1285</p>
+            <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker</p>
           `,
         });
       } catch (emailErr) {

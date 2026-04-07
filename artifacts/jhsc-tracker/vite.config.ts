@@ -31,7 +31,7 @@ export default defineConfig({
       manifest: {
         name: "JHSC Co-Chair Tracker",
         short_name: "JHSC Tracker",
-        description: "Joint Health & Safety Committee Tracker — Unifor Local 1285 / Saputo Georgetown",
+        description: "Joint Health & Safety Committee Tracker",
         theme_color: "#1a1a2e",
         background_color: "#f8fafc",
         display: "standalone",

@@ -207,7 +207,7 @@ export default function SuggestionsPage() {
         <div>
           <h1 className="text-xl font-bold text-foreground">Employee Suggestions Form</h1>
           <p className="text-sm text-muted-foreground">
-            Saputo Dairy – Georgetown, Ontario · Unifor Local 1285
+            Joint Health &amp; Safety Committee
           </p>
         </div>
       </div>

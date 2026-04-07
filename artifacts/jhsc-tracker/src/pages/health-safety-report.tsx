@@ -261,7 +261,7 @@ export default function HealthSafetyReportPage() {
         <div>
           <h1 className="text-xl font-bold text-foreground">Health &amp; Safety Concern Report</h1>
           <p className="text-sm text-muted-foreground">
-            Saputo Dairy – Georgetown, Ontario · Unifor Local 1285
+            Joint Health &amp; Safety Committee
           </p>
         </div>
       </div>

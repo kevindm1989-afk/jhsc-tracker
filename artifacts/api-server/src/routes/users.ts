@@ -217,7 +217,7 @@ router.post("/:id/send-reset-email", requireAdmin, async (req, res) => {
         <p style="word-break:break-all;font-size:13px;color:#555;">${resetUrl}</p>
         <p>This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>
         <br/>
-        <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker &mdash; Unifor Local 1285</p>
+        <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker</p>
       `,
     });
 

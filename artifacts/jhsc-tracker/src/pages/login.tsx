@@ -156,7 +156,7 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">JHSC Co-Chair Tracker</h1>
-          <p className="text-sm text-muted-foreground font-medium">Unifor Local 1285 — Saputo Georgetown</p>
+          <p className="text-sm text-muted-foreground font-medium">Joint Health &amp; Safety Committee</p>
         </div>
 
         <Card className="border shadow-md">

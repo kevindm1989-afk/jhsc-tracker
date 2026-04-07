@@ -214,9 +214,8 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         </h1>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-primary flex-shrink-0" />
-          <span className="text-sm font-semibold text-sidebar-foreground/90">Unifor Local 1285</span>
+          <span className="text-sm font-semibold text-sidebar-foreground/90">Joint Health &amp; Safety Committee</span>
         </div>
-        <p className="text-xs text-sidebar-foreground/70 mt-1 font-medium">Saputo Georgetown</p>
       </div>
 
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
