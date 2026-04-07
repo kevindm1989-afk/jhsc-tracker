@@ -61,6 +61,7 @@ export default function MeetingTranscription() {
   const [result, setResult] = useState<TranscriptResult | null>(null);
   const [copyLabel, setCopyLabel] = useState("Copy");
   const [speakerNames, setSpeakerNames] = useState<Record<string, string>>({});
+  const [audioUrl, setAudioUrl] = useState<string>("");
 
   const mrRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -95,7 +96,7 @@ export default function MeetingTranscription() {
         stream.getTracks().forEach(t => t.stop());
         setTimeout(() => {
           const blob = new Blob(chunksRef.current, { type: mime });
-          if (audioRef.current) audioRef.current.src = URL.createObjectURL(blob);
+          setAudioUrl(URL.createObjectURL(blob));
           setAppState("preview");
         }, 300);
       };
@@ -120,7 +121,7 @@ export default function MeetingTranscription() {
 
   const handleDiscard = () => {
     chunksRef.current = [];
-    if (audioRef.current) audioRef.current.src = "";
+    setAudioUrl("");
     setSeconds(0);
     setAppState("idle");
   };
@@ -197,7 +198,7 @@ export default function MeetingTranscription() {
 
   const handleNew = () => {
     chunksRef.current = [];
-    if (audioRef.current) audioRef.current.src = "";
+    setAudioUrl("");
     setResult(null); setSpeakerNames({}); setSeconds(0);
     setStatusMsg(""); setElapsed(""); setAppState("idle");
     if (pollRef.current) clearInterval(pollRef.current);
@@ -248,7 +249,7 @@ export default function MeetingTranscription() {
           {appState === "preview" && (
             <div>
               <p style={{ fontSize: "13px", color: "#666", marginBottom: "8px" }}>Preview before submitting:</p>
-              <audio ref={audioRef} controls style={{ width: "100%", marginBottom: "16px" }} />
+              <audio ref={audioRef} src={audioUrl} controls style={{ width: "100%", marginBottom: "16px" }} />
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <button onClick={handleSubmit} style={btn("#1a2744", "#fff")}>Submit for Transcription</button>
                 <button onClick={handleDiscard} style={btn("transparent", "#888", "1px solid #ddd")}>Discard & Re-record</button>
