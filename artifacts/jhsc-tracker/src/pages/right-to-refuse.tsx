@@ -175,7 +175,7 @@ export default function RightToRefusePage() {
                     <TableCell>{outcomeBadge(item.outcome)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        {isLocked(item) && <Lock className="w-3 h-3 text-muted-foreground" title="Locked after 24 hours" />}
+                        {isLocked(item) && <Lock className="w-3 h-3 text-muted-foreground" />}
                         {!isLocked(item) && (
                           <Button variant="ghost" size="icon" className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => handleEdit(item)}>
                             <Edit2 className="h-4 w-4" />

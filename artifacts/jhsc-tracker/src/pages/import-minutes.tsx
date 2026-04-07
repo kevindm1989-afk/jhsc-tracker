@@ -110,7 +110,7 @@ function UploadArea({
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
   onClick: () => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   hint: string;
 }) {

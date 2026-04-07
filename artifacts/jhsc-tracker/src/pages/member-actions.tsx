@@ -11,6 +11,7 @@ import {
   getListMemberActionsQueryKey,
   MemberAction,
   MemberActionType,
+  UpdateMemberActionStatus,
 } from "@workspace/api-client-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -168,7 +169,7 @@ export default function MemberActionsPage() {
   };
 
   const updateStatus = (item: MemberAction, status: string) => {
-    updateMutation.mutate({ id: item.id, data: { status } });
+    updateMutation.mutate({ id: item.id, data: { status: status as UpdateMemberActionStatus } });
   };
 
   const myActions = canAdmin ? (actions ?? []) : (actions ?? []).filter((a) => a.assignedToUserId === user?.id);

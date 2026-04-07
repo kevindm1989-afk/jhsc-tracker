@@ -12,7 +12,9 @@ import {
   ActionItem,
   ActionItemStatus,
   ActionItemDepartment,
-  ActionItemPriority
+  ActionItemPriority,
+  UpdateActionItem,
+  CreateActionItem,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -145,9 +147,9 @@ export default function ActionItemsPage() {
 
   const onSubmit = (data: FormValues) => {
     if (editingItem) {
-      updateMutation.mutate({ id: editingItem.id, data });
+      updateMutation.mutate({ id: editingItem.id, data: data as UpdateActionItem });
     } else {
-      createMutation.mutate({ data });
+      createMutation.mutate({ data: data as CreateActionItem });
     }
   };
 

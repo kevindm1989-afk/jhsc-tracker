@@ -25,6 +25,7 @@ interface AppUser {
   id: number;
   username: string;
   displayName: string;
+  email?: string;
   role: string;
   permissions: string[];
   createdAt: string;
