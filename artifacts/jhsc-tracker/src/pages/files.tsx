@@ -76,6 +76,15 @@ async function apiFetch(url: string, opts?: RequestInit) {
   return res.json();
 }
 
+function formatMeetingDate(isoDate: string) {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 function buildFolderOptions(folders: FolderItem[]): { id: number; label: string }[] {
   const options: { id: number; label: string }[] = [];
   const addLevel = (parentId: number | null, prefix: string) => {
@@ -103,6 +112,7 @@ export default function FilesPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFolderId, setUploadFolderId] = useState<string>("");
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [meetingDate, setMeetingDate] = useState<string>("");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -126,6 +136,9 @@ export default function FilesPage() {
   });
 
   const folderOptions = buildFolderOptions(folders);
+
+  const minutesFolder = folders.find((f) => f.parentId === null && f.name === "Minutes");
+  const isMinutesDest = !!minutesFolder && uploadFolderId === String(minutesFolder.id);
 
   // ── Mutations ────────────────────────────────────────────────────────────────
 
@@ -216,9 +229,33 @@ export default function FilesPage() {
     setNewFolderOpen(true);
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!uploadFolderId || !uploadFiles.length) return;
-    uploadMut.mutate({ folderId: parseInt(uploadFolderId), files: uploadFiles });
+
+    let targetFolderId = parseInt(uploadFolderId);
+
+    if (isMinutesDest && meetingDate) {
+      const folderName = formatMeetingDate(meetingDate);
+      const existing = folders.find((f) => f.parentId === targetFolderId && f.name === folderName);
+      if (existing) {
+        targetFolderId = existing.id;
+      } else {
+        try {
+          const created = await apiFetch("/api/folder-files/folders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: folderName, parentId: targetFolderId }),
+          });
+          await qc.invalidateQueries({ queryKey: ["folders"] });
+          targetFolderId = created.id;
+        } catch {
+          toast({ title: "Error", description: "Could not create date subfolder", variant: "destructive" });
+          return;
+        }
+      }
+    }
+
+    uploadMut.mutate({ folderId: targetFolderId, files: uploadFiles });
   };
 
   const handleFileDrop = useCallback((e: React.DragEvent) => {
@@ -588,7 +625,7 @@ export default function FilesPage() {
       </Dialog>
 
       {/* Upload Dialog */}
-      <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) { setUploadFiles([]); } }}>
+      <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) { setUploadFiles([]); setMeetingDate(""); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -612,6 +649,29 @@ export default function FilesPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Meeting date — shown only when Minutes folder is selected */}
+            {isMinutesDest && (
+              <div className="space-y-1.5">
+                <label className="text-xs uppercase font-bold text-muted-foreground">
+                  Meeting Date <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  type="date"
+                  value={meetingDate}
+                  onChange={(e) => setMeetingDate(e.target.value)}
+                  max={new Date().toISOString().split("T")[0]}
+                />
+                {meetingDate && (
+                  <p className="text-xs text-muted-foreground">
+                    File will be saved to:{" "}
+                    <span className="font-medium text-foreground">
+                      Minutes &rsaquo; {formatMeetingDate(meetingDate)}
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
 
             <div
               className={cn(
@@ -652,12 +712,12 @@ export default function FilesPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setUploadOpen(false); setUploadFiles([]); setUploadFolderId(""); }}>
+            <Button variant="outline" onClick={() => { setUploadOpen(false); setUploadFiles([]); setUploadFolderId(""); setMeetingDate(""); }}>
               Cancel
             </Button>
             <Button
               onClick={handleUpload}
-              disabled={!uploadFolderId || !uploadFiles.length || uploadMut.isPending}
+              disabled={!uploadFolderId || !uploadFiles.length || uploadMut.isPending || (isMinutesDest && !meetingDate)}
             >
               {uploadMut.isPending ? "Uploading…" : `Upload ${uploadFiles.length || ""} File${uploadFiles.length !== 1 ? "s" : ""}`}
             </Button>
