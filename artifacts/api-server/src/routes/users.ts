@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { db } from "@workspace/db";
@@ -47,7 +47,7 @@ router.get("/permissions", requireAdmin, (_req, res) => {
 });
 
 // POST /api/users — create a new member user (admin only)
-router.post("/", requireAdmin, async (req, res) => {
+router.post("/", requireAdmin, async (req: Request, res: Response) => {
   try {
     const { username, displayName, password, role, permissions } = req.body as {
       username: string;
@@ -84,20 +84,20 @@ router.post("/", requireAdmin, async (req, res) => {
         createdAt: usersTable.createdAt,
       });
 
-    res.status(201).json(created);
+    return res.status(201).json(created);
   } catch (err: any) {
     if (err?.code === "23505") {
       return res.status(409).json({ error: "Username already exists" });
     }
     console.error("Create user error:", err);
-    res.status(500).json({ error: "Failed to create user" });
+    return res.status(500).json({ error: "Failed to create user" });
   }
 });
 
 // PATCH /api/users/:id — update a user (admin only)
-router.patch("/:id", requireAdmin, async (req, res) => {
+router.patch("/:id", requireAdmin, async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     const { displayName, email, role, permissions, password } = req.body as {
       displayName?: string;
       email?: string;
@@ -140,17 +140,17 @@ router.patch("/:id", requireAdmin, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     console.error("Update user error:", err);
-    res.status(500).json({ error: "Failed to update user" });
+    return res.status(500).json({ error: "Failed to update user" });
   }
 });
 
 // DELETE /api/users/:id — delete a user (admin only, cannot delete last admin)
-router.delete("/:id", requireAdmin, async (req, res) => {
+router.delete("/:id", requireAdmin, async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
 
     const [target] = await db.select().from(usersTable).where(eq(usersTable.id, id));
     if (!target) {
@@ -158,12 +158,6 @@ router.delete("/:id", requireAdmin, async (req, res) => {
     }
 
     if (target.role === "admin") {
-      const otherAdmins = await db
-        .select({ id: usersTable.id })
-        .from(usersTable)
-        .where(ne(usersTable.id, id));
-      const hasOtherAdmin = otherAdmins.some((u) => u.id !== id);
-      // re-check properly
       const allAdmins = await db
         .select({ id: usersTable.id, role: usersTable.role })
         .from(usersTable);
@@ -174,17 +168,17 @@ router.delete("/:id", requireAdmin, async (req, res) => {
     }
 
     await db.delete(usersTable).where(eq(usersTable.id, id));
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error("Delete user error:", err);
-    res.status(500).json({ error: "Failed to delete user" });
+    return res.status(500).json({ error: "Failed to delete user" });
   }
 });
 
 // POST /api/users/:id/send-reset-email — admin sends a password reset link to a user
-router.post("/:id/send-reset-email", requireAdmin, async (req, res) => {
+router.post("/:id/send-reset-email", requireAdmin, async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     const [user] = await db
       .select({ id: usersTable.id, email: usersTable.email, displayName: usersTable.displayName })
       .from(usersTable)
@@ -221,10 +215,10 @@ router.post("/:id/send-reset-email", requireAdmin, async (req, res) => {
       `,
     });
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error("Send reset email error:", err);
-    res.status(500).json({ error: "Failed to send reset email" });
+    return res.status(500).json({ error: "Failed to send reset email" });
   }
 });
 

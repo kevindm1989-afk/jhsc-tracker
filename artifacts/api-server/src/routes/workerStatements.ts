@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
 import { workerStatementsTable } from "@workspace/db/schema";
 import { eq, desc, and } from "drizzle-orm";
@@ -9,7 +9,7 @@ function genCode(id: number) {
   return "W-" + String(id).padStart(3, "0");
 }
 
-function requireWorkerRepAccess(req: any, res: any, next: any) {
+function requireWorkerRepAccess(req: Request, res: Response, next: NextFunction) {
   const role = req.session?.role;
   if (role === "admin" || role === "worker-rep") return next();
   return res.status(403).json({ error: "Worker statements are confidential. Access restricted to Worker Co-Chair and Admin per OHSA s.8." });
@@ -56,25 +56,25 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/:id", requireWorkerRepAccess, async (req, res) => {
+router.get("/:id", requireWorkerRepAccess, async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const [item] = await db
       .select()
       .from(workerStatementsTable)
       .where(eq(workerStatementsTable.id, id));
 
     if (!item) return res.status(404).json({ error: "Not found" });
-    res.json(item);
+    return res.json(item);
   } catch (err) {
     req.log.error({ err }, "Failed to get worker statement");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const body = req.body;
 
     const [updated] = await db
@@ -84,10 +84,10 @@ router.put("/:id", async (req, res) => {
       .returning();
 
     if (!updated) return res.status(404).json({ error: "Not found" });
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to update worker statement");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
