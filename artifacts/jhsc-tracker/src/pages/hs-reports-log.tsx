@@ -329,7 +329,7 @@ export default function HSReportsLogPage() {
                               ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
                               : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                           </Button>
-                          {user?.role === "admin" && (
+                          {(user?.role === "admin" || user?.role === "co-chair") && (
                             <Button
                               variant="ghost"
                               size="sm"

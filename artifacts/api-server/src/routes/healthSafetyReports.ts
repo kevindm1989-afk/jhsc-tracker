@@ -97,7 +97,7 @@ router.get("/", async (req, res) => {
       .select()
       .from(healthSafetyReportsTable)
       .orderBy(desc(healthSafetyReportsTable.createdAt));
-    const filtered = role === "admin" ? reports : reports.filter((r) => r.submittedByUserId === userId);
+    const filtered = (role === "admin" || role === "co-chair") ? reports : reports.filter((r) => r.submittedByUserId === userId);
     res.json(filtered);
   } catch (err) {
     console.error("GET health-safety-reports error", err);
@@ -208,7 +208,7 @@ router.post("/", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const session = req.session as any;
-    if (session?.role !== "admin") return res.status(403).json({ error: "Admin only" });
+    if (session?.role !== "admin" && session?.role !== "co-chair") return res.status(403).json({ error: "Access denied" });
     const id = parseInt(req.params.id);
     await db.delete(healthSafetyReportsTable).where(eq(healthSafetyReportsTable.id, id));
     res.json({ success: true });

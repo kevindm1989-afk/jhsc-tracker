@@ -237,7 +237,7 @@ export default function HealthSafetyReportPage() {
                     <p className="text-xs text-muted-foreground truncate">{r.employeeName} · {r.department}</p>
                     <p className="text-xs text-muted-foreground">{r.incidentDate} · {r.areaLocation}</p>
                   </div>
-                  {user?.role === "admin" && (
+                  {(user?.role === "admin" || user?.role === "co-chair") && (
                     <Button variant="ghost" size="sm" onClick={() => deleteReport(r.id)}>
                       <Trash2 className="w-3.5 h-3.5 text-destructive" />
                     </Button>
@@ -458,7 +458,7 @@ export default function HealthSafetyReportPage() {
                     <p className="text-xs text-muted-foreground truncate">{r.employeeName} · {r.department}</p>
                     <p className="text-xs text-muted-foreground">{r.incidentDate} · {r.areaLocation}</p>
                   </div>
-                  {user?.role === "admin" && (
+                  {(user?.role === "admin" || user?.role === "co-chair") && (
                     <Button variant="ghost" size="sm" onClick={() => deleteReport(r.id)}>
                       <Trash2 className="w-3.5 h-3.5 text-destructive" />
                     </Button>

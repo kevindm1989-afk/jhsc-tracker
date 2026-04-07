@@ -47,7 +47,7 @@ interface UserFormData {
   displayName: string;
   email: string;
   password: string;
-  role: "admin" | "member" | "worker-rep" | "management";
+  role: "admin" | "co-chair" | "member" | "worker-rep" | "management";
   permissions: string[];
 }
 
@@ -199,7 +199,7 @@ export default function ManageUsersPage() {
       displayName: u.displayName,
       email: u.email ?? "",
       password: "",
-      role: u.role as "admin" | "member" | "worker-rep" | "management",
+      role: u.role as "admin" | "co-chair" | "member" | "worker-rep" | "management",
       permissions: [...u.permissions],
     });
     setEditingUser(u);
@@ -401,6 +401,8 @@ export default function ManageUsersPage() {
                     <div className="w-9 h-9 rounded-full bg-sidebar flex items-center justify-center shrink-0">
                       {u.role === "admin" ? (
                         <ShieldCheck className="w-4 h-4 text-primary" />
+                      ) : u.role === "co-chair" ? (
+                        <ShieldCheck className="w-4 h-4 text-green-500" />
                       ) : u.role === "worker-rep" ? (
                         <ShieldCheck className="w-4 h-4 text-blue-500" />
                       ) : (
@@ -412,6 +414,9 @@ export default function ManageUsersPage() {
                         <span className="font-semibold text-foreground">{u.displayName}</span>
                         {u.role === "admin" && (
                           <Badge variant="default" className="text-[10px] px-1.5">Admin</Badge>
+                        )}
+                        {u.role === "co-chair" && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">Worker Co-Chair</Badge>
                         )}
                         {u.role === "worker-rep" && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">Worker Rep</Badge>
@@ -438,7 +443,10 @@ export default function ManageUsersPage() {
                         </div>
                       )}
                       {u.role === "admin" && (
-                        <span className="text-xs text-muted-foreground mt-1 block">Full access to all modules</span>
+                        <span className="text-xs text-muted-foreground mt-1 block">System administration only</span>
+                      )}
+                      {u.role === "co-chair" && (
+                        <span className="text-xs text-muted-foreground mt-1 block">Full access to all JHSC modules</span>
                       )}
                       {u.role === "worker-rep" && (
                         <span className="text-xs text-muted-foreground mt-1 block">Can verify items — read-only access</span>
@@ -524,12 +532,13 @@ export default function ManageUsersPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Role</Label>
-              <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v as "admin" | "member" | "worker-rep" | "management" }))}>
+              <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v as "admin" | "co-chair" | "member" | "worker-rep" | "management" }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin (full access)</SelectItem>
+                  <SelectItem value="admin">Admin (system administration only)</SelectItem>
+                  <SelectItem value="co-chair">Worker Co-Chair (full module access)</SelectItem>
                   <SelectItem value="worker-rep">Worker Rep (verify items, read-only)</SelectItem>
                   <SelectItem value="management">Management (cannot view Worker Statements/RTR)</SelectItem>
                   <SelectItem value="member">Member (custom permissions)</SelectItem>
