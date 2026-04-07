@@ -23,6 +23,7 @@ import {
   ArrowUpDown,
   ShieldX,
   Folder,
+  Mic,
 } from "lucide-react";
 import {
   DndContext,
@@ -74,6 +75,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "/suggestions-log": ScrollText,
   "/right-to-refuse": ShieldX,
   "/files": Folder,
+  "/meeting-transcription": Mic,
   "/import-minutes": Upload,
   "/manage-users": Users,
 };

@@ -18,6 +18,7 @@ import settingsRouter from "./settings";
 import rightToRefuseRouter from "./rightToRefuse";
 import attachmentsRouter from "./attachments";
 import folderFilesRouter from "./folderFiles";
+import transcriptionRouter from "./transcription";
 import inspectionChecklistsRouter from "./inspectionChecklists";
 import inspectionScheduleRouter from "./inspectionSchedule";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
@@ -48,6 +49,7 @@ router.use("/checklists", requireAuth, inspectionChecklistsRouter);
 router.use("/inspection-schedule", requireAuth, inspectionScheduleRouter);
 
 // Admin-only routes
+router.use("/transcription", requireAuth, transcriptionRouter);
 router.use("/users", usersRouter);
 router.use("/registrations", registrationsRouter);
 

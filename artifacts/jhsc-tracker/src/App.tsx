@@ -24,6 +24,7 @@ import ResetPasswordPage from "@/pages/reset-password";
 import ChangePasswordPage from "@/pages/change-password";
 import RightToRefusePage from "@/pages/right-to-refuse";
 import FilesPage from "@/pages/files";
+import MeetingTranscriptionPage from "@/pages/meeting-transcription";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -145,6 +146,9 @@ function Router() {
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />
+              </Route>
+              <Route path="/meeting-transcription">
+                <ProtectedRoute component={MeetingTranscriptionPage} />
               </Route>
               <Route path="/change-password">
                 <ProtectedRoute component={ChangePasswordPage} />
