@@ -48,7 +48,7 @@ router.post("/upload", upload.single("audio"), async (req: Request, res: Respons
       AAPI + "/transcript",
       {
         audio_url: audioUrl,
-        speech_model: "universal",
+        speech_models: ["universal"],
         speaker_labels: true,
         word_boost: WORD_BOOST,
         boost_param: "high",
