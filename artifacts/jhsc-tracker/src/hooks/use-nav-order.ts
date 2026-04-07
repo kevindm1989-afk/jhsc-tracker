@@ -16,6 +16,7 @@ export const DEFAULT_NAV_ORDER = [
   "/right-to-refuse",
   "/suggestions",
   "/suggestions-log",
+  "/files",
   "/import-minutes",
   "/manage-users",
 ];

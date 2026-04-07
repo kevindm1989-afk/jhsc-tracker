@@ -447,6 +447,35 @@ export async function ensureSessionTable(): Promise<void> {
     await client.query(`ALTER TABLE "closed_items_log" ADD COLUMN IF NOT EXISTS "corrective_action" text;`);
     await client.query(`ALTER TABLE "closed_items_log" ADD COLUMN IF NOT EXISTS "closing_photo_path" text;`);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "folders" (
+        "id" serial PRIMARY KEY,
+        "name" text NOT NULL,
+        "created_by" text NOT NULL DEFAULT 'Unknown',
+        "created_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "folder_files" (
+        "id" serial PRIMARY KEY,
+        "folder_id" integer NOT NULL REFERENCES "folders"("id") ON DELETE CASCADE,
+        "original_name" text NOT NULL,
+        "stored_name" text NOT NULL,
+        "mime_type" text NOT NULL,
+        "size_bytes" integer NOT NULL DEFAULT 0,
+        "uploaded_by" text NOT NULL DEFAULT 'Unknown',
+        "created_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
+    // Seed default folders if they don't exist
+    await client.query(`
+      INSERT INTO "folders" ("name", "created_by")
+      SELECT name, 'system' FROM (VALUES ('Minutes'), ('Inspections')) AS t(name)
+      WHERE NOT EXISTS (SELECT 1 FROM "folders" WHERE "folders"."name" = t.name);
+    `);
+
   } finally {
     client.release();
   }

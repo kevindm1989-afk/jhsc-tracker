@@ -17,6 +17,7 @@ import registrationsRouter from "./registrations";
 import settingsRouter from "./settings";
 import rightToRefuseRouter from "./rightToRefuse";
 import attachmentsRouter from "./attachments";
+import folderFilesRouter from "./folderFiles";
 import inspectionChecklistsRouter from "./inspectionChecklists";
 import inspectionScheduleRouter from "./inspectionSchedule";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
@@ -42,6 +43,7 @@ router.use("/inspect", requireAuth, requirePermission("conduct-inspection"), ins
 router.use("/settings", requireAuth, settingsRouter);
 router.use("/right-to-refuse", requireAuth, rightToRefuseRouter);
 router.use("/attachments", requireAuth, attachmentsRouter);
+router.use("/folder-files", requireAuth, folderFilesRouter);
 router.use("/checklists", requireAuth, inspectionChecklistsRouter);
 router.use("/inspection-schedule", requireAuth, inspectionScheduleRouter);
 
