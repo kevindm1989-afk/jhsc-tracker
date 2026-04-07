@@ -112,10 +112,10 @@ router.patch("/:id", requireAdmin, async (req, res) => {
       }
     }
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error("Review registration error:", err);
-    res.status(500).json({ error: "Failed to update registration" });
+    return res.status(500).json({ error: "Failed to update registration" });
   }
 });
 

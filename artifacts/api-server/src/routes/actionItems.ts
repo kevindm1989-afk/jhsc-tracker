@@ -60,10 +60,10 @@ router.get("/:id", async (req, res) => {
       .where(eq(actionItemsTable.id, id));
 
     if (!item) return res.status(404).json({ error: "Not found" });
-    res.json(item);
+    return res.json(item);
   } catch (err) {
     req.log.error({ err }, "Failed to get action item");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -85,10 +85,10 @@ router.put("/:id", async (req, res) => {
       .returning();
 
     if (!updated) return res.status(404).json({ error: "Not found" });
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to update action item");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -120,10 +120,10 @@ router.post("/:id/verify", async (req, res) => {
       .where(eq(actionItemsTable.id, id))
       .returning();
 
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to verify action item");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

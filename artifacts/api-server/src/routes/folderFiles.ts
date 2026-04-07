@@ -69,10 +69,10 @@ router.post("/folders", async (req, res) => {
       .insert(foldersTable)
       .values({ name: name.trim(), createdBy, parentId: parentId ? parseInt(parentId) : null })
       .returning();
-    res.status(201).json(folder);
+    return res.status(201).json(folder);
   } catch (err) {
     req.log.error({ err }, "Failed to create folder");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -83,10 +83,10 @@ router.patch("/folders/:id", async (req, res) => {
     if (!name?.trim()) return res.status(400).json({ error: "Folder name is required" });
     const [folder] = await db.update(foldersTable).set({ name: name.trim() }).where(eq(foldersTable.id, id)).returning();
     if (!folder) return res.status(404).json({ error: "Folder not found" });
-    res.json(folder);
+    return res.json(folder);
   } catch (err) {
     req.log.error({ err }, "Failed to rename folder");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -125,7 +125,7 @@ router.get("/folders/:id/files", async (req, res) => {
 
 router.post("/folders/:id/files", upload.array("files", 20), async (req, res) => {
   try {
-    const folderId = parseInt(req.params.id);
+    const folderId = parseInt(req.params.id as string);
     const files = req.files as Express.Multer.File[];
     if (!files?.length) return res.status(400).json({ error: "No files uploaded" });
     const uploadedBy = req.session?.displayName || "Unknown";
@@ -140,17 +140,18 @@ router.post("/folders/:id/files", upload.array("files", 20), async (req, res) =>
         uploadedBy,
       })))
       .returning();
-    res.status(201).json(inserted);
+    return res.status(201).json(inserted);
   } catch (err) {
     req.log.error({ err }, "Failed to upload files");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/files/:storedName", (req, res) => {
-  const filePath = path.join(UPLOAD_DIR, req.params.storedName);
+  const filePath = path.join(UPLOAD_DIR, req.params.storedName as string);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found" });
-  res.download(filePath, req.query.name as string | undefined);
+  const downloadName = req.query.name as string | undefined;
+  return downloadName ? res.download(filePath, downloadName) : res.download(filePath);
 });
 
 router.delete("/files/:id", async (req, res) => {
@@ -162,10 +163,10 @@ router.delete("/files/:id", async (req, res) => {
       if (fs.existsSync(fp)) fs.unlink(fp, () => {});
       await db.delete(folderFilesTable).where(eq(folderFilesTable.id, id));
     }
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     req.log.error({ err }, "Failed to delete file");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

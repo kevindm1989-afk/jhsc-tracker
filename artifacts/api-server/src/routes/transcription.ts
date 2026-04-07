@@ -30,7 +30,7 @@ router.post("/upload", upload.single("audio"), async (req: Request, res: Respons
     const noFile = !req.file;
     if (noKey) return res.status(500).json({ error: "ASSEMBLYAI_API_KEY secret not set." });
     if (noFile) return res.status(400).json({ error: "No audio file received." });
-    filePath = req.file.path;
+    filePath = req.file!.path;
     const fileStream = fs.createReadStream(filePath as string);
     const uploadRes = await axios.post(AAPI + "/upload", fileStream, {
       headers: {

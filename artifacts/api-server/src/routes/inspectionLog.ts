@@ -59,10 +59,10 @@ router.get("/:id", async (req, res) => {
       .where(eq(inspectionLogTable.id, id));
 
     if (!item) return res.status(404).json({ error: "Not found" });
-    res.json(item);
+    return res.json(item);
   } catch (err) {
     req.log.error({ err }, "Failed to get inspection entry");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -78,10 +78,10 @@ router.put("/:id", async (req, res) => {
       .returning();
 
     if (!updated) return res.status(404).json({ error: "Not found" });
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to update inspection entry");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -113,10 +113,10 @@ router.post("/:id/verify", async (req, res) => {
       .returning();
 
     if (!updated) return res.status(404).json({ error: "Not found" });
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to verify inspection entry");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

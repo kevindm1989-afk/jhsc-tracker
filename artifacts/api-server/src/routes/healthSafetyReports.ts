@@ -209,12 +209,12 @@ router.delete("/:id", async (req, res) => {
   try {
     const session = req.session as any;
     if (session?.role !== "admin" && session?.role !== "co-chair") return res.status(403).json({ error: "Access denied" });
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     await db.delete(healthSafetyReportsTable).where(eq(healthSafetyReportsTable.id, id));
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error("DELETE health-safety-reports error", err);
-    res.status(500).json({ error: "Failed to delete report" });
+    return res.status(500).json({ error: "Failed to delete report" });
   }
 });
 

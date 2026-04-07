@@ -9,10 +9,10 @@ router.get("/nav-order", async (_req, res) => {
   try {
     const result = await pool.query(`SELECT value FROM app_settings WHERE key = 'nav_order'`);
     if (result.rows.length === 0) return res.json({ order: null });
-    res.json({ order: JSON.parse(result.rows[0].value) });
+    return res.json({ order: JSON.parse(result.rows[0].value) });
   } catch (err) {
     console.error("GET nav-order error:", err);
-    res.status(500).json({ error: "Failed to fetch nav order" });
+    return res.status(500).json({ error: "Failed to fetch nav order" });
   }
 });
 
@@ -37,10 +37,10 @@ router.patch("/nav-order", async (req, res) => {
       [JSON.stringify(order)]
     );
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error("PATCH nav-order error:", err);
-    res.status(500).json({ error: "Failed to save nav order" });
+    return res.status(500).json({ error: "Failed to save nav order" });
   }
 });
 

@@ -67,7 +67,8 @@ function genCode(id: number) {
 // GET /api/member-actions — admins see all; members see their own
 router.get("/", async (req, res) => {
   try {
-    const user = req.session?.user;
+    const userId = req.session?.userId;
+    const user = userId != null ? { id: userId, role: req.session!.role!, displayName: req.session!.displayName!, username: req.session!.username! } : null;
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
     const rows = await db
@@ -76,17 +77,18 @@ router.get("/", async (req, res) => {
       .where(user.role === "admin" ? undefined : eq(memberActionsTable.assignedToUserId, user.id))
       .orderBy(desc(memberActionsTable.createdAt));
 
-    res.json(rows);
+    return res.json(rows);
   } catch (err) {
     req.log.error({ err }, "Failed to list member actions");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // POST /api/member-actions — admin only
 router.post("/", requireAdmin, async (req, res) => {
   try {
-    const user = req.session?.user;
+    const userId = req.session?.userId;
+    const user = userId != null ? { id: userId, role: req.session!.role!, displayName: req.session!.displayName!, username: req.session!.username! } : null;
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
     const body = req.body;
@@ -123,20 +125,21 @@ router.post("/", requireAdmin, async (req, res) => {
       .where(eq(memberActionsTable.id, created.id))
       .returning();
 
-    res.status(201).json(updated);
+    return res.status(201).json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to create member action");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // PUT /api/member-actions/:id — admin OR the assigned user
 router.put("/:id", async (req, res) => {
   try {
-    const user = req.session?.user;
+    const userId = req.session?.userId;
+    const user = userId != null ? { id: userId, role: req.session!.role!, displayName: req.session!.displayName!, username: req.session!.username! } : null;
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const [existing] = await db
       .select()
       .from(memberActionsTable)
@@ -205,24 +208,24 @@ router.put("/:id", async (req, res) => {
           memberName: user.displayName ?? user.username,
           actionCode: existing.actionCode,
           title: existing.title,
-          zone: existing.zone,
+          zone: existing.zone != null ? String(existing.zone) : null,
           statusChanged,
           notesChanged,
         });
       }
     }
 
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to update member action");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // DELETE /api/member-actions/:id — admin only
 router.delete("/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     await db.delete(memberActionsTable).where(eq(memberActionsTable.id, id));
     res.status(204).send();
   } catch (err) {

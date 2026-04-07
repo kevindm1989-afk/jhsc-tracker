@@ -131,10 +131,10 @@ router.delete("/:id", async (req, res) => {
     if (session?.role !== "admin") return res.status(403).json({ error: "Admin only" });
     const id = parseInt(req.params.id);
     await db.delete(suggestionsTable).where(eq(suggestionsTable.id, id));
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error("DELETE suggestions error", err);
-    res.status(500).json({ error: "Failed to delete suggestion" });
+    return res.status(500).json({ error: "Failed to delete suggestion" });
   }
 });
 

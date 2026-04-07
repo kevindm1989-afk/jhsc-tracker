@@ -88,10 +88,10 @@ router.post("/export", async (req, res) => {
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.send(outBuffer);
+    return res.send(outBuffer);
   } catch (err) {
     console.error("Inspection export error:", err);
-    res.status(500).json({ error: "Failed to generate inspection form export." });
+    return res.status(500).json({ error: "Failed to generate inspection form export." });
   }
 });
 
@@ -167,10 +167,10 @@ router.post("/save", async (req, res) => {
       imported++;
     }
 
-    res.json({ success: true, imported });
+    return res.json({ success: true, imported });
   } catch (err) {
     console.error("Inspection save error:", err);
-    res.status(500).json({ error: "Failed to save inspection findings." });
+    return res.status(500).json({ error: "Failed to save inspection findings." });
   }
 });
 
@@ -350,10 +350,10 @@ router.post("/email", async (req, res) => {
       console.error("Inspection file save error:", saveErr);
     }
 
-    res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName, imported, fileSaved, savedToFolder });
+    return res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName, imported, fileSaved, savedToFolder });
   } catch (err) {
     console.error("Inspection email error:", err);
-    res.status(500).json({ error: "Failed to send inspection email." });
+    return res.status(500).json({ error: "Failed to send inspection email." });
   }
 });
 

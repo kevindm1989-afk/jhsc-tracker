@@ -222,7 +222,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       console.error("Minutes file save error:", saveErr);
     }
 
-    res.json({
+    return res.json({
       success: true,
       meetingDate: parsed.meetingDate,
       facility: parsed.facility,
@@ -243,7 +243,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     });
   } catch (err) {
     console.error("Import error:", err);
-    res.status(500).json({ error: "Failed to parse or import the file. Make sure it is a valid JHSC minutes workbook." });
+    return res.status(500).json({ error: "Failed to parse or import the file. Make sure it is a valid JHSC minutes workbook." });
   }
 });
 
@@ -311,7 +311,7 @@ router.post("/inspection", upload.single("file"), async (req, res) => {
       }
     }
 
-    res.json({
+    return res.json({
       success: true,
       imported: { inspectionEntries: imported },
       skipped: { inspectionEntries: skipped },
@@ -319,7 +319,7 @@ router.post("/inspection", upload.single("file"), async (req, res) => {
     });
   } catch (err) {
     console.error("Inspection import error:", err);
-    res.status(500).json({
+    return res.status(500).json({
       error: "Failed to parse or import the file. Make sure it is a valid JHSC Inspection Form workbook.",
     });
   }

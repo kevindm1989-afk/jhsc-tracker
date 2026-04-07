@@ -59,10 +59,10 @@ router.get("/:id", async (req, res) => {
       .from(closedItemsLogTable)
       .where(eq(closedItemsLogTable.id, id));
     if (!item) return res.status(404).json({ error: "Not found" });
-    res.json(item);
+    return res.json(item);
   } catch (err) {
     req.log.error({ err }, "Failed to get closed item");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -75,10 +75,10 @@ router.put("/:id", async (req, res) => {
       .where(eq(closedItemsLogTable.id, id))
       .returning();
     if (!updated) return res.status(404).json({ error: "Not found" });
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to update closed item");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -106,10 +106,10 @@ router.patch("/:id/assign", async (req, res) => {
       .where(eq(closedItemsLogTable.id, id))
       .returning();
     if (!updated) return res.status(404).json({ error: "Not found" });
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to assign verifier");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -127,10 +127,10 @@ router.post("/:id/verify", async (req, res) => {
       .where(eq(closedItemsLogTable.id, id))
       .returning();
 
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to verify closed item");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

@@ -68,10 +68,10 @@ router.put("/:id", async (req, res) => {
       .where(eq(rightToRefuseTable.id, id))
       .returning();
 
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to update right-to-refuse record");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

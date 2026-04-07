@@ -45,7 +45,7 @@ router.get("/:parentType/:parentId", async (req, res) => {
 
 router.post("/:parentType/:parentId", upload.array("files", 3), async (req, res) => {
   try {
-    const { parentType, parentId } = req.params;
+    const { parentType, parentId } = req.params as Record<string, string>;
     const files = req.files as Express.Multer.File[];
     const uploadedBy = req.session?.displayName || "Unknown";
 
@@ -74,17 +74,17 @@ router.post("/:parentType/:parentId", upload.array("files", 3), async (req, res)
       )
       .returning();
 
-    res.status(201).json(inserted);
+    return res.status(201).json(inserted);
   } catch (err) {
     req.log.error({ err }, "Failed to upload attachments");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/file/:filename", (req, res) => {
-  const filePath = path.join(UPLOAD_DIR, req.params.filename);
+  const filePath = path.join(UPLOAD_DIR, req.params.filename as string);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found" });
-  res.sendFile(filePath);
+  return res.sendFile(filePath);
 });
 
 router.delete("/:id", async (req, res) => {

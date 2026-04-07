@@ -39,12 +39,12 @@ router.post("/login", async (req, res) => {
     req.session.role = user.role;
     req.session.permissions = user.permissions;
 
-    req.session.save((err) => {
+    return req.session.save((err) => {
       if (err) {
         console.error("Session save error:", err);
         return res.status(500).json({ error: "Login failed" });
       }
-      res.json({
+      return res.json({
         id: user.id,
         username: user.username,
         displayName: user.displayName,
@@ -54,7 +54,7 @@ router.post("/login", async (req, res) => {
     });
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ error: "Login failed" });
+    return res.status(500).json({ error: "Login failed" });
   }
 });
 
@@ -141,10 +141,10 @@ router.post("/register", async (req, res) => {
       console.error("Admin notification email error (non-fatal):", emailErr);
     }
 
-    res.status(201).json({ success: true });
+    return res.status(201).json({ success: true });
   } catch (err) {
     console.error("Register error:", err);
-    res.status(500).json({ error: "Registration failed" });
+    return res.status(500).json({ error: "Registration failed" });
   }
 });
 
@@ -201,10 +201,10 @@ router.post("/forgot-password", async (req, res) => {
       }
     }
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error("Forgot password error:", err);
-    res.status(500).json({ error: "Something went wrong" });
+    return res.status(500).json({ error: "Something went wrong" });
   }
 });
 
@@ -248,10 +248,10 @@ router.post("/reset-password", async (req, res) => {
       .set({ usedAt: now })
       .where(eq(passwordResetTokensTable.id, resetToken.id));
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error("Reset password error:", err);
-    res.status(500).json({ error: "Something went wrong" });
+    return res.status(500).json({ error: "Something went wrong" });
   }
 });
 
@@ -285,19 +285,19 @@ router.post("/change-password", async (req, res) => {
       .set({ passwordHash: newHash, updatedAt: new Date() })
       .where(eq(usersTable.id, user.id));
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     console.error("Change password error:", err);
-    res.status(500).json({ error: "Failed to change password" });
+    return res.status(500).json({ error: "Failed to change password" });
   }
 });
 
 // POST /api/auth/logout
 router.post("/logout", (req, res) => {
-  req.session.destroy((err) => {
+  return req.session.destroy((err) => {
     if (err) return res.status(500).json({ error: "Logout failed" });
     res.clearCookie("connect.sid");
-    res.json({ success: true });
+    return res.json({ success: true });
   });
 });
 
@@ -306,7 +306,7 @@ router.get("/me", (req, res) => {
   if (!req.session?.userId) {
     return res.status(401).json({ error: "Not authenticated" });
   }
-  res.json({
+  return res.json({
     id: req.session.userId,
     username: req.session.username,
     displayName: req.session.displayName,
