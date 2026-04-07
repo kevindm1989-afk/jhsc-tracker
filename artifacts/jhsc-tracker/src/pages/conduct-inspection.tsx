@@ -239,7 +239,7 @@ export default function ConductInspectionPage() {
       queryClient.invalidateQueries();
       const parts: string[] = [`Email sent to Kevin (Co-Chair)`];
       if (data.imported > 0) parts.push(`${data.imported} finding${data.imported !== 1 ? "s" : ""} logged`);
-      if (data.docSaved) parts.push("form saved to Documents");
+      if (data.fileSaved && data.savedToFolder) parts.push(`saved to ${data.savedToFolder}`);
       toast({ title: "Inspection submitted", description: parts.join(" · ") });
     } catch (e: any) {
       toast({ title: "Submission failed", description: e.message, variant: "destructive" });

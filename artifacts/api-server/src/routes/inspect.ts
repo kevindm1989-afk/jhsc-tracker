@@ -1,13 +1,16 @@
 import { Router, type IRouter } from "express";
 import path from "path";
-import { readFile } from "fs/promises";
+import { readFile, writeFile, mkdir } from "fs/promises";
+import { existsSync } from "fs";
 import XlsxPopulate from "xlsx-populate";
-import { db } from "@workspace/db";
+import { db, pool } from "@workspace/db";
 import { inspectionLogTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { CHECKLIST_SECTIONS, ZONE_NAMES, ADDITIONAL_COMMENTS_ROW } from "../checklistData";
 import { createTransporter, getSenderAddress } from "../emailClient";
 import "../sessionTypes";
+
+const UPLOAD_DIR = process.env["UPLOAD_DIR"] || path.join(process.cwd(), "uploads");
 
 const CO_CHAIR_EMAIL = "kevin_de_melo@hotmail.com";
 
@@ -287,7 +290,66 @@ router.post("/email", async (req, res) => {
       imported++;
     }
 
-    res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName, imported });
+    // ── 3. Save file to Inspections › Month subfolder ────────────────────────
+    let fileSaved = false;
+    let savedToFolder = "";
+    try {
+      if (!existsSync(UPLOAD_DIR)) await mkdir(UPLOAD_DIR, { recursive: true });
+
+      const storedName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.xlsx`;
+      await writeFile(path.join(UPLOAD_DIR, storedName), outBuffer);
+
+      // Find or create top-level "Inspections" folder
+      let inspRes = await pool.query(
+        `SELECT id FROM folders WHERE name = 'Inspections' AND parent_id IS NULL LIMIT 1`
+      );
+      let inspFolderId: number;
+      if (inspRes.rows.length > 0) {
+        inspFolderId = inspRes.rows[0].id;
+      } else {
+        const r = await pool.query(
+          `INSERT INTO folders (name, created_by) VALUES ('Inspections', 'system') RETURNING id`
+        );
+        inspFolderId = r.rows[0].id;
+      }
+
+      // Format month label from inspection date (e.g. "April 2026")
+      const inspDate = new Date((date || new Date().toISOString().split("T")[0]) + "T12:00:00");
+      const monthLabel = inspDate.toLocaleDateString("en-CA", { year: "numeric", month: "long" });
+
+      // Find or create month subfolder
+      let monthRes = await pool.query(
+        `SELECT id FROM folders WHERE name = $1 AND parent_id = $2 LIMIT 1`,
+        [monthLabel, inspFolderId]
+      );
+      let monthFolderId: number;
+      if (monthRes.rows.length > 0) {
+        monthFolderId = monthRes.rows[0].id;
+      } else {
+        const r = await pool.query(
+          `INSERT INTO folders (name, parent_id, created_by) VALUES ($1, $2, 'system') RETURNING id`,
+          [monthLabel, inspFolderId]
+        );
+        monthFolderId = r.rows[0].id;
+      }
+
+      // Insert file record
+      const uploadedBy = (req as any).session?.displayName || "System";
+      await pool.query(
+        `INSERT INTO folder_files (folder_id, original_name, stored_name, mime_type, size_bytes, uploaded_by)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [monthFolderId, fileName, storedName,
+         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+         outBuffer.length, uploadedBy]
+      );
+
+      fileSaved = true;
+      savedToFolder = `Inspections › ${monthLabel}`;
+    } catch (saveErr) {
+      console.error("Inspection file save error:", saveErr);
+    }
+
+    res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName, imported, fileSaved, savedToFolder });
   } catch (err) {
     console.error("Inspection email error:", err);
     res.status(500).json({ error: "Failed to send inspection email." });
