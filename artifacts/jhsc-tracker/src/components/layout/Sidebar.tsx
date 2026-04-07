@@ -21,8 +21,6 @@ import {
   KeyRound,
   GripVertical,
   ArrowUpDown,
-  FileWarning,
-  FileText,
   ShieldX,
 } from "lucide-react";
 import {
@@ -73,8 +71,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "/worker-statements": MessageSquareWarning,
   "/suggestions": Lightbulb,
   "/suggestions-log": ScrollText,
-  "/recommendations": FileWarning,
-  "/meeting-minutes": FileText,
   "/right-to-refuse": ShieldX,
   "/import-minutes": Upload,
   "/manage-users": Users,

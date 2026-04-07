@@ -22,8 +22,6 @@ import SuggestionsPage from "@/pages/suggestions";
 import SuggestionsLogPage from "@/pages/suggestions-log";
 import ResetPasswordPage from "@/pages/reset-password";
 import ChangePasswordPage from "@/pages/change-password";
-import RecommendationsPage from "@/pages/recommendations";
-import MeetingMinutesPage from "@/pages/meeting-minutes";
 import RightToRefusePage from "@/pages/right-to-refuse";
 import NotFound from "@/pages/not-found";
 
@@ -137,12 +135,6 @@ function Router() {
               </Route>
               <Route path="/suggestions-log">
                 <ProtectedRoute component={SuggestionsLogPage} permission="suggestions" />
-              </Route>
-              <Route path="/recommendations">
-                <ProtectedRoute component={RecommendationsPage} permission="recommendations" />
-              </Route>
-              <Route path="/meeting-minutes">
-                <ProtectedRoute component={MeetingMinutesPage} permission="meeting-minutes" />
               </Route>
               <Route path="/right-to-refuse">
                 <ProtectedRoute component={RightToRefusePage} />
