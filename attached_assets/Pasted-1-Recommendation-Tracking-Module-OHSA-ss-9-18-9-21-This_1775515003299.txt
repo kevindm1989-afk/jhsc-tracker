@@ -1,0 +1,83 @@
+1. Recommendation Tracking Module (OHSA ss.9(18)–9(21))
+This is your most critical gap given your active dispute.
+
+Formal Recommendation register — each entry tagged with: date issued, OHSA authority cited (s.9(18) vs s.9(20)), management response deadline (21 days tracked automatically), response received (yes/no), response accepted/rejected, and escalation status
+Status flags: Pending → Responded → Accepted / Rejected → Escalated to MOL
+Auto-alert when the 21-day response window under s.9(21) is approaching or expired
+Link each recommendation to its source hazard finding (RC-001, RC-002, etc.)
+
+2. Hazard Finding Lifecycle with Severity Ratings
+
+Add a risk matrix (likelihood × severity) to each finding, producing a priority score
+Track finding status: Identified → Recommended → Resolved / Disputed → Escalated
+Photo attachment per finding (critical for MSD/WBV documentation — photos of dock plate crossings, trench drain, etc.)
+Link findings to inspection date, zone, equipment involved (e.g., Raymond 8410), and regulatory reference (Reg. 851 s.45, CSA B335-15, ISO 2631-1, etc.)
+
+3. Inspection Module Enhancements
+
+Zone-specific checklists (you already have 9 zones in your Excel system — mirror those)
+Checklist items mapped to specific OHSA/Reg. 851 sections so every deficiency has an automatic legal hook
+Digital signature capture for both co-chairs at inspection completion
+Timestamp and GPS tag per inspection (for legal record integrity)
+Auto-generate a draft inspection report from completed checklist — formatted to your standard document style
+
+4. Worker Statement Module Hardening
+
+Anonymous intake form workers can fill on their own phone — generates a W-### reference number automatically
+Statement stored encrypted, accessible only to JHSC co-chairs
+Option to mark statements as: Supporting (corroborating hazard), Incident Report, Near Miss, or Right to Refuse
+Audit log showing when statements were accessed and by whom
+
+5. Meeting Minutes Builder
+
+Agenda template auto-populated from: open action items, overdue recommendations, pending hazard findings
+Attendance capture with role tags (worker member, management member, observer)
+Motion/vote recording with outcome (consensus, split, deferred)
+Auto-number minutes and action items sequentially (AI-2026-001, etc.)
+One-click export to PDF with institutional header (Unifor Local 1285 / Saputo Georgetown)
+
+6. Right to Refuse Log (OHSA ss.43–44)
+
+Dedicated log for any work refusals — worker ID (anonymized), date/time, hazard described, supervisor notified, JHSC investigation triggered, MOL involvement (yes/no), outcome
+Separate from general hazard findings — this is legally distinct and time-sensitive
+
+7. Incident & Near Miss Register
+
+Separate from hazard findings — track after-the-fact events
+Fields: date/time, worker (anonymized), description, root cause (preliminary), Form 7 required (yes/no), critical injury flag, MOL notification status
+Link to any existing hazard finding the incident is connected to
+
+8. Management Response Tracker
+
+Log every written communication from management: date received, author, reference to which recommendation/finding, stated position (accepted / partial / refused)
+Flag refused responses and auto-surface them for MOL escalation consideration
+Link directly to your OHSA s.9(21) escalation rights
+
+9. MOL / Escalation File
+
+Track any MOL inspections, orders, inspector names, case IDs (e.g., your existing OHS Case ID: 03920QSPS392)
+Log orders issued, compliance dates, status (complied / disputed / appealed)
+Store contact info for assigned inspectors and ergonomists
+
+10. Document Vault
+
+Centralized storage for uploaded PDFs: signed JHSC recommendations, management refusals, worker statements, inspection reports, CBA provisions, MOL correspondence
+Each document tagged with: document type, date, related hazard/recommendation number, version
+Read-only access option for JHSC management co-chair (Corey Skinner) — without write access
+
+11. Dashboard / KPI View
+
+Open hazard findings count by severity
+Overdue management responses (s.9(21) timer expired)
+Days since last formal inspection
+Open action items by assignee
+Upcoming JHSC meeting date countdown
+Worker statements received (last 30 days)
+
+12. Offline / PWA Enhancements
+
+Full offline functionality — inspections on the warehouse floor don't always have signal in cold storage
+Queue changes locally and sync when back online
+Large tap targets for gloved hands or cold fingers
+Quick-add shortcut: one tap from home screen → log a hazard finding immediately (designed for floor walkthroughs)
+

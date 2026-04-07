@@ -1,0 +1,189 @@
+I am building a JHSC (Joint Health & Safety Committee) Progressive Web App for a unionized warehouse environment in Ontario, Canada. The app must comply with the Ontario Occupational Health and Safety Act (OHSA). I need you to implement the following features into my existing app. Do not break any existing functionality. Add each feature cleanly and integrate it into the current navigation and database structure.
+
+---
+
+## 1. CLICKABLE DASHBOARD DRILL-THROUGH
+- Every stat tile on the dashboard (Overdue Items, Open Actions, Open Hazards, Worker Statements, H&S Reports, Closed This Month) must be clickable
+- Clicking a tile navigates to the corresponding filtered list page showing only those records
+- Overdue tile filters to items past their due date only
+
+---
+
+## 2. FORMAL RECOMMENDATION REGISTER (OHSA s.9(18)–9(21))
+- New page: "Recommendations" in the nav
+- Each recommendation record must include:
+  - Recommendation ID (auto-generated: RC-001, RC-002, etc.)
+  - Date issued
+  - OHSA authority cited (dropdown: s.9(18), s.9(20), s.9(21), other)
+  - Description of recommendation
+  - Linked hazard finding ID (optional lookup)
+  - Management response deadline (auto-calculated: issued date + 21 days)
+  - Countdown timer showing days remaining until deadline
+  - Response received (Yes / No)
+  - Response outcome (Accepted / Rejected / No Response / Partial)
+  - Escalation status (None / Escalated to MOL)
+  - Notes field
+- Status badge: Pending → Responded → Accepted / Rejected / Escalated
+- Auto-flag in red when 21-day window expires with no response logged
+- Link each recommendation to its source hazard finding
+
+---
+
+## 3. RISK MATRIX ON HAZARD FINDINGS
+- Add a risk matrix to every hazard finding form
+- Two dropdowns: Likelihood (1–5) and Severity (1–5)
+- Auto-calculate Priority Score = Likelihood × Severity
+- Display colour-coded badge: 🔴 Critical (15–25) / 🟡 Moderate (8–14) / 🟢 Low (1–7)
+- Display the risk score and colour badge on the hazard findings list view
+
+---
+
+## 4. MEETING MINUTES MODULE (OHSA s.9(33))
+- New page: "Meeting Minutes" in the nav
+- Each minutes record includes:
+  - Meeting date
+  - Meeting type (Regular Monthly / Special / Emergency)
+  - Attendees — management side (names + titles)
+  - Attendees — worker side (names + titles)
+  - Agenda items (add multiple, each with notes)
+  - Motions made (text field, add multiple)
+  - Decisions reached (text field)
+  - Action items assigned (title, assigned to, due date)
+  - Next meeting date
+  - Worker Co-Chair signature field
+  - Management Co-Chair signature field
+- Generate a formatted PDF of the minutes that can be downloaded or emailed
+- Track whether minutes were signed by both Co-Chairs
+
+---
+
+## 5. RIGHT TO REFUSE TRACKER (OHSA s.43)
+- New page: "Right to Refuse" in the nav — visible to Worker Co-Chair and Admin only
+- Form fields:
+  - Worker name (marked confidential — not visible to management role)
+  - Date and time of refusal
+  - Zone / location
+  - Hazard described (text)
+  - Supervisor notified (Yes / No + name)
+  - JHSC Worker Rep notified (Yes / No)
+  - Inspector called (Yes / No + MOL file number if applicable)
+  - Outcome (Resolved / Ongoing / Inspector Ordered Work Stoppage / Other)
+  - Notes
+- Record is timestamped on submission and locked — cannot be edited after 24 hours
+- Only Worker Co-Chair and Admin can view this log
+- Display records in a read-only log with status badges
+
+---
+
+## 6. WORKER STATEMENT CONFIDENTIALITY CONTROLS
+- Worker statements submitted by Members must only be visible to the Worker Co-Chair role and Admin
+- Management role and general Admin should NOT be able to view worker statement content
+- Add a role-based visibility gate on the Worker Statements page and any detail views
+- Display a confidentiality notice at the top of the Worker Statements page: "These records are confidential and accessible to the Worker Co-Chair only per OHSA s.8"
+- On the member-facing submission form, add a notice: "Your statement is confidential and will only be seen by your Worker Co-Chair"
+
+---
+
+## 7. CLOSED ITEMS AUDIT TRAIL
+- The current "Verify" button on Closed Items is one-click with no confirmation or detail
+- Replace with a Verify flow:
+  1. Click Verify → opens a modal
+  2. Modal fields: Corrective action taken (text), Verified by (auto-filled with logged-in user), Date verified (auto-filled), Optional closing photo upload
+  3. Confirm button submits and stamps the record
+- Display the full audit trail on each closed item: who closed it, when, what correction was made, and photo if attached
+- Closed items should be read-only after verification
+
+---
+
+## 8. ANONYMOUS HAZARD REPORTING
+- On the member-facing hazard submission form, add a toggle: "Submit anonymously"
+- If toggled on, the submitter's name is NOT stored — record shows "Anonymous Submission"
+- The date, time, and zone are still recorded
+- The JHSC Worker Co-Chair can still action the finding
+- Display an "Anonymous" badge on the finding in the JHSC view
+
+---
+
+## 9. PHOTO & DOCUMENT ATTACHMENTS PER FINDING
+- Add file upload capability to:
+  - Hazard findings (new and existing)
+  - H&S incident reports
+  - Closed item verification (as noted above)
+- Accepted file types: JPG, PNG, PDF
+- Max file size: 10MB per file, up to 3 files per record
+- Display thumbnails for images and a PDF icon for documents in the record detail view
+- Store files securely and link them to the parent record ID
+
+---
+
+## 10. MANAGEMENT RESPONSE TRACKER
+- When the inspection report email is sent to the management Co-Chair, generate a unique response link
+- Management Co-Chair can open the link and submit their response:
+  - Response date (auto-stamped)
+  - Action committed (text)
+  - Target completion date
+  - Accept / Reject / Partial Accept each finding individually
+- Response is logged back into the app and visible to both Co-Chairs
+- Non-responses are automatically flagged after 21 days with label: "No Response — OHSA s.9(21) applicable"
+
+---
+
+## 11. INSPECTION CHECKLIST TEMPLATES
+- New section within the Conduct Inspection flow: "Use Template"
+- Pre-built checklist templates:
+  - Forklift / Raymond Equipment Safety
+  - Racking Integrity (CSA A344)
+  - Cold Storage & Temperature Zones
+  - Dock / Loading Area
+  - Ergonomics & MSD Prevention
+  - Fire Safety & Emergency Exits
+  - General Warehouse Walkthrough
+- Each checklist item includes: item description, OHSA or CSA reference, Pass / Fail / N/A rating, notes field
+- Completed template auto-populates into the inspection record
+- Worker Co-Chair can add custom checklist items to any template
+
+---
+
+## 12. SCHEDULED INSPECTION REMINDERS
+- In app settings, allow Worker Co-Chair and Admin to set:
+  - Monthly inspection date (e.g., every 3rd Tuesday)
+  - Reminder lead time (e.g., 5 days before)
+- App sends an email reminder to both Co-Chairs X days before the scheduled inspection
+- After the inspection date, if no inspection was logged, send a follow-up alert: "Monthly inspection not yet recorded — OHSA s.9(26) requires monthly inspections"
+- Track inspection completion rate by month on the dashboard
+
+---
+
+## 13. OFFLINE MODE / PWA CACHING
+- The app is already a PWA — extend the service worker to cache:
+  - All inspection forms
+  - Hazard finding forms
+  - H&S report forms
+  - Right to Refuse form
+- Allow forms to be completed offline and submitted when connectivity is restored
+- Show an "Offline Mode" banner when the device is not connected
+- Queue submissions locally and sync automatically on reconnect
+
+---
+
+## 14. ZONE-BASED QUICK FILTER
+- Add a Zone filter (Zones 1–11) to the following pages:
+  - Hazard Findings
+  - Action Items
+  - Inspections
+  - Closed Items
+- Filter appears as a horizontal scrollable tab bar at the top of each page: All | Z1 | Z2 | Z3 ... Z11
+- Selecting a zone instantly filters the list to that zone only
+- Persist the selected zone filter during the session
+
+---
+
+## GENERAL REQUIREMENTS
+- Do not break any existing features
+- Maintain existing role structure: Admin, Worker Co-Chair, Management Co-Chair, Member
+- All new pages must follow the existing UI style and colour scheme
+- All new database tables or fields must be compatible with the existing database structure
+- All timestamps must be in Eastern Time (Ontario)
+- All date formats: YYYY-MM-DD
+- The app must remain fully mobile-responsive (used on Samsung Galaxy on the warehouse floor)
+- All OHSA section references displayed in the app must be accurate to the Ontario OHSA R.S.O. 1990, c. O.1
