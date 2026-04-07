@@ -27,49 +27,62 @@ async function generateExcel(report: typeof healthSafetyReportsTable.$inferSelec
   const ws = wb.sheet(0);
 
   // Section 1 – Employee details
-  ws.cell("B4").value(report.employeeName);
-  ws.cell("B5").value(report.department);
-  ws.cell("B6").value(report.jobTitle);
-  ws.cell("B7").value(report.shift);
-  ws.cell("B8").value(report.dateReported);
-  ws.cell("B9").value(report.supervisorManager);
+  // Name (C6:D6) | Date Reported (F6:G6)
+  ws.cell("C6").value(report.employeeName);
+  ws.cell("F6").value(report.dateReported);
+  // Department (C7:D7) | Shift (F7:G7)
+  ws.cell("C7").value(report.department);
+  ws.cell("F7").value(report.shift);
+  // Job Title (C8:G8)
+  ws.cell("C8").value(report.jobTitle);
+  // Supervisor / Manager (C9:G9)
+  ws.cell("C9").value(report.supervisorManager);
 
-  // Section 2 – Concern types (mark [X] for selected)
+  // Section 2 – Concern types (replace the checkbox rows with [X] for selected)
   const selected = new Set(report.concernTypes as string[]);
   const check = (key: string) => selected.has(key) ? "X" : " ";
-  ws.cell("A11").value(
+  ws.cell("B11").value(
     `[${check("unsafe_condition")}] Unsafe condition   [${check("near_miss")}] Near miss   [${check("injury_illness")}] Injury / illness   [${check("ergonomic")}] Ergonomic`
   );
-  ws.cell("A12").value(
+  ws.cell("B12").value(
     `[${check("equipment")}] Equipment   [${check("housekeeping")}] Housekeeping   [${check("slip_trip_fall")}] Slip/Trip/Fall   [${check("chemical")}] Chemical`
   );
   const otherText = report.otherConcernType ? report.otherConcernType : "__________";
-  ws.cell("A13").value(`[${check("unsafe_act")}] Unsafe act   [${check("other")}] Other: ${otherText}`);
+  ws.cell("B13").value(`[${check("unsafe_act")}] Unsafe act   [${check("other")}] Other: ${otherText}`);
 
   // Section 3 – Location / Date / Time
-  ws.cell("B15").value(report.areaLocation);
-  ws.cell("B16").value(report.incidentDate);
-  ws.cell("B17").value(report.incidentTime);
-  ws.cell("B18").value(report.equipmentTask ?? "");
+  // Area / Location (C15:G15)
+  ws.cell("C15").value(report.areaLocation);
+  // Date (C16:D16) | Time (F16:G16)
+  ws.cell("C16").value(report.incidentDate);
+  ws.cell("F16").value(report.incidentTime);
+  // Equipment / Task (C17:G17)
+  ws.cell("C17").value(report.equipmentTask ?? "");
 
-  // Section 4 – What happened
-  ws.cell("A20").value(report.whatHappened);
+  // Section 4 – What happened (B19:G23 merged rows)
+  ws.cell("B19").value(report.whatHappened);
 
   // Section 5 – Immediate action
+  // Reported to supervisor (B25:G25)
   const supText = report.reportedToSupervisor
     ? "Reported to supervisor? [X] Yes   [ ] No"
     : "Reported to supervisor? [ ] Yes   [X] No";
-  ws.cell("A25").value(supText);
-  ws.cell("B26").value(report.whoNotified ?? "");
-  ws.cell("B27").value(report.immediateActionTaken ?? "");
+  ws.cell("B25").value(supText);
+  // Who was notified (C26:G26)
+  ws.cell("C26").value(report.whoNotified ?? "");
+  // Immediate action taken (C27:G27)
+  ws.cell("C27").value(report.immediateActionTaken ?? "");
 
   // Section 6 – Witnesses / Corrective action
-  ws.cell("B29").value(report.witnesses ?? "");
-  ws.cell("B30").value(report.suggestedCorrection ?? "");
+  // Witnesses (C29:G29)
+  ws.cell("C29").value(report.witnesses ?? "");
+  // Suggested correction (B31:G31 — B30 is the label row)
+  ws.cell("B31").value(report.suggestedCorrection ?? "");
 
-  // Section 7 – Signature
-  ws.cell("B32").value(report.employeeSignature);
-  ws.cell("B33").value(report.signatureDate);
+  // Section 7 – Employee signature
+  // Signature (C34:D34) | Date (F34:G34)
+  ws.cell("C34").value(report.employeeSignature);
+  ws.cell("F34").value(report.signatureDate);
 
   return wb.outputAsync() as Promise<Buffer>;
 }
