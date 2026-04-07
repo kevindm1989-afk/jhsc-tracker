@@ -88,7 +88,11 @@ export default function MeetingTranscription() {
   const handleRecord = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm";
+      const mime =
+        MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" :
+        MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" :
+        MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" :
+        "audio/ogg";
       const mr = new MediaRecorder(stream, { mimeType: mime });
       chunksRef.current = [];
       mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
@@ -130,7 +134,8 @@ export default function MeetingTranscription() {
     const mime = mrRef.current?.mimeType ?? "audio/webm";
     const blob = new Blob(chunksRef.current, { type: mime });
     const fd = new FormData();
-    fd.append("audio", blob, "meeting.webm");
+    const ext = mime.includes("mp4") ? "mp4" : mime.includes("ogg") ? "ogg" : "webm";
+    fd.append("audio", blob, "meeting." + ext);
     setAppState("uploading");
     setStatusMsg("Uploading audio to server...");
     submitStartRef.current = Date.now();
@@ -249,7 +254,7 @@ export default function MeetingTranscription() {
           {appState === "preview" && (
             <div>
               <p style={{ fontSize: "13px", color: "#666", marginBottom: "8px" }}>Preview before submitting:</p>
-              <audio ref={audioRef} src={audioUrl} controls style={{ width: "100%", marginBottom: "16px" }} />
+              <audio ref={audioRef} src={audioUrl} controls preload="auto" autoPlay={false} style={{ width: "100%", marginBottom: "16px" }} />
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <button onClick={handleSubmit} style={btn("#1a2744", "#fff")}>Submit for Transcription</button>
                 <button onClick={handleDiscard} style={btn("transparent", "#888", "1px solid #ddd")}>Discard & Re-record</button>
