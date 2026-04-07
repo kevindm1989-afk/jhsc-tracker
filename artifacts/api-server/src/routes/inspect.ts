@@ -333,12 +333,13 @@ router.post("/email", async (req, res) => {
         monthFolderId = r.rows[0].id;
       }
 
-      // Insert file record
+      // Insert file record — name is the full inspection date (e.g. "April 7, 2026.xlsx")
       const uploadedBy = (req as any).session?.displayName || "System";
+      const displayFileName = `${displayDate}.xlsx`;
       await pool.query(
         `INSERT INTO folder_files (folder_id, original_name, stored_name, mime_type, size_bytes, uploaded_by)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [monthFolderId, fileName, storedName,
+        [monthFolderId, displayFileName, storedName,
          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
          outBuffer.length, uploadedBy]
       );
