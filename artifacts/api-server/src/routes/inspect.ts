@@ -335,7 +335,7 @@ router.post("/email", async (req, res) => {
 
       // Insert file record — name is the full inspection date (e.g. "April 7, 2026.xlsx")
       const uploadedBy = (req as any).session?.displayName || "System";
-      const displayFileName = `${displayDate}.xlsx`;
+      const displayFileName = `${displayDate} — ${zoneName}.xlsx`;
       await pool.query(
         `INSERT INTO folder_files (folder_id, original_name, stored_name, mime_type, size_bytes, uploaded_by)
          VALUES ($1, $2, $3, $4, $5, $6)`,
