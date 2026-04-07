@@ -103,7 +103,7 @@ export default function FilesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const isAdmin = user?.role === "admin";
+  const canAdmin = user?.role === "admin" || user?.role === "co-chair";
 
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbEntry[]>([]);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
@@ -311,7 +311,7 @@ export default function FilesPage() {
             <Upload className="w-4 h-4" />
             Upload File
           </Button>
-          {isAdmin && (
+          {canAdmin && (
             <Button variant="outline" onClick={() => openNewFolder(null)} className="gap-2">
               <Plus className="w-4 h-4" />
               New Folder
@@ -321,9 +321,9 @@ export default function FilesPage() {
       </div>
 
       {/* Main layout */}
-      <div className="flex gap-4 min-h-[500px]">
+      <div className="flex flex-col md:flex-row gap-4">
         {/* Sidebar — top-level folders only */}
-        <div className="w-56 shrink-0 space-y-1">
+        <div className="md:w-56 md:shrink-0 space-y-1">
           <p className="text-xs uppercase font-bold text-muted-foreground px-2 pb-1">Folders</p>
           {topLevelFolders.length === 0 && (
             <p className="text-sm text-muted-foreground px-2 py-4">No folders yet.</p>
@@ -350,11 +350,11 @@ export default function FilesPage() {
                 </span>
                 <span className="flex items-center gap-1 shrink-0">
                   <span className="text-xs text-muted-foreground">{totalCount || ""}</span>
-                  {isAdmin && (
+                  {canAdmin && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <span
-                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-muted-foreground/20"
+                          className="sm:opacity-0 sm:group-hover:opacity-100 p-0.5 rounded hover:bg-muted-foreground/20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
@@ -392,7 +392,8 @@ export default function FilesPage() {
         </div>
 
         {/* Divider */}
-        <div className="w-px bg-border shrink-0" />
+        <div className="hidden md:block w-px bg-border shrink-0" />
+        <div className="md:hidden h-px bg-border" />
 
         {/* Right panel */}
         <div className="flex-1 min-w-0">
@@ -430,7 +431,7 @@ export default function FilesPage() {
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  {isAdmin && (
+                  {canAdmin && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -472,11 +473,11 @@ export default function FilesPage() {
                           {sf.fileCount} file{sf.fileCount !== 1 ? "s" : ""}
                           {sf.subfolderCount > 0 ? `, ${sf.subfolderCount} subfolder${sf.subfolderCount !== 1 ? "s" : ""}` : ""}
                         </span>
-                        {isAdmin && (
+                        {canAdmin && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <span
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-muted-foreground/20 transition-opacity"
+                                className="absolute top-2 right-2 sm:opacity-0 sm:group-hover:opacity-100 p-0.5 rounded hover:bg-muted-foreground/20 transition-opacity"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
@@ -546,7 +547,7 @@ export default function FilesPage() {
                             {formatBytes(file.sizeBytes)} · {formatDate(file.createdAt)} · {file.uploadedBy}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                           <Button
                             size="icon"
                             variant="ghost"
@@ -556,7 +557,7 @@ export default function FilesPage() {
                           >
                             <Download className="w-4 h-4" />
                           </Button>
-                          {isAdmin && (
+                          {canAdmin && (
                             <Button
                               size="icon"
                               variant="ghost"

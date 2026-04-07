@@ -53,7 +53,7 @@ export default function ActionItemsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const canAdmin = user?.role === "admin" || user?.role === "co-chair";
 
   const queryParams = {
     ...(statusFilter !== "all" && { status: statusFilter }),
@@ -163,7 +163,7 @@ export default function ActionItemsPage() {
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Action Items</h1>
           <p className="text-muted-foreground mt-1 text-sm">Track safety corrections and assigned tasks.</p>
         </div>
-        {isAdmin && (
+        {canAdmin && (
           <Button onClick={handleCreate} className="shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
             <Plus className="w-4 h-4 mr-2" /> Add Action Item
           </Button>
@@ -197,37 +197,37 @@ export default function ActionItemsPage() {
         </Select>
       </div>
 
-      <div className="overflow-x-auto rounded-md border shadow-sm"><div className="min-w-[700px] bg-card overflow-hidden">
+      <div className="rounded-md border shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
-              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">ID</TableHead>
-              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Date</TableHead>
+              <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider hidden sm:table-cell">ID</TableHead>
+              <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Date</TableHead>
               <TableHead className="font-bold text-xs uppercase tracking-wider">Description</TableHead>
-              <TableHead className="w-[200px] font-bold text-xs uppercase tracking-wider">Notes / Update</TableHead>
-              <TableHead className="w-[150px] font-bold text-xs uppercase tracking-wider">Assigned To</TableHead>
-              <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Due Date</TableHead>
-              <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
-              {isAdmin && <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>}
+              <TableHead className="w-[200px] font-bold text-xs uppercase tracking-wider hidden lg:table-cell">Notes / Update</TableHead>
+              <TableHead className="w-[140px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Assigned To</TableHead>
+              <TableHead className="w-[110px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Due Date</TableHead>
+              <TableHead className="w-[110px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
+              {canAdmin && <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array(5).fill(0).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-full max-w-[300px]" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-full max-w-[180px]" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-full max-w-[180px]" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                  {isAdmin && <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>}
+                  {canAdmin && <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>}
                 </TableRow>
               ))
             ) : items?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 8 : 7} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={canAdmin ? 8 : 7} className="h-32 text-center text-muted-foreground">
                   No action items found.
                 </TableCell>
               </TableRow>
@@ -236,26 +236,28 @@ export default function ActionItemsPage() {
                 const overdue = isOverdue(item.dueDate, item.status);
                 return (
                   <TableRow key={item.id} className={cn("group transition-colors", overdue && "bg-amber-50/50 hover:bg-amber-100/50 dark:bg-amber-950/20 dark:hover:bg-amber-950/30")}>
-                    <TableCell className="font-mono text-xs font-semibold">
+                    <TableCell className="font-mono text-xs font-semibold hidden sm:table-cell">
                       {item.itemCode}
                     </TableCell>
-                    <TableCell className="text-sm tabular-nums text-muted-foreground">
+                    <TableCell className="text-sm tabular-nums text-muted-foreground hidden md:table-cell">
                       {format(new Date(item.date), 'MMM dd, yyyy')}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <PriorityBadge priority={item.priority} />
                           <DeptBadge dept={item.department} />
+                          <span className="text-[10px] font-mono text-muted-foreground sm:hidden">{item.itemCode}</span>
                         </div>
                         <span className="text-sm font-medium leading-snug">{item.description}</span>
+                        <span className="text-xs text-muted-foreground md:hidden">{item.assignedTo} {item.dueDate ? `· Due ${format(new Date(item.dueDate), 'MMM dd')}` : ''}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground align-top">
+                    <TableCell className="text-sm text-muted-foreground align-top hidden lg:table-cell">
                       {item.notes ? item.notes : <span className="text-xs">—</span>}
                     </TableCell>
-                    <TableCell className="text-sm font-medium">{item.assignedTo}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-sm font-medium hidden md:table-cell">{item.assignedTo}</TableCell>
+                    <TableCell className="hidden md:table-cell">
                       {item.dueDate ? (
                         <div className={cn("text-sm font-mono flex items-center gap-1", overdue ? "text-red-600 font-bold" : "text-muted-foreground")}>
                           <CalendarIcon className="w-3 h-3" />
@@ -268,7 +270,7 @@ export default function ActionItemsPage() {
                     <TableCell>
                       <StatusBadge status={overdue ? "Overdue" : item.status} />
                     </TableCell>
-                    {isAdmin && (
+                    {canAdmin && (
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
@@ -291,7 +293,7 @@ export default function ActionItemsPage() {
             )}
           </TableBody>
         </Table>
-      </div></div>
+      </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="w-[calc(100vw-32px)] sm:max-w-2xl max-h-[90vh] overflow-y-auto border-sidebar-border shadow-2xl">

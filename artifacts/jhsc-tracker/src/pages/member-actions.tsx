@@ -90,7 +90,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function MemberActionsPage() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const canAdmin = user?.role === "admin" || user?.role === "co-chair";
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -171,7 +171,7 @@ export default function MemberActionsPage() {
     updateMutation.mutate({ id: item.id, data: { status } });
   };
 
-  const myActions = isAdmin ? (actions ?? []) : (actions ?? []).filter((a) => a.assignedToUserId === user?.id);
+  const myActions = canAdmin ? (actions ?? []) : (actions ?? []).filter((a) => a.assignedToUserId === user?.id);
   const filtered = myActions.filter((a) => statusFilter === "all" || a.status === statusFilter);
 
   const isOverdue = (item: MemberAction) =>
@@ -187,10 +187,10 @@ export default function MemberActionsPage() {
             Member Actions
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {isAdmin ? "Assign and track tasks for committee members" : "Your assigned tasks"}
+            {canAdmin ? "Assign and track tasks for committee members" : "Your assigned tasks"}
           </p>
         </div>
-        {isAdmin && (
+        {canAdmin && (
           <Button onClick={openCreate} size="sm" className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Assign Action
@@ -301,7 +301,7 @@ export default function MemberActionsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {isAdmin ? (
+                      {canAdmin ? (
                         <Select
                           value={item.status}
                           onValueChange={(val) => updateStatus(item, val)}
@@ -324,7 +324,7 @@ export default function MemberActionsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {!isAdmin && item.status !== "completed" && (
+                        {!canAdmin && item.status !== "completed" && (
                           <Button
                             size="sm"
                             className="h-7 text-xs px-2 bg-green-600 hover:bg-green-700 text-white"
@@ -335,7 +335,7 @@ export default function MemberActionsPage() {
                             Mark Complete
                           </Button>
                         )}
-                        {isAdmin && (
+                        {canAdmin && (
                           <>
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item)}>
                               <Edit2 className="w-3.5 h-3.5" />
@@ -359,7 +359,7 @@ export default function MemberActionsPage() {
                 <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                   {statusFilter !== "all"
                     ? `No ${STATUS_CONFIG[statusFilter]?.label.toLowerCase()} actions.`
-                    : isAdmin
+                    : canAdmin
                     ? "No actions assigned yet. Use the button above to assign one."
                     : "No actions have been assigned to you yet."}
                 </TableCell>
@@ -370,7 +370,7 @@ export default function MemberActionsPage() {
       </div>
 
       {/* Create / Edit Dialog (admin only) */}
-      {isAdmin && (
+      {canAdmin && (
         <Dialog open={isFormOpen} onOpenChange={(open) => { if (!open) { setIsFormOpen(false); setEditingItem(null); } }}>
           <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
             <DialogHeader>

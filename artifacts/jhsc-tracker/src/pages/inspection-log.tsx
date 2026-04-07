@@ -79,7 +79,7 @@ export default function InspectionLogPage() {
     },
   });
 
-  const isAdmin = currentUser?.role === "admin";
+  const canAdmin = currentUser?.role === "admin" || currentUser?.role === "co-chair";
   const isWorkerRep = currentUser?.role === "worker-rep";
 
   const queryParams = {
@@ -191,7 +191,7 @@ export default function InspectionLogPage() {
 
   const canVerify = (item: InspectionEntry) => {
     if (item.status !== "Pending") return false;
-    if (isAdmin || isWorkerRep) return true;
+    if (canAdmin || isWorkerRep) return true;
     if (!item.inspector || !currentUser) return false;
     return item.inspector.trim().toLowerCase() === currentUser.displayName.trim().toLowerCase();
   };
@@ -205,7 +205,7 @@ export default function InspectionLogPage() {
             Findings from workplace inspections. Pending items require verification by the inspector.
           </p>
         </div>
-        {isAdmin && (
+        {canAdmin && (
           <Button onClick={handleCreate} className="shrink-0 font-bold shadow-sm">
             <Plus className="w-4 h-4 mr-2" /> Record Finding
           </Button>
@@ -243,18 +243,17 @@ export default function InspectionLogPage() {
         </Select>
       </div>
 
-      <div className="overflow-x-auto rounded-md border shadow-sm">
-        <div className="min-w-[800px] bg-card overflow-hidden">
+      <div className="rounded-md border shadow-sm overflow-hidden">
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead className="w-[80px] font-bold text-xs uppercase tracking-wider">ID</TableHead>
-                <TableHead className="w-[80px] font-bold text-xs uppercase tracking-wider">Date</TableHead>
-                <TableHead className="w-[130px] font-bold text-xs uppercase tracking-wider">Zone / Area</TableHead>
+                <TableHead className="w-[75px] font-bold text-xs uppercase tracking-wider hidden sm:table-cell">ID</TableHead>
+                <TableHead className="w-[75px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Date</TableHead>
+                <TableHead className="w-[110px] font-bold text-xs uppercase tracking-wider hidden sm:table-cell">Zone</TableHead>
                 <TableHead className="font-bold text-xs uppercase tracking-wider">Finding & Corrective Action</TableHead>
-                <TableHead className="w-[110px] font-bold text-xs uppercase tracking-wider">Inspector</TableHead>
-                <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider">Priority</TableHead>
-                <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
+                <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider hidden lg:table-cell">Inspector</TableHead>
+                <TableHead className="w-[80px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Priority</TableHead>
+                <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
                 <TableHead className="w-[110px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -264,9 +263,14 @@ export default function InspectionLogPage() {
                   .fill(0)
                   .map((_, i) => (
                     <TableRow key={i}>
-                      {Array(8).fill(0).map((_, j) => (
-                        <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
-                      ))}
+                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     </TableRow>
                   ))
               ) : items?.length === 0 ? (
@@ -278,13 +282,13 @@ export default function InspectionLogPage() {
               ) : (
                 items?.map(item => (
                   <TableRow key={item.id} className="group transition-colors">
-                    <TableCell className="font-mono text-xs font-semibold text-muted-foreground">
+                    <TableCell className="font-mono text-xs font-semibold text-muted-foreground hidden sm:table-cell">
                       {item.itemCode}
                     </TableCell>
-                    <TableCell className="text-sm tabular-nums text-muted-foreground">
+                    <TableCell className="text-sm tabular-nums text-muted-foreground hidden md:table-cell">
                       {format(new Date(item.date), "MMM dd")}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground leading-tight">
                           {item.zone.split(" — ")[0]}
@@ -296,6 +300,10 @@ export default function InspectionLogPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 flex-wrap sm:hidden">
+                          <span className="text-[10px] font-mono text-muted-foreground">{item.itemCode}</span>
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground">{item.zone.split(" — ")[0]}</span>
+                        </div>
                         <span className="text-sm font-medium leading-snug">{item.finding}</span>
                         {item.correctiveAction && (
                           <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1 border-l-2 border-muted-foreground/30">
@@ -311,14 +319,14 @@ export default function InspectionLogPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       {item.inspector ? (
                         <span className="text-xs font-medium">{item.inspector}</span>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <PriorityBadge priority={item.priority} />
                     </TableCell>
                     <TableCell>
@@ -337,7 +345,7 @@ export default function InspectionLogPage() {
                             Verify
                           </Button>
                         )}
-                        {isAdmin && (
+                        {canAdmin && (
                           <>
                             <Button
                               variant="ghost"
@@ -368,7 +376,6 @@ export default function InspectionLogPage() {
               )}
             </TableBody>
           </Table>
-        </div>
       </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>

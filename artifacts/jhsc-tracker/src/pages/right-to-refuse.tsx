@@ -121,42 +121,51 @@ export default function RightToRefusePage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-md border shadow-sm">
-        <div className="min-w-[900px] bg-card overflow-hidden">
+      <div className="rounded-md border shadow-sm overflow-hidden">
           <Table>
             <TableHeader className="bg-muted/50 border-b-2 border-border">
               <TableRow>
-                <TableHead className="font-bold text-xs uppercase tracking-wider w-[90px]">Code</TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider w-[90px]">Date</TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider">Worker / Zone</TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider">Hazard</TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider w-[120px]">Notified</TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider w-[130px]">Outcome</TableHead>
-                <TableHead className="w-[70px]" />
+                <TableHead className="font-bold text-xs uppercase tracking-wider w-[80px] hidden sm:table-cell">Code</TableHead>
+                <TableHead className="font-bold text-xs uppercase tracking-wider w-[80px] hidden md:table-cell">Date</TableHead>
+                <TableHead className="font-bold text-xs uppercase tracking-wider">Worker / Hazard</TableHead>
+                <TableHead className="font-bold text-xs uppercase tracking-wider hidden md:table-cell">Notified</TableHead>
+                <TableHead className="font-bold text-xs uppercase tracking-wider w-[120px]">Outcome</TableHead>
+                <TableHead className="w-[50px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 Array(3).fill(0).map((_, i) => (
                   <TableRow key={i}>
-                    {Array(7).fill(0).map((__, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}
+                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                   </TableRow>
                 ))
               ) : items?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">No right-to-refuse records on file.</TableCell>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">No right-to-refuse records on file.</TableCell>
                 </TableRow>
               ) : (
                 items?.map((item) => (
                   <TableRow key={item.id} className="group">
-                    <TableCell className="font-mono text-xs font-semibold">{item.refuseCode}</TableCell>
-                    <TableCell className="text-sm tabular-nums text-muted-foreground">{format(new Date(item.refusalDate), 'MMM d')}<br /><span className="text-xs">{item.refusalTime}</span></TableCell>
+                    <TableCell className="font-mono text-xs font-semibold hidden sm:table-cell">{item.refuseCode}</TableCell>
+                    <TableCell className="text-sm tabular-nums text-muted-foreground hidden md:table-cell">{format(new Date(item.refusalDate), 'MMM d')}<br /><span className="text-xs">{item.refusalTime}</span></TableCell>
                     <TableCell>
-                      <p className="text-sm font-semibold">{item.workerName}</p>
-                      <span className="text-xs text-muted-foreground">{item.zone}</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 sm:hidden">
+                          <span className="font-mono text-[10px] text-muted-foreground">{item.refuseCode}</span>
+                          <span className="text-[10px] text-muted-foreground">{format(new Date(item.refusalDate), 'MMM d')}</span>
+                        </div>
+                        <p className="text-sm font-semibold">{item.workerName}</p>
+                        <span className="text-xs text-muted-foreground">{item.zone}</span>
+                        <span className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.hazardDescription}</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-sm max-w-[300px]">{item.hazardDescription}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
                         {item.supervisorNotified && <span>✓ Supervisor</span>}
                         {item.jhscRepNotified && <span>✓ JHSC Rep</span>}
@@ -168,7 +177,7 @@ export default function RightToRefusePage() {
                       <div className="flex items-center gap-1">
                         {isLocked(item) && <Lock className="w-3 h-3 text-muted-foreground" title="Locked after 24 hours" />}
                         {!isLocked(item) && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleEdit(item)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => handleEdit(item)}>
                             <Edit2 className="h-4 w-4" />
                           </Button>
                         )}
@@ -179,7 +188,6 @@ export default function RightToRefusePage() {
               )}
             </TableBody>
           </Table>
-        </div>
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -191,7 +199,7 @@ export default function RightToRefusePage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs uppercase font-bold text-muted-foreground">Refusal Date</label>
                 <Input type="date" value={form.refusalDate || ""} onChange={e => setForm(f => ({ ...f, refusalDate: e.target.value }))} />

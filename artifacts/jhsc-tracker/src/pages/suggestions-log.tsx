@@ -69,7 +69,7 @@ function ExpandedRow({ s }: { s: Suggestion }) {
 export default function SuggestionsLogPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const isAdmin = user?.role === "admin";
+  const canAdmin = user?.role === "admin" || user?.role === "co-chair";
 
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -131,7 +131,7 @@ export default function SuggestionsLogPage() {
           <div>
             <h1 className="text-xl font-bold text-foreground">Suggestions Log</h1>
             <p className="text-sm text-muted-foreground">
-              {isAdmin ? "All submitted employee suggestions" : "Your submitted suggestions"}
+              {canAdmin ? "All submitted employee suggestions" : "Your submitted suggestions"}
             </p>
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function SuggestionsLogPage() {
           <span>Location</span>
           <span className="w-16 text-center">Priority</span>
           <span className="w-24 text-center">Submitted</span>
-          {isAdmin && <span className="w-8" />}
+          {canAdmin && <span className="w-8" />}
         </div>
 
         {isLoading ? (
@@ -229,7 +229,7 @@ export default function SuggestionsLogPage() {
                     <TruncatedText text={s.locationOfConcern} lines={1} label="Location" className="text-sm text-muted-foreground" />
                     <span className="w-16 flex justify-center"><PriorityBadge level={s.priorityLevel} /></span>
                     <span className="w-24 text-xs text-muted-foreground text-center">{s.dateSubmitted}</span>
-                    {isAdmin && (
+                    {canAdmin && (
                       <span className="w-8 flex justify-center" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
@@ -260,7 +260,7 @@ export default function SuggestionsLogPage() {
                         <p className="text-xs text-muted-foreground">{s.locationOfConcern} · {s.dateSubmitted}</p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        {isAdmin && (
+                        {canAdmin && (
                           <span onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="ghost"

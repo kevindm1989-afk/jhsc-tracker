@@ -60,7 +60,7 @@ export default function ClosedItemsLogPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const canAdmin = user?.role === "admin" || user?.role === "co-chair";
   const isWorkerRep = user?.role === "worker-rep";
 
   const queryParams = {
@@ -184,7 +184,7 @@ export default function ClosedItemsLogPage() {
             Items resolved and closed — imported from meeting minutes
           </p>
         </div>
-        {isAdmin && (
+        {canAdmin && (
           <Button onClick={openCreate} size="sm" className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Add Closed Item
@@ -217,67 +217,76 @@ export default function ClosedItemsLogPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border overflow-x-auto">
+      <div className="rounded-md border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-20">Code</TableHead>
-              <TableHead className="w-24">Date</TableHead>
-              <TableHead className="w-28">Department</TableHead>
+              <TableHead className="w-20 hidden sm:table-cell">Code</TableHead>
+              <TableHead className="w-24 hidden md:table-cell">Date</TableHead>
+              <TableHead className="w-28 hidden md:table-cell">Department</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="w-48">Notes</TableHead>
-              <TableHead className="w-32">Assigned To</TableHead>
-              <TableHead className="w-28">Closed Date</TableHead>
-              <TableHead className="hidden w-28">Meeting Date</TableHead>
+              <TableHead className="w-48 hidden lg:table-cell">Notes</TableHead>
+              <TableHead className="w-32 hidden lg:table-cell">Assigned To</TableHead>
+              <TableHead className="w-28 hidden md:table-cell">Closed Date</TableHead>
               <TableHead className="w-24">Status</TableHead>
-              {(isAdmin || isWorkerRep) && <TableHead className="w-24 text-right">Actions</TableHead>}
+              {(canAdmin || isWorkerRep) && <TableHead className="w-24 text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: (isAdmin || isWorkerRep) ? 10 : 9 }).map((_, j) => (
-                    <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
-                  ))}
+                  <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                  {(canAdmin || isWorkerRep) && <TableCell><Skeleton className="h-4 w-full" /></TableCell>}
                 </TableRow>
               ))
             ) : items && items.length > 0 ? (
               items.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{item.itemCode}</TableCell>
-                  <TableCell className="text-sm whitespace-nowrap">
+                  <TableCell className="font-mono text-xs text-muted-foreground hidden sm:table-cell">{item.itemCode}</TableCell>
+                  <TableCell className="text-sm hidden md:table-cell">
                     {format(new Date(item.date), "MMM d, yyyy")}
                   </TableCell>
-                  <TableCell><DeptBadge dept={item.department} /></TableCell>
+                  <TableCell className="hidden md:table-cell"><DeptBadge dept={item.department} /></TableCell>
                   <TableCell className="text-sm max-w-xs">
-                    <TruncatedText text={item.description} lines={2} label="Description" />
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5 flex-wrap sm:hidden">
+                        <span className="font-mono text-[10px] text-muted-foreground">{item.itemCode}</span>
+                        <DeptBadge dept={item.department} />
+                      </div>
+                      <TruncatedText text={item.description} lines={2} label="Description" />
+                      <span className="text-xs text-muted-foreground md:hidden">{format(new Date(item.date), "MMM d, yyyy")}{item.assignedTo ? ` · ${item.assignedTo}` : ''}</span>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[12rem]">
+                  <TableCell className="text-sm text-muted-foreground max-w-[12rem] hidden lg:table-cell">
                     {item.notes ? (
                       <TruncatedText text={item.notes} lines={2} label="Notes" className="text-muted-foreground" />
                     ) : (
                       <span className="text-muted-foreground/50">—</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm">{item.assignedTo}</TableCell>
-                  <TableCell className="text-sm whitespace-nowrap">
+                  <TableCell className="text-sm hidden lg:table-cell">{item.assignedTo}</TableCell>
+                  <TableCell className="text-sm hidden md:table-cell">
                     {item.closedDate ? format(new Date(item.closedDate), "MMM d, yyyy") : <span className="text-muted-foreground/60">—</span>}
-                  </TableCell>
-                  <TableCell className="hidden text-sm whitespace-nowrap text-muted-foreground">
-                    {item.meetingDate ?? <span className="text-muted-foreground/60">—</span>}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       <StatusBadge status="Closed" />
                       {(item as any).verifiedAt && (
-                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                          ✓ {(item as any).verifiedBy} · {format(new Date((item as any).verifiedAt), "MMM d, yyyy")}
+                        <span className="text-[10px] text-muted-foreground">
+                          ✓ {(item as any).verifiedBy}
                         </span>
                       )}
                     </div>
                   </TableCell>
-                  {(isAdmin || isWorkerRep) && (
+                  {(canAdmin || isWorkerRep) && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         {!(item as any).verifiedAt && (
@@ -291,7 +300,7 @@ export default function ClosedItemsLogPage() {
                             Verify
                           </Button>
                         )}
-                        {isAdmin && (
+                        {canAdmin && (
                           <>
                             <Button
                               variant="ghost"
@@ -318,7 +327,7 @@ export default function ClosedItemsLogPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={(isAdmin || isWorkerRep) ? 10 : 9} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={(canAdmin || isWorkerRep) ? 10 : 9} className="h-32 text-center text-muted-foreground">
                   No closed items found.{" "}
                   {deptFilter !== "all" || searchText
                     ? "Try clearing the filters."

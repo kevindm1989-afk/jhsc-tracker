@@ -190,15 +190,15 @@ export default function WorkerStatementsPage() {
         </Select>
       </div>
 
-      <div className="overflow-x-auto rounded-md border shadow-sm"><div className="min-w-[700px] bg-card overflow-hidden">
+      <div className="rounded-md border shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50 border-b-2 border-border">
             <TableRow>
-              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Code</TableHead>
-              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Date</TableHead>
+              <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider hidden sm:table-cell">Code</TableHead>
+              <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Date</TableHead>
               <TableHead className="font-bold text-xs uppercase tracking-wider">Concern details</TableHead>
-              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Linked To</TableHead>
-              <TableHead className="w-[140px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
+              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Linked To</TableHead>
+              <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
               <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -206,10 +206,10 @@ export default function WorkerStatementsPage() {
             {isLoading ? (
               Array(5).fill(0).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-12" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-full" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
@@ -223,16 +223,16 @@ export default function WorkerStatementsPage() {
             ) : (
               items?.map((item) => (
                 <TableRow key={item.id} className="group transition-colors">
-                  <TableCell className="font-mono text-xs font-bold text-sidebar-primary">
+                  <TableCell className="font-mono text-xs font-bold text-sidebar-primary hidden sm:table-cell">
                     {item.statementCode}
                   </TableCell>
-                  <TableCell className="text-sm tabular-nums text-muted-foreground">
+                  <TableCell className="text-sm tabular-nums text-muted-foreground hidden md:table-cell">
                     {format(new Date(item.dateReceived), 'MMM dd, yyyy')}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1.5">
                       <span className="text-sm font-medium leading-snug">{item.description}</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded uppercase font-bold tracking-tight border">
                           {item.hazardType}
                         </span>
@@ -240,10 +240,11 @@ export default function WorkerStatementsPage() {
                         <span className="text-[10px] text-muted-foreground/80 uppercase font-semibold">
                           {item.shift} Shift
                         </span>
+                        <span className="sm:hidden text-[10px] font-mono text-sidebar-primary font-bold">{item.statementCode}</span>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {item.linkedItemCode ? (
                       <div className="flex items-center gap-1 font-mono text-xs text-muted-foreground font-semibold bg-muted/50 w-fit px-1.5 py-0.5 rounded border border-muted">
                         <LinkIcon className="w-3 h-3" />
@@ -276,7 +277,7 @@ export default function WorkerStatementsPage() {
             )}
           </TableBody>
         </Table>
-      </div></div>
+      </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="w-[calc(100vw-32px)] sm:max-w-2xl max-h-[90vh] overflow-y-auto border-sidebar-primary/20 shadow-2xl">

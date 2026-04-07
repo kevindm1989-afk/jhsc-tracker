@@ -80,9 +80,9 @@ export default function HazardFindingsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const canAdmin = user?.role === "admin" || user?.role === "co-chair";
   const isWorkerRep = user?.role === "worker-rep";
-  const canEdit = isAdmin || isWorkerRep;
+  const canEdit = canAdmin || isWorkerRep;
 
   const queryParams = {
     ...(statusFilter !== "all" && { status: statusFilter }),
@@ -258,17 +258,17 @@ export default function HazardFindingsPage() {
         </Select>
       </div>
 
-      <div className="overflow-x-auto rounded-md border shadow-sm"><div className="min-w-[900px] bg-card overflow-hidden">
+      <div className="rounded-md border shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50 border-b-2 border-border">
             <TableRow>
-              <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider">ID</TableHead>
-              <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider">Date</TableHead>
-              <TableHead className="font-bold text-xs uppercase tracking-wider">Hazard Description & OHSA Ref</TableHead>
-              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Risk Score</TableHead>
-              <TableHead className="w-[110px] font-bold text-xs uppercase tracking-wider">Severity</TableHead>
-              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Deadline</TableHead>
-              <TableHead className="w-[130px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
+              <TableHead className="w-[80px] font-bold text-xs uppercase tracking-wider hidden sm:table-cell">ID</TableHead>
+              <TableHead className="w-[80px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Date</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider">Hazard Description</TableHead>
+              <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider hidden lg:table-cell">Risk Score</TableHead>
+              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Severity</TableHead>
+              <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Deadline</TableHead>
+              <TableHead className="w-[110px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
               {canEdit && <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>}
             </TableRow>
           </TableHeader>
@@ -276,7 +276,14 @@ export default function HazardFindingsPage() {
             {isLoading ? (
               Array(5).fill(0).map((_, i) => (
                 <TableRow key={i}>
-                  {Array(canEdit ? 8 : 7).fill(0).map((__, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}
+                  <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                  {canEdit && <TableCell><Skeleton className="h-4 w-full" /></TableCell>}
                 </TableRow>
               ))
             ) : items?.length === 0 ? (
@@ -288,41 +295,46 @@ export default function HazardFindingsPage() {
             ) : (
               items?.map((item) => (
                 <TableRow key={item.id} className="group transition-colors">
-                  <TableCell className="font-mono text-xs font-semibold">
+                  <TableCell className="font-mono text-xs font-semibold hidden sm:table-cell">
                     {item.itemCode}
                     {(item as any).isAnonymous && (
                       <span title="Anonymous submission"><EyeOff className="w-3 h-3 text-muted-foreground mt-0.5" /></span>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm tabular-nums text-muted-foreground">
+                  <TableCell className="text-sm tabular-nums text-muted-foreground hidden md:table-cell">
                     {format(new Date(item.date), 'MMM dd')}
                     {(item as any).zone && <div className="text-[10px] text-muted-foreground truncate max-w-[80px]">{(item as any).zone.split(' — ')[0]}</div>}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap sm:hidden">
+                        <span className="text-[10px] font-mono text-muted-foreground">{item.itemCode}</span>
+                        {(item as any).zone && <span className="text-[10px] font-bold uppercase text-muted-foreground">{(item as any).zone.split(' — ')[0]}</span>}
+                      </div>
                       <span className="text-sm font-medium leading-snug">{item.hazardDescription}</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {item.ohsaReference && (
                           <span className="text-[10px] bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-mono px-1.5 py-0.5 rounded uppercase font-bold tracking-tight">
                             {item.ohsaReference}
                           </span>
                         )}
                         <DeptBadge dept={item.department} />
+                        <span className="md:hidden text-[10px] font-medium text-muted-foreground">{item.severity}</span>
                       </div>
                       {item.notes && <p className="text-xs text-muted-foreground">{item.notes}</p>}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     {(item as any).riskScore ? (
                       <span className={`text-xs font-bold px-2 py-1 rounded font-mono ${riskColor((item as any).riskScore)}`}>
                         {riskLabel((item as any).riskScore)}
                       </span>
                     ) : <span className="text-xs text-muted-foreground">—</span>}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <PriorityBadge priority={item.severity} />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {item.responseDeadline ? (
                       <div className="text-sm font-mono flex items-center gap-1 text-muted-foreground">
                         <CalendarIcon className="w-3 h-3" />
@@ -341,7 +353,7 @@ export default function HazardFindingsPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        {isAdmin && (
+                        {canAdmin && (
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => {
                               if (window.confirm('Delete this record?')) {
@@ -359,7 +371,7 @@ export default function HazardFindingsPage() {
             )}
           </TableBody>
         </Table>
-      </div></div>
+      </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="w-[calc(100vw-32px)] sm:max-w-2xl max-h-[90vh] overflow-y-auto border-sidebar-border shadow-2xl">
