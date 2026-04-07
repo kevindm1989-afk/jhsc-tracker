@@ -210,7 +210,7 @@ export default function HazardFindingsPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <ShieldAlert className="w-8 h-8 text-destructive" />
-            Hazard Findings
+            Recommendations
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">Formal recommendations to the employer. Includes risk matrix scoring.</p>
         </div>
@@ -282,7 +282,7 @@ export default function HazardFindingsPage() {
             ) : items?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={canEdit ? 8 : 7} className="h-32 text-center text-muted-foreground">
-                  No hazard findings found.
+                  No recommendations found.
                 </TableCell>
               </TableRow>
             ) : (

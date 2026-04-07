@@ -211,7 +211,7 @@ function MinutesTab() {
       setResult(data);
       setPreview(null);
       queryClient.invalidateQueries();
-      toast({ title: "Import complete", description: `${data.imported.actionItems} action items loaded, ${data.imported.hazardFindings} hazard findings imported.` });
+      toast({ title: "Import complete", description: `${data.imported.actionItems} action items loaded, ${data.imported.hazardFindings} recommendations imported.` });
     } catch (e: any) {
       setError(e.message || "Import failed");
     } finally {
@@ -242,7 +242,7 @@ function MinutesTab() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {[
                 { label: "Action Items Loaded", val: result.imported.actionItems, cls: "text-green-700" },
-                { label: "Hazard Findings Imported", val: result.imported.hazardFindings, cls: "text-green-700" },
+                { label: "Recommendations Imported", val: result.imported.hazardFindings, cls: "text-green-700" },
                 { label: "Closed Items Imported", val: result.imported.closedItems, cls: "text-green-700" },
                 { label: "Closed Items Updated", val: result.updated.closedItems, cls: "text-blue-700" },
               ].map(({ label, val, cls }) => (
@@ -395,7 +395,7 @@ function MinutesTab() {
               <CardHeader className="pb-3 border-b bg-destructive/5">
                 <CardTitle className="text-sm font-bold uppercase tracking-wide flex items-center gap-2 text-destructive">
                   <AlertTriangle className="w-4 h-4" />
-                  Hazard Findings / Recommendations ({preview.hazardFindings.length})
+                  Recommendations ({preview.hazardFindings.length})
                 </CardTitle>
                 <CardDescription className="text-xs flex items-center gap-1 mt-1">
                   <SkipForward className="w-3 h-3" />
@@ -421,13 +421,13 @@ function MinutesTab() {
           <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <p className="text-sm text-amber-800">
-              <span className="font-semibold">This will replace all existing action items and hazard findings.</span> All current action items and hazard findings will be deleted and replaced with the {preview.actionItems.length} action item{preview.actionItems.length !== 1 ? "s" : ""} and {preview.hazardFindings.length} hazard finding{preview.hazardFindings.length !== 1 ? "s" : ""} from this file. Closed items are not affected.
+              <span className="font-semibold">This will replace all existing action items and recommendations.</span> All current action items and recommendations will be deleted and replaced with the {preview.actionItems.length} action item{preview.actionItems.length !== 1 ? "s" : ""} and {preview.hazardFindings.length} recommendation{preview.hazardFindings.length !== 1 ? "s" : ""} from this file. Closed items are not affected.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <Button onClick={handleImport} disabled={isImporting} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
               <Upload className="w-4 h-4 mr-2" />
-              {isImporting ? "Importing..." : `Replace Action Items + Import ${preview.hazardFindings.length} Hazard Findings`}
+              {isImporting ? "Importing..." : `Replace Action Items + Import ${preview.hazardFindings.length} Recommendation${preview.hazardFindings.length !== 1 ? "s" : ""}`}
             </Button>
             <Button variant="outline" onClick={reset} disabled={isImporting}>Cancel</Button>
           </div>
@@ -440,8 +440,8 @@ function MinutesTab() {
             <p className="font-medium">How it works</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs mt-3">
               <div className="space-y-1"><p className="font-bold text-foreground">1. Upload</p><p>Drop your JHSC meeting minutes .xlsm or .xlsx file above.</p></div>
-              <div className="space-y-1"><p className="font-bold text-foreground">2. Preview</p><p>Review the action items and hazard findings that will be imported.</p></div>
-              <div className="space-y-1"><p className="font-bold text-foreground">3. Confirm</p><p>Existing action items and hazard findings are replaced with the ones in the file. Closed items are not affected.</p></div>
+              <div className="space-y-1"><p className="font-bold text-foreground">2. Preview</p><p>Review the action items and recommendations that will be imported.</p></div>
+              <div className="space-y-1"><p className="font-bold text-foreground">3. Confirm</p><p>Existing action items and recommendations are replaced with the ones in the file. Closed items are not affected.</p></div>
             </div>
           </CardContent>
         </Card>

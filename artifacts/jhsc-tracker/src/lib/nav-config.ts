@@ -13,7 +13,7 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Member Actions", href: "/member-actions", permission: "member-actions" },
   { name: "Conduct A H&S Report", href: "/health-safety-report", permission: "health-safety-report" },
   { name: "H&S Reports Log", href: "/hs-reports-log", permission: "hs-reports-log" },
-  { name: "Hazard Findings", href: "/hazard-findings", permission: "hazard-findings" },
+  { name: "Recommendations", href: "/hazard-findings", permission: "hazard-findings" },
   { name: "Inspection Log", href: "/inspection-log", permission: "inspection-log" },
   { name: "Conduct Inspection", href: "/conduct-inspection", permission: "conduct-inspection" },
   { name: "Worker Statements", href: "/worker-statements", permission: "worker-statements" },
