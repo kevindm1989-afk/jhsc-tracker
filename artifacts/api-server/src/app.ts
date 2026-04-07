@@ -427,36 +427,6 @@ export async function ensureSessionTable(): Promise<void> {
       );
     `);
 
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS "recommendations_log" (
-        "id" serial PRIMARY KEY,
-        "rec_code" text NOT NULL UNIQUE,
-        "title" text NOT NULL,
-        "description" text,
-        "recommendation_date" text NOT NULL,
-        "due_date" text,
-        "status" text NOT NULL DEFAULT 'Open',
-        "assigned_to" text,
-        "outcome" text,
-        "created_by" text NOT NULL,
-        "created_at" timestamp NOT NULL DEFAULT now(),
-        "updated_at" timestamp NOT NULL DEFAULT now()
-      );
-    `);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS "stored_files" (
-        "id" serial PRIMARY KEY,
-        "original_name" text NOT NULL,
-        "stored_path" text NOT NULL,
-        "folder" text NOT NULL,
-        "mime_type" text NOT NULL,
-        "size_bytes" integer NOT NULL,
-        "uploaded_by" text NOT NULL,
-        "uploaded_at" timestamp NOT NULL DEFAULT now()
-      );
-    `);
-
     // ── Idempotent column additions for existing databases ────────────────────
 
     await client.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email" text NOT NULL DEFAULT '';`);

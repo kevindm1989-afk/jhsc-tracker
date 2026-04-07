@@ -23,8 +23,6 @@ import SuggestionsLogPage from "@/pages/suggestions-log";
 import ResetPasswordPage from "@/pages/reset-password";
 import ChangePasswordPage from "@/pages/change-password";
 import RightToRefusePage from "@/pages/right-to-refuse";
-import RecommendationsLogPage from "@/pages/recommendations-log";
-import FilesPage from "@/pages/files";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -140,12 +138,6 @@ function Router() {
               </Route>
               <Route path="/right-to-refuse">
                 <ProtectedRoute component={RightToRefusePage} />
-              </Route>
-              <Route path="/recommendations-log">
-                <ProtectedRoute component={RecommendationsLogPage} permission="hazard-findings" />
-              </Route>
-              <Route path="/files">
-                <ProtectedRoute component={FilesPage} permission="import-data" />
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />

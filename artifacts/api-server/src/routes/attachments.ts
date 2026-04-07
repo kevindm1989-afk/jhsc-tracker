@@ -81,14 +81,10 @@ router.post("/:parentType/:parentId", upload.array("files", 3), async (req, res)
   }
 });
 
-router.get("/file/*filePath", (req, res) => {
-  const filePath = path.join(UPLOAD_DIR, req.params.filePath as string);
-  // Prevent path traversal
-  const resolved = path.resolve(filePath);
-  const uploadResolved = path.resolve(UPLOAD_DIR);
-  if (!resolved.startsWith(uploadResolved)) return res.status(403).json({ error: "Forbidden" });
+router.get("/file/:filename", (req, res) => {
+  const filePath = path.join(UPLOAD_DIR, req.params.filename);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found" });
-  res.sendFile(resolved);
+  res.sendFile(filePath);
 });
 
 router.delete("/:id", async (req, res) => {
