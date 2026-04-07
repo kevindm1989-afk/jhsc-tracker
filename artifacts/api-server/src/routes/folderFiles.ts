@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { db } from "@workspace/db";
+import { db, pool } from "@workspace/db";
 import { foldersTable, folderFilesTable } from "@workspace/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 
@@ -41,17 +41,19 @@ const router: IRouter = Router();
 
 router.get("/folders", async (req, res) => {
   try {
-    const folders = await db
-      .select({
-        id: foldersTable.id,
-        name: foldersTable.name,
-        createdBy: foldersTable.createdBy,
-        createdAt: foldersTable.createdAt,
-        fileCount: sql<number>`(SELECT COUNT(*) FROM folder_files WHERE folder_id = ${foldersTable.id})::int`,
-      })
-      .from(foldersTable)
-      .orderBy(foldersTable.createdAt);
-    res.json(folders);
+    const { rows } = await pool.query(`
+      SELECT
+        f.id,
+        f.name,
+        f.parent_id AS "parentId",
+        f.created_by AS "createdBy",
+        f.created_at AS "createdAt",
+        (SELECT COUNT(*) FROM folder_files ff WHERE ff.folder_id = f.id)::int AS "fileCount",
+        (SELECT COUNT(*) FROM folders sf WHERE sf.parent_id = f.id)::int AS "subfolderCount"
+      FROM folders f
+      ORDER BY f.created_at
+    `);
+    res.json(rows);
   } catch (err) {
     req.log.error({ err }, "Failed to list folders");
     res.status(500).json({ error: "Internal server error" });
@@ -60,10 +62,13 @@ router.get("/folders", async (req, res) => {
 
 router.post("/folders", async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, parentId } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: "Folder name is required" });
     const createdBy = req.session?.displayName || "Unknown";
-    const [folder] = await db.insert(foldersTable).values({ name: name.trim(), createdBy }).returning();
+    const [folder] = await db
+      .insert(foldersTable)
+      .values({ name: name.trim(), createdBy, parentId: parentId ? parseInt(parentId) : null })
+      .returning();
     res.status(201).json(folder);
   } catch (err) {
     req.log.error({ err }, "Failed to create folder");

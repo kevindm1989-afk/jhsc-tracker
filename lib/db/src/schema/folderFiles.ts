@@ -3,6 +3,7 @@ import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
 export const foldersTable = pgTable("folders", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  parentId: integer("parent_id"),
   createdBy: text("created_by").notNull().default("Unknown"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -18,5 +19,5 @@ export const folderFilesTable = pgTable("folder_files", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export type Folder = typeof foldersTable.$inferSelect;
+export type Folder = typeof foldersTable.$inferSelect & { fileCount?: number; subfolderCount?: number };
 export type FolderFile = typeof folderFilesTable.$inferSelect;

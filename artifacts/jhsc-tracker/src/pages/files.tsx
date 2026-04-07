@@ -11,6 +11,7 @@ import {
   Plus,
   MoreVertical,
   ChevronRight,
+  FolderPlus,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -27,9 +28,11 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 interface FolderItem {
   id: number;
   name: string;
+  parentId: number | null;
   createdBy: string;
   createdAt: string;
   fileCount: number;
+  subfolderCount: number;
 }
 
 interface FileItem {
@@ -41,6 +44,11 @@ interface FileItem {
   sizeBytes: number;
   uploadedBy: string;
   createdAt: string;
+}
+
+interface BreadcrumbEntry {
+  id: number;
+  name: string;
 }
 
 function formatBytes(bytes: number) {
@@ -68,20 +76,38 @@ async function apiFetch(url: string, opts?: RequestInit) {
   return res.json();
 }
 
+function buildFolderOptions(folders: FolderItem[]): { id: number; label: string }[] {
+  const options: { id: number; label: string }[] = [];
+  const addLevel = (parentId: number | null, prefix: string) => {
+    folders
+      .filter((f) => f.parentId === parentId)
+      .forEach((f) => {
+        options.push({ id: f.id, label: `${prefix}${f.name}` });
+        addLevel(f.id, `${prefix}  › `);
+      });
+  };
+  addLevel(null, "");
+  return options;
+}
+
 export default function FilesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
   const isAdmin = user?.role === "admin";
 
-  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
+  const [breadcrumb, setBreadcrumb] = useState<BreadcrumbEntry[]>([]);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderParentId, setNewFolderParentId] = useState<number | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFolderId, setUploadFolderId] = useState<string>("");
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const currentFolderId = breadcrumb.length > 0 ? breadcrumb[breadcrumb.length - 1].id : null;
+  const topLevelFolderId = breadcrumb.length > 0 ? breadcrumb[0].id : null;
 
   // ── Queries ──────────────────────────────────────────────────────────────────
 
@@ -90,29 +116,40 @@ export default function FilesPage() {
     queryFn: () => apiFetch("/api/folder-files/folders"),
   });
 
+  const topLevelFolders = folders.filter((f) => f.parentId === null);
+  const subfolders = folders.filter((f) => f.parentId === currentFolderId);
+
   const { data: files = [], isLoading: filesLoading } = useQuery<FileItem[]>({
-    queryKey: ["folder-files", selectedFolderId],
-    queryFn: () => apiFetch(`/api/folder-files/folders/${selectedFolderId}/files`),
-    enabled: selectedFolderId !== null,
+    queryKey: ["folder-files", currentFolderId],
+    queryFn: () => apiFetch(`/api/folder-files/folders/${currentFolderId}/files`),
+    enabled: currentFolderId !== null,
   });
 
-  const selectedFolder = folders.find((f) => f.id === selectedFolderId);
+  const folderOptions = buildFolderOptions(folders);
 
   // ── Mutations ────────────────────────────────────────────────────────────────
 
   const createFolderMut = useMutation({
-    mutationFn: (name: string) =>
+    mutationFn: ({ name, parentId }: { name: string; parentId: number | null }) =>
       apiFetch("/api/folder-files/folders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, parentId }),
       }),
     onSuccess: (folder: FolderItem) => {
       qc.invalidateQueries({ queryKey: ["folders"] });
       setNewFolderOpen(false);
       setNewFolderName("");
-      setSelectedFolderId(folder.id);
       toast({ title: "Folder created", description: folder.name });
+      if (folder.parentId !== null) {
+        const parent = folders.find((f) => f.id === folder.parentId);
+        if (parent) {
+          const parentIdx = breadcrumb.findIndex((b) => b.id === parent.id);
+          if (parentIdx !== -1) {
+            setBreadcrumb((prev) => prev.slice(0, parentIdx + 1));
+          }
+        }
+      }
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -122,7 +159,8 @@ export default function FilesPage() {
       apiFetch(`/api/folder-files/folders/${id}`, { method: "DELETE" }),
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: ["folders"] });
-      if (selectedFolderId === id) setSelectedFolderId(null);
+      const idx = breadcrumb.findIndex((b) => b.id === id);
+      if (idx !== -1) setBreadcrumb((prev) => prev.slice(0, idx));
       toast({ title: "Folder deleted" });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -159,7 +197,7 @@ export default function FilesPage() {
       apiFetch(`/api/folder-files/files/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["folders"] });
-      qc.invalidateQueries({ queryKey: ["folder-files", selectedFolderId] });
+      qc.invalidateQueries({ queryKey: ["folder-files", currentFolderId] });
       toast({ title: "File deleted" });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -169,7 +207,13 @@ export default function FilesPage() {
 
   const handleCreateFolder = () => {
     if (!newFolderName.trim()) return;
-    createFolderMut.mutate(newFolderName.trim());
+    createFolderMut.mutate({ name: newFolderName.trim(), parentId: newFolderParentId });
+  };
+
+  const openNewFolder = (parentId: number | null = null) => {
+    setNewFolderParentId(parentId);
+    setNewFolderName("");
+    setNewFolderOpen(true);
   };
 
   const handleUpload = () => {
@@ -202,6 +246,18 @@ export default function FilesPage() {
     setUploadOpen(true);
   };
 
+  const navigateToFolder = (folder: FolderItem) => {
+    if (folder.parentId === null) {
+      setBreadcrumb([{ id: folder.id, name: folder.name }]);
+    } else {
+      setBreadcrumb((prev) => [...prev, { id: folder.id, name: folder.name }]);
+    }
+  };
+
+  const navigateToBreadcrumb = (index: number) => {
+    setBreadcrumb((prev) => prev.slice(0, index + 1));
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -214,12 +270,12 @@ export default function FilesPage() {
           <p className="text-muted-foreground mt-1 text-sm">Organize and store JHSC documents in folders.</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => openUploadFor(selectedFolderId ?? undefined)} className="gap-2">
+          <Button onClick={() => openUploadFor(currentFolderId ?? undefined)} className="gap-2">
             <Upload className="w-4 h-4" />
             Upload File
           </Button>
           {isAdmin && (
-            <Button variant="outline" onClick={() => setNewFolderOpen(true)} className="gap-2">
+            <Button variant="outline" onClick={() => openNewFolder(null)} className="gap-2">
               <Plus className="w-4 h-4" />
               New Folder
             </Button>
@@ -229,160 +285,291 @@ export default function FilesPage() {
 
       {/* Main layout */}
       <div className="flex gap-4 min-h-[500px]">
-        {/* Folder list */}
+        {/* Sidebar — top-level folders only */}
         <div className="w-56 shrink-0 space-y-1">
           <p className="text-xs uppercase font-bold text-muted-foreground px-2 pb-1">Folders</p>
-          {folders.length === 0 && (
+          {topLevelFolders.length === 0 && (
             <p className="text-sm text-muted-foreground px-2 py-4">No folders yet.</p>
           )}
-          {folders.map((folder) => (
-            <button
-              key={folder.id}
-              onClick={() => setSelectedFolderId(folder.id)}
-              className={cn(
-                "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-left group",
-                selectedFolderId === folder.id
-                  ? "bg-primary/10 text-primary"
-                  : "hover:bg-muted text-foreground"
-              )}
-            >
-              <span className="flex items-center gap-2 min-w-0">
-                {selectedFolderId === folder.id
-                  ? <FolderOpen className="w-4 h-4 shrink-0" />
-                  : <Folder className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-foreground" />}
-                <span className="truncate">{folder.name}</span>
-              </span>
-              <span className="flex items-center gap-1 shrink-0">
-                <span className="text-xs text-muted-foreground">{folder.fileCount}</span>
-                {isAdmin && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <span
-                        className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-muted-foreground/20"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
-                      </span>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Delete folder "${folder.name}" and all its files?`))
-                            deleteFolderMut.mutate(folder.id);
-                        }}
-                      >
-                        <Trash2 className="w-3.5 h-3.5 mr-2" />
-                        Delete folder
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+          {topLevelFolders.map((folder) => {
+            const isSelected = topLevelFolderId === folder.id;
+            const totalCount = folder.fileCount + folder.subfolderCount;
+            return (
+              <button
+                key={folder.id}
+                onClick={() => navigateToFolder(folder)}
+                className={cn(
+                  "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-left group",
+                  isSelected
+                    ? "bg-primary/10 text-primary"
+                    : "hover:bg-muted text-foreground"
                 )}
-              </span>
-            </button>
-          ))}
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  {isSelected
+                    ? <FolderOpen className="w-4 h-4 shrink-0" />
+                    : <Folder className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-foreground" />}
+                  <span className="truncate">{folder.name}</span>
+                </span>
+                <span className="flex items-center gap-1 shrink-0">
+                  <span className="text-xs text-muted-foreground">{totalCount || ""}</span>
+                  {isAdmin && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <span
+                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-muted-foreground/20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                        </span>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigateToFolder(folder);
+                            openNewFolder(folder.id);
+                          }}
+                        >
+                          <FolderPlus className="w-3.5 h-3.5 mr-2" />
+                          New subfolder
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Delete "${folder.name}" and all its contents?`))
+                              deleteFolderMut.mutate(folder.id);
+                          }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-2" />
+                          Delete folder
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Divider */}
         <div className="w-px bg-border shrink-0" />
 
-        {/* File list */}
+        {/* Right panel */}
         <div className="flex-1 min-w-0">
-          {!selectedFolderId ? (
+          {currentFolderId === null ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground gap-3">
               <Folder className="w-12 h-12 opacity-30" />
-              <p className="text-sm">Select a folder to view its files</p>
+              <p className="text-sm">Select a folder to view its contents</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {/* Folder header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>Files</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                  <span className="font-semibold text-foreground">{selectedFolder?.name}</span>
-                </div>
-                <Button size="sm" variant="outline" onClick={() => openUploadFor(selectedFolderId)} className="gap-1.5 text-xs h-7">
-                  <Upload className="w-3 h-3" />
-                  Upload here
-                </Button>
-              </div>
-
-              {filesLoading ? (
-                <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-14 rounded-md bg-muted animate-pulse" />
+            <div className="space-y-4">
+              {/* Breadcrumb + actions */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
+                  <span
+                    className="hover:text-foreground cursor-pointer transition-colors"
+                    onClick={() => setBreadcrumb([])}
+                  >
+                    Files
+                  </span>
+                  {breadcrumb.map((entry, i) => (
+                    <span key={entry.id} className="flex items-center gap-1">
+                      <ChevronRight className="w-3.5 h-3.5" />
+                      <span
+                        className={cn(
+                          "transition-colors",
+                          i === breadcrumb.length - 1
+                            ? "font-semibold text-foreground"
+                            : "hover:text-foreground cursor-pointer"
+                        )}
+                        onClick={() => i < breadcrumb.length - 1 && navigateToBreadcrumb(i)}
+                      >
+                        {entry.name}
+                      </span>
+                    </span>
                   ))}
                 </div>
-              ) : files.length === 0 ? (
-                <div
-                  className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-border rounded-lg text-muted-foreground gap-3 cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                  onClick={() => openUploadFor(selectedFolderId)}
-                >
-                  <Upload className="w-8 h-8 opacity-40" />
-                  <p className="text-sm">No files yet — click to upload</p>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {files.map((file) => (
-                    <div
-                      key={file.id}
-                      className="flex items-center gap-3 px-4 py-3 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors group"
+                <div className="flex gap-2">
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openNewFolder(currentFolderId)}
+                      className="gap-1.5 text-xs h-7"
                     >
-                      <FileIcon mimeType={file.mimeType} className="w-5 h-5 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{file.originalName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatBytes(file.sizeBytes)} · {formatDate(file.createdAt)} · {file.uploadedBy}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7"
-                          onClick={() => handleDownload(file)}
-                          title="Download"
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
+                      <FolderPlus className="w-3 h-3" />
+                      New Subfolder
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openUploadFor(currentFolderId)}
+                    className="gap-1.5 text-xs h-7"
+                  >
+                    <Upload className="w-3 h-3" />
+                    Upload here
+                  </Button>
+                </div>
+              </div>
+
+              {/* Subfolders grid */}
+              {subfolders.length > 0 && (
+                <div>
+                  <p className="text-xs uppercase font-bold text-muted-foreground mb-2">Subfolders</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {subfolders.map((sf) => (
+                      <div
+                        key={sf.id}
+                        className="group relative flex flex-col items-start gap-1 px-3 py-3 rounded-lg border border-border bg-card hover:bg-muted/40 hover:border-primary/30 cursor-pointer transition-colors"
+                        onClick={() => navigateToFolder(sf)}
+                      >
+                        <div className="flex items-center gap-2 w-full min-w-0">
+                          <Folder className="w-5 h-5 shrink-0 text-primary/70" />
+                          <span className="text-sm font-medium truncate">{sf.name}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground pl-7">
+                          {sf.fileCount} file{sf.fileCount !== 1 ? "s" : ""}
+                          {sf.subfolderCount > 0 ? `, ${sf.subfolderCount} subfolder${sf.subfolderCount !== 1 ? "s" : ""}` : ""}
+                        </span>
                         {isAdmin && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <span
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-muted-foreground/20 transition-opacity"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                              </span>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigateToFolder(sf);
+                                  openNewFolder(sf.id);
+                                }}
+                              >
+                                <FolderPlus className="w-3.5 h-3.5 mr-2" />
+                                New subfolder
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`Delete "${sf.name}" and all its contents?`))
+                                    deleteFolderMut.mutate(sf.id);
+                                }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                Delete subfolder
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Files section */}
+              <div>
+                {subfolders.length > 0 && (
+                  <p className="text-xs uppercase font-bold text-muted-foreground mb-2">Files</p>
+                )}
+                {filesLoading ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-14 rounded-md bg-muted animate-pulse" />
+                    ))}
+                  </div>
+                ) : files.length === 0 ? (
+                  <div
+                    className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-border rounded-lg text-muted-foreground gap-3 cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
+                    onClick={() => openUploadFor(currentFolderId)}
+                  >
+                    <Upload className="w-8 h-8 opacity-40" />
+                    <p className="text-sm">No files yet — click to upload</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {files.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center gap-3 px-4 py-3 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors group"
+                      >
+                        <FileIcon mimeType={file.mimeType} className="w-5 h-5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{file.originalName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatBytes(file.sizeBytes)} · {formatDate(file.createdAt)} · {file.uploadedBy}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => {
-                              if (confirm(`Delete "${file.originalName}"?`))
-                                deleteFileMut.mutate(file.id);
-                            }}
-                            title="Delete"
+                            className="h-7 w-7"
+                            onClick={() => handleDownload(file)}
+                            title="Download"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Download className="w-4 h-4" />
                           </Button>
-                        )}
+                          {isAdmin && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => {
+                                if (confirm(`Delete "${file.originalName}"?`))
+                                  deleteFileMut.mutate(file.id);
+                              }}
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* New Folder Dialog */}
+      {/* New Folder / Subfolder Dialog */}
       <Dialog open={newFolderOpen} onOpenChange={setNewFolderOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Folder className="w-5 h-5 text-primary" />
-              Create New Folder
+              {newFolderParentId !== null ? (
+                <>
+                  <FolderPlus className="w-5 h-5 text-primary" />
+                  Create Subfolder
+                </>
+              ) : (
+                <>
+                  <Folder className="w-5 h-5 text-primary" />
+                  Create New Folder
+                </>
+              )}
             </DialogTitle>
           </DialogHeader>
+          {newFolderParentId !== null && (
+            <p className="text-xs text-muted-foreground -mt-1">
+              Inside: <span className="font-medium text-foreground">{folders.find((f) => f.id === newFolderParentId)?.name}</span>
+            </p>
+          )}
           <div className="py-3">
             <Input
-              placeholder="Folder name"
+              placeholder={newFolderParentId !== null ? "Subfolder name" : "Folder name"}
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleCreateFolder(); }}
@@ -410,7 +597,6 @@ export default function FilesPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            {/* Folder picker */}
             <div className="space-y-1.5">
               <label className="text-xs uppercase font-bold text-muted-foreground">Destination Folder</label>
               <Select value={uploadFolderId} onValueChange={setUploadFolderId}>
@@ -418,16 +604,15 @@ export default function FilesPage() {
                   <SelectValue placeholder="Choose a folder..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {folders.map((f) => (
-                    <SelectItem key={f.id} value={String(f.id)}>
-                      {f.name}
+                  {folderOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={String(opt.id)}>
+                      {opt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Drop zone */}
             <div
               className={cn(
                 "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
@@ -448,7 +633,6 @@ export default function FilesPage() {
               <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
             </div>
 
-            {/* Selected files list */}
             {uploadFiles.length > 0 && (
               <div className="space-y-1.5 max-h-40 overflow-y-auto">
                 {uploadFiles.map((f, i) => (

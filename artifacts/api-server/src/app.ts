@@ -456,6 +456,8 @@ export async function ensureSessionTable(): Promise<void> {
       );
     `);
 
+    await client.query(`ALTER TABLE "folders" ADD COLUMN IF NOT EXISTS "parent_id" integer REFERENCES "folders"("id") ON DELETE CASCADE;`);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS "folder_files" (
         "id" serial PRIMARY KEY,
