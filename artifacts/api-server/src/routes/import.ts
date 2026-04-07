@@ -1,11 +1,15 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { db } from "@workspace/db";
-import { actionItemsTable, hazardFindingsTable, inspectionLogTable, closedItemsLogTable } from "@workspace/db/schema";
+import { actionItemsTable, hazardFindingsTable, inspectionLogTable, closedItemsLogTable, storedFilesTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 import { parseMinutesFile } from "../minutesParser";
 import { parseInspectionFile } from "../inspectionParser";
 import "../sessionTypes";
+
+const UPLOAD_DIR = process.env["UPLOAD_DIR"] || path.join(process.cwd(), "uploads");
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -145,6 +149,37 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         .where(eq(hazardFindingsTable.id, created.id));
 
       importedHazardFindings++;
+    }
+
+    // ── Save the uploaded file to the Files archive ───────────────────────────
+    try {
+      const meetingDateSlug = (parsed.meetingDate ?? "unknown").replace(/[^0-9\-]/g, "");
+      const folderRelative = path.join("minutes", meetingDateSlug);
+      const folderAbsolute = path.join(UPLOAD_DIR, folderRelative);
+      if (!fs.existsSync(folderAbsolute)) fs.mkdirSync(folderAbsolute, { recursive: true });
+
+      const originalName = req.file!.originalname;
+      const safeFilename = originalName.replace(/[^a-zA-Z0-9._\-]/g, "_");
+      // If a file with this name already exists, add a timestamp prefix to avoid collision
+      const storedFilename = fs.existsSync(path.join(folderAbsolute, safeFilename))
+        ? `${Date.now()}_${safeFilename}`
+        : safeFilename;
+
+      const destPath = path.join(folderAbsolute, storedFilename);
+      fs.writeFileSync(destPath, req.file!.buffer);
+
+      const storedRelative = path.join(folderRelative, storedFilename);
+      await db.insert(storedFilesTable).values({
+        originalName,
+        storedPath: storedRelative,
+        folder: folderRelative,
+        mimeType: req.file!.mimetype,
+        sizeBytes: req.file!.size,
+        uploadedBy: req.session?.displayName || "Unknown",
+      });
+    } catch (fileErr) {
+      console.error("Warning: could not save minutes file to archive:", fileErr);
+      // Non-fatal: import succeeded, file archive is bonus
     }
 
     res.json({

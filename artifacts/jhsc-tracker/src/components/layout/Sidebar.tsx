@@ -22,6 +22,8 @@ import {
   GripVertical,
   ArrowUpDown,
   ShieldX,
+  BookOpen,
+  HardDrive,
 } from "lucide-react";
 import {
   DndContext,
@@ -72,6 +74,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "/suggestions": Lightbulb,
   "/suggestions-log": ScrollText,
   "/right-to-refuse": ShieldX,
+  "/recommendations-log": BookOpen,
+  "/files": HardDrive,
   "/import-minutes": Upload,
   "/manage-users": Users,
 };
