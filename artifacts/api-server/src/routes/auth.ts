@@ -33,9 +33,11 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
+    const displayName = user.role === "admin" ? "admin" : user.displayName;
+
     req.session.userId = user.id;
     req.session.username = user.username;
-    req.session.displayName = user.displayName;
+    req.session.displayName = displayName;
     req.session.role = user.role;
     req.session.permissions = user.permissions;
 
@@ -47,7 +49,7 @@ router.post("/login", async (req, res) => {
       return res.json({
         id: user.id,
         username: user.username,
-        displayName: user.displayName,
+        displayName,
         role: user.role,
         permissions: user.permissions,
       });
