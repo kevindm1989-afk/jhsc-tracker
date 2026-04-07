@@ -15,6 +15,12 @@ import authRouter from "./auth";
 import usersRouter from "./users";
 import registrationsRouter from "./registrations";
 import settingsRouter from "./settings";
+import recommendationsRouter from "./recommendations";
+import meetingMinutesRouter from "./meetingMinutes";
+import rightToRefuseRouter from "./rightToRefuse";
+import attachmentsRouter from "./attachments";
+import inspectionChecklistsRouter from "./inspectionChecklists";
+import inspectionScheduleRouter from "./inspectionSchedule";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
 
 const router: IRouter = Router();
@@ -35,8 +41,13 @@ router.use("/health-safety-reports", requireAuth, healthSafetyReportsRouter);
 router.use("/suggestions", requireAuth, suggestionsRouter);
 router.use("/import", requireAuth, requirePermission("import-data"), importRouter);
 router.use("/inspect", requireAuth, requirePermission("conduct-inspection"), inspectRouter);
-// Settings (nav order etc — auth required)
 router.use("/settings", requireAuth, settingsRouter);
+router.use("/recommendations", requireAuth, requirePermission("recommendations"), recommendationsRouter);
+router.use("/meeting-minutes", requireAuth, requirePermission("meeting-minutes"), meetingMinutesRouter);
+router.use("/right-to-refuse", requireAuth, rightToRefuseRouter);
+router.use("/attachments", requireAuth, attachmentsRouter);
+router.use("/checklists", requireAuth, inspectionChecklistsRouter);
+router.use("/inspection-schedule", requireAuth, inspectionScheduleRouter);
 
 // Admin-only routes
 router.use("/users", usersRouter);

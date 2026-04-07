@@ -318,10 +318,134 @@ export async function ensureSessionTable(): Promise<void> {
       );
     `);
 
+    // ── New feature tables ────────────────────────────────────────────────────
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "recommendations" (
+        "id" serial PRIMARY KEY,
+        "rec_code" text NOT NULL UNIQUE,
+        "date_issued" date NOT NULL,
+        "ohsa_authority" text NOT NULL,
+        "description" text NOT NULL,
+        "linked_hazard_code" text,
+        "response_deadline" date NOT NULL,
+        "response_received" text NOT NULL DEFAULT 'No',
+        "response_outcome" text NOT NULL DEFAULT 'Pending',
+        "escalation_status" text NOT NULL DEFAULT 'None',
+        "notes" text,
+        "status" text NOT NULL DEFAULT 'Pending',
+        "created_at" timestamp NOT NULL DEFAULT now(),
+        "updated_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "meeting_minutes" (
+        "id" serial PRIMARY KEY,
+        "minutes_code" text NOT NULL UNIQUE,
+        "meeting_date" date NOT NULL,
+        "meeting_type" text NOT NULL DEFAULT 'Regular Monthly',
+        "management_attendees" json NOT NULL DEFAULT '[]',
+        "worker_attendees" json NOT NULL DEFAULT '[]',
+        "agenda_items" json NOT NULL DEFAULT '[]',
+        "motions" json NOT NULL DEFAULT '[]',
+        "decisions" text,
+        "action_items" json NOT NULL DEFAULT '[]',
+        "next_meeting_date" date,
+        "worker_co_chair_signed" boolean NOT NULL DEFAULT false,
+        "management_co_chair_signed" boolean NOT NULL DEFAULT false,
+        "emailed_at" timestamp,
+        "created_at" timestamp NOT NULL DEFAULT now(),
+        "updated_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "right_to_refuse" (
+        "id" serial PRIMARY KEY,
+        "refuse_code" text NOT NULL UNIQUE,
+        "worker_name" text NOT NULL,
+        "refusal_date" date NOT NULL,
+        "refusal_time" text NOT NULL,
+        "zone" text NOT NULL,
+        "hazard_description" text NOT NULL,
+        "supervisor_notified" boolean NOT NULL DEFAULT false,
+        "supervisor_name" text,
+        "jhsc_rep_notified" boolean NOT NULL DEFAULT false,
+        "inspector_called" boolean NOT NULL DEFAULT false,
+        "mol_file_number" text,
+        "outcome" text NOT NULL DEFAULT 'Ongoing',
+        "notes" text,
+        "locked_at" timestamp,
+        "created_at" timestamp NOT NULL DEFAULT now(),
+        "updated_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "attachments" (
+        "id" serial PRIMARY KEY,
+        "parent_type" text NOT NULL,
+        "parent_id" integer NOT NULL,
+        "file_name" text NOT NULL,
+        "file_path" text NOT NULL,
+        "mime_type" text NOT NULL,
+        "file_size_bytes" integer NOT NULL,
+        "uploaded_by" text NOT NULL,
+        "created_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "checklist_templates" (
+        "id" serial PRIMARY KEY,
+        "name" text NOT NULL,
+        "category" text NOT NULL,
+        "items" json NOT NULL DEFAULT '[]',
+        "created_at" timestamp NOT NULL DEFAULT now(),
+        "updated_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "completed_checklists" (
+        "id" serial PRIMARY KEY,
+        "inspection_id" integer,
+        "template_id" integer,
+        "template_name" text NOT NULL,
+        "completed_items" json NOT NULL DEFAULT '[]',
+        "completed_by" text NOT NULL,
+        "completed_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "inspection_schedule" (
+        "key" text PRIMARY KEY,
+        "value" text NOT NULL,
+        "updated_at" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+
     // ── Idempotent column additions for existing databases ────────────────────
 
     await client.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email" text NOT NULL DEFAULT '';`);
     await client.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" timestamp NOT NULL DEFAULT now();`);
+
+    await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "zone" text;`);
+    await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "risk_likelihood" integer;`);
+    await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "risk_severity" integer;`);
+    await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "risk_score" integer;`);
+    await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "is_anonymous" boolean NOT NULL DEFAULT false;`);
+    await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "submitter_name" text;`);
+    await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "response_token" text;`);
+    await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "response_token_expires_at" timestamp;`);
+
+    await client.query(`ALTER TABLE "action_items" ADD COLUMN IF NOT EXISTS "zone" text;`);
+
+    await client.query(`ALTER TABLE "closed_items_log" ADD COLUMN IF NOT EXISTS "zone" text;`);
+    await client.query(`ALTER TABLE "closed_items_log" ADD COLUMN IF NOT EXISTS "corrective_action" text;`);
+    await client.query(`ALTER TABLE "closed_items_log" ADD COLUMN IF NOT EXISTS "closing_photo_path" text;`);
 
   } finally {
     client.release();

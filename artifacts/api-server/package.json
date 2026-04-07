@@ -26,6 +26,8 @@
     }
   },
   "dependencies": {
+    "@types/multer": "^2.1.0",
+    "@types/node-cron": "^3.0.11",
     "@workspace/db": "workspace:*",
     "bcryptjs": "^2.4.3",
     "connect-pg-simple": "^10.0.0",
@@ -37,7 +39,9 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
     "nodemailer": "^6.9.15",
+    "pdfkit": "^0.18.0",
     "pg": "^8.20.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",

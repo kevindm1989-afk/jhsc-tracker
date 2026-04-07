@@ -10,3 +10,8 @@ export * from "./suggestions.js";
 export * from "./users.js";
 export * from "./workerStatements.js";
 export * from "./documents.js";
+export * from "./recommendations.js";
+export * from "./meetingMinutes.js";
+export * from "./rightToRefuse.js";
+export * from "./attachments.js";
+export * from "./inspectionChecklists.js";

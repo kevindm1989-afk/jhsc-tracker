@@ -2,13 +2,43 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import { VitePWA } from "vite-plugin-pwa";
 
 const port = Number(process.env.PORT || "3000");
 const basePath = process.env.BASE_PATH || "/";
 
 export default defineConfig({
   base: basePath,
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    VitePWA({
+      registerType: "autoUpdate",
+      injectRegister: "auto",
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        runtimeCaching: [
+          {
+            urlPattern: /^\/api\/(dashboard|action-items|hazard-findings|inspection-log|closed-items-log)/,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "jhsc-api-cache",
+              expiration: { maxEntries: 100, maxAgeSeconds: 86400 },
+            },
+          },
+        ],
+      },
+      manifest: {
+        name: "JHSC Co-Chair Tracker",
+        short_name: "JHSC Tracker",
+        description: "Joint Health & Safety Committee Tracker — Unifor Local 1285 / Saputo Georgetown",
+        theme_color: "#1a1a2e",
+        background_color: "#f8fafc",
+        display: "standalone",
+        icons: [{ src: "/favicon.ico", sizes: "any", type: "image/x-icon" }],
+      },
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),

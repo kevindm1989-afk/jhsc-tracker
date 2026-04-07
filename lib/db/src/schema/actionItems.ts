@@ -18,6 +18,7 @@ export const actionItemsTable = pgTable("action_items", {
   verifiedAt: timestamp("verified_at"),
   verifiedBy: text("verified_by"),
   notes: text("notes"),
+  zone: text("zone"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

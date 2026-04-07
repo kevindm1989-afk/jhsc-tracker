@@ -5,11 +5,13 @@ import { AlertTriangle, Clock, ListChecks, CheckCircle2, MessageSquareWarning, S
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useLocation } from "wouter";
 
 export default function DashboardPage() {
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
   const { data: overdueItems, isLoading: isLoadingOverdue } = useGetDashboardOverdue();
   const { data: recentItems, isLoading: isLoadingRecent } = useGetDashboardRecent();
+  const [, navigate] = useLocation();
 
   return (
     <div className="space-y-8">
@@ -18,7 +20,7 @@ export default function DashboardPage() {
         <p className="text-muted-foreground mt-1">Facility safety overview and compliance tracking.</p>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards — clickable */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         <StatCard 
           title="Overdue Items" 
@@ -26,30 +28,35 @@ export default function DashboardPage() {
           icon={AlertTriangle} 
           isLoading={isLoadingSummary}
           valueClass={summary?.overdueCount && summary.overdueCount > 0 ? "text-destructive" : ""}
+          onClick={() => navigate("/action-items")}
         />
         <StatCard 
           title="Open Actions" 
           value={summary?.openActionItems} 
           icon={ListChecks} 
-          isLoading={isLoadingSummary} 
+          isLoading={isLoadingSummary}
+          onClick={() => navigate("/action-items")}
         />
         <StatCard 
           title="Open Hazards" 
           value={summary?.openHazardFindings} 
           icon={Clock} 
-          isLoading={isLoadingSummary} 
+          isLoading={isLoadingSummary}
+          onClick={() => navigate("/hazard-findings")}
         />
         <StatCard 
           title="Worker Statements" 
           value={summary?.totalWorkerStatements} 
           icon={MessageSquareWarning} 
-          isLoading={isLoadingSummary} 
+          isLoading={isLoadingSummary}
+          onClick={() => navigate("/worker-statements")}
         />
         <StatCard
           title="H&S Reports"
           value={(summary as any)?.totalHSReports}
           icon={ShieldAlert}
           isLoading={isLoadingSummary}
+          onClick={() => navigate("/hs-reports-log")}
         />
         <StatCard 
           title="Closed This Month" 
@@ -57,6 +64,7 @@ export default function DashboardPage() {
           icon={CheckCircle2} 
           isLoading={isLoadingSummary}
           valueClass="text-green-600"
+          onClick={() => navigate("/closed-items-log")}
         />
       </div>
 
@@ -82,7 +90,7 @@ export default function DashboardPage() {
             ) : (
               <div className="divide-y">
                 {overdueItems?.map((item) => (
-                  <div key={item.itemCode} className="p-4 flex flex-col gap-2 hover:bg-muted/50 transition-colors">
+                  <div key={item.itemCode} className="p-4 flex flex-col gap-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate(`/${item.module}`)}>
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -132,7 +140,7 @@ export default function DashboardPage() {
             ) : (
               <div className="divide-y">
                 {recentItems?.map((item) => (
-                  <div key={item.itemCode} className="p-4 flex flex-col gap-2 hover:bg-muted/50 transition-colors">
+                  <div key={item.itemCode} className="p-4 flex flex-col gap-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate(`/${item.module}`)}>
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -170,16 +178,18 @@ function StatCard({
   value, 
   icon: Icon, 
   isLoading,
-  valueClass = ""
+  valueClass = "",
+  onClick,
 }: { 
   title: string; 
   value?: number; 
   icon: any; 
   isLoading: boolean;
   valueClass?: string;
+  onClick?: () => void;
 }) {
   return (
-    <Card className="shadow-sm border-border/60">
+    <Card className={`shadow-sm border-border/60 transition-all ${onClick ? "cursor-pointer hover:border-primary/40 hover:shadow-md" : ""}`} onClick={onClick}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className="w-4 h-4 text-muted-foreground/50" />

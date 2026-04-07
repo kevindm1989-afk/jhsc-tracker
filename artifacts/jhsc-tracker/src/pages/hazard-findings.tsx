@@ -23,21 +23,48 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit2, Trash2, CalendarIcon, ShieldAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Edit2, Trash2, CalendarIcon, ShieldAlert, Eye, EyeOff } from "lucide-react";
 import { StatusBadge, PriorityBadge, DeptBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
+const ZONES = ["Zone 1 — Receiving", "Zone 2 — Cold Storage", "Zone 3 — Production", "Zone 4 — Packaging", "Zone 5 — Shipping", "Zone 6 — Maintenance", "Zone 7 — Office/Admin"];
+
+const RISK_LEVELS = [1, 2, 3, 4, 5];
+
+function riskColor(score: number | null | undefined) {
+  if (!score) return "bg-gray-100 text-gray-700";
+  if (score >= 20) return "bg-red-600 text-white";
+  if (score >= 12) return "bg-orange-500 text-white";
+  if (score >= 6) return "bg-yellow-400 text-gray-900";
+  return "bg-green-100 text-green-800";
+}
+
+function riskLabel(score: number | null | undefined) {
+  if (!score) return "—";
+  if (score >= 20) return `${score} Critical`;
+  if (score >= 12) return `${score} High`;
+  if (score >= 6) return `${score} Medium`;
+  return `${score} Low`;
+}
+
 const formSchema = z.object({
   date: z.string().min(1, "Date is required"),
   department: z.nativeEnum(HazardFindingDepartment),
+  zone: z.string().optional().nullable(),
   hazardDescription: z.string().min(5, "Description is required"),
   ohsaReference: z.string().optional().nullable(),
   severity: z.nativeEnum(HazardFindingSeverity),
+  riskLikelihood: z.coerce.number().min(1).max(5).optional().nullable(),
+  riskSeverity: z.coerce.number().min(1).max(5).optional().nullable(),
   recommendationDate: z.string().min(1, "Rec date is required"),
   responseDeadline: z.string().optional().nullable(),
   status: z.nativeEnum(HazardFindingStatus),
+  isAnonymous: z.boolean().optional(),
+  submitterName: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 
@@ -46,6 +73,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function HazardFindingsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [deptFilter, setDeptFilter] = useState<string>("all");
+  const [zoneFilter, setZoneFilter] = useState<string>("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<HazardFinding | null>(null);
 
@@ -53,13 +81,19 @@ export default function HazardFindingsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const isWorkerRep = user?.role === "worker-rep";
+  const canEdit = isAdmin || isWorkerRep;
 
   const queryParams = {
     ...(statusFilter !== "all" && { status: statusFilter }),
     ...(deptFilter !== "all" && { department: deptFilter })
   };
 
-  const { data: items, isLoading } = useListHazardFindings(queryParams);
+  const { data: allItems, isLoading } = useListHazardFindings(queryParams);
+
+  const items = allItems?.filter((item: any) =>
+    zoneFilter === "all" || item.zone === zoneFilter
+  );
 
   const createMutation = useCreateHazardFinding({
     mutation: {
@@ -96,27 +130,42 @@ export default function HazardFindingsPage() {
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
       department: "Production",
+      zone: "",
       hazardDescription: "",
       ohsaReference: "",
       severity: "High",
+      riskLikelihood: null,
+      riskSeverity: null,
       recommendationDate: new Date().toISOString().split('T')[0],
       responseDeadline: "",
       status: "Open",
+      isAnonymous: false,
+      submitterName: "",
       notes: "",
     }
   });
+
+  const watchLikelihood = form.watch("riskLikelihood");
+  const watchRiskSeverity = form.watch("riskSeverity");
+  const watchAnonymous = form.watch("isAnonymous");
+  const riskScore = watchLikelihood && watchRiskSeverity ? watchLikelihood * watchRiskSeverity : null;
 
   const handleEdit = (item: HazardFinding) => {
     setEditingItem(item);
     form.reset({
       date: item.date,
       department: item.department,
+      zone: (item as any).zone || "",
       hazardDescription: item.hazardDescription,
       ohsaReference: item.ohsaReference || "",
       severity: item.severity,
+      riskLikelihood: (item as any).riskLikelihood || null,
+      riskSeverity: (item as any).riskSeverity || null,
       recommendationDate: item.recommendationDate,
       responseDeadline: item.responseDeadline || "",
       status: item.status,
+      isAnonymous: (item as any).isAnonymous || false,
+      submitterName: (item as any).submitterName || "",
       notes: item.notes || "",
     });
     setIsFormOpen(true);
@@ -127,22 +176,31 @@ export default function HazardFindingsPage() {
     form.reset({
       date: new Date().toISOString().split('T')[0],
       department: "Production",
+      zone: "",
       hazardDescription: "",
       ohsaReference: "",
       severity: "High",
+      riskLikelihood: null,
+      riskSeverity: null,
       recommendationDate: new Date().toISOString().split('T')[0],
       responseDeadline: "",
       status: "Open",
+      isAnonymous: false,
+      submitterName: "",
       notes: "",
     });
     setIsFormOpen(true);
   };
 
   const onSubmit = (data: FormValues) => {
+    const payload = {
+      ...data,
+      riskScore: data.riskLikelihood && data.riskSeverity ? data.riskLikelihood * data.riskSeverity : null,
+    };
     if (editingItem) {
-      updateMutation.mutate({ id: editingItem.id, data });
+      updateMutation.mutate({ id: editingItem.id, data: payload });
     } else {
-      createMutation.mutate({ data });
+      createMutation.mutate({ data: payload });
     }
   };
 
@@ -154,9 +212,9 @@ export default function HazardFindingsPage() {
             <ShieldAlert className="w-8 h-8 text-destructive" />
             Hazard Findings
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">Formal recommendations to the employer.</p>
+          <p className="text-muted-foreground mt-1 text-sm">Formal recommendations to the employer. Includes risk matrix scoring.</p>
         </div>
-        {isAdmin && (
+        {canEdit && (
           <Button onClick={handleCreate} className="shrink-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold shadow-sm">
             <Plus className="w-4 h-4 mr-2" /> Log Hazard
           </Button>
@@ -170,7 +228,7 @@ export default function HazardFindingsPage() {
         </div>
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs font-medium">
+          <SelectTrigger className="w-full sm:w-[160px] h-9 text-xs font-medium">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -180,7 +238,7 @@ export default function HazardFindingsPage() {
         </Select>
 
         <Select value={deptFilter} onValueChange={setDeptFilter}>
-          <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs font-medium">
+          <SelectTrigger className="w-full sm:w-[160px] h-9 text-xs font-medium">
             <SelectValue placeholder="All Departments" />
           </SelectTrigger>
           <SelectContent>
@@ -188,39 +246,42 @@ export default function HazardFindingsPage() {
             {Object.values(HazardFindingDepartment).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
+
+        <Select value={zoneFilter} onValueChange={setZoneFilter}>
+          <SelectTrigger className="w-full sm:w-[200px] h-9 text-xs font-medium">
+            <SelectValue placeholder="All Zones" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Zones</SelectItem>
+            {ZONES.map(z => <SelectItem key={z} value={z}>{z}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="overflow-x-auto rounded-md border shadow-sm"><div className="min-w-[800px] bg-card overflow-hidden">
+      <div className="overflow-x-auto rounded-md border shadow-sm"><div className="min-w-[900px] bg-card overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50 border-b-2 border-border">
             <TableRow>
               <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider">ID</TableHead>
-              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Date</TableHead>
+              <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider">Date</TableHead>
               <TableHead className="font-bold text-xs uppercase tracking-wider">Hazard Description & OHSA Ref</TableHead>
-              <TableHead className="w-[200px] font-bold text-xs uppercase tracking-wider">Notes / Update</TableHead>
-              <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Severity</TableHead>
-              <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Deadline</TableHead>
-              <TableHead className="w-[150px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
-              {isAdmin && <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>}
+              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Risk Score</TableHead>
+              <TableHead className="w-[110px] font-bold text-xs uppercase tracking-wider">Severity</TableHead>
+              <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider">Deadline</TableHead>
+              <TableHead className="w-[130px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
+              {canEdit && <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array(5).fill(0).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-full" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-full max-w-[180px]" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                  {isAdmin && <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>}
+                  {Array(canEdit ? 8 : 7).fill(0).map((__, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}
                 </TableRow>
               ))
             ) : items?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 8 : 7} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={canEdit ? 8 : 7} className="h-32 text-center text-muted-foreground">
                   No hazard findings found.
                 </TableCell>
               </TableRow>
@@ -229,9 +290,13 @@ export default function HazardFindingsPage() {
                 <TableRow key={item.id} className="group transition-colors">
                   <TableCell className="font-mono text-xs font-semibold">
                     {item.itemCode}
+                    {(item as any).isAnonymous && (
+                      <span title="Anonymous submission"><EyeOff className="w-3 h-3 text-muted-foreground mt-0.5" /></span>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm tabular-nums text-muted-foreground">
                     {format(new Date(item.date), 'MMM dd')}
+                    {(item as any).zone && <div className="text-[10px] text-muted-foreground truncate max-w-[80px]">{(item as any).zone.split(' — ')[0]}</div>}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1.5">
@@ -244,10 +309,15 @@ export default function HazardFindingsPage() {
                         )}
                         <DeptBadge dept={item.department} />
                       </div>
+                      {item.notes && <p className="text-xs text-muted-foreground">{item.notes}</p>}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground align-top">
-                    {item.notes ? item.notes : <span className="text-xs">—</span>}
+                  <TableCell>
+                    {(item as any).riskScore ? (
+                      <span className={`text-xs font-bold px-2 py-1 rounded font-mono ${riskColor((item as any).riskScore)}`}>
+                        {riskLabel((item as any).riskScore)}
+                      </span>
+                    ) : <span className="text-xs text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell>
                     <PriorityBadge priority={item.severity} />
@@ -265,20 +335,22 @@ export default function HazardFindingsPage() {
                   <TableCell>
                     <StatusBadge status={item.status} />
                   </TableCell>
-                  {isAdmin && (
+                  {canEdit && (
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => {
-                            if (window.confirm('Delete this record?')) {
-                              deleteMutation.mutate({ id: item.id });
-                            }
-                          }}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {isAdmin && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              if (window.confirm('Delete this record?')) {
+                                deleteMutation.mutate({ id: item.id });
+                              }
+                            }}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   )}
@@ -320,6 +392,20 @@ export default function HazardFindingsPage() {
                   </FormItem>
                 )} />
               </div>
+
+              <FormField control={form.control} name="zone" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Zone / Area (optional)</FormLabel>
+                  <Select onValueChange={v => field.onChange(v === "none" ? "" : v)} value={field.value || "none"}>
+                    <FormControl><SelectTrigger className="text-sm"><SelectValue placeholder="Select zone..." /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">No specific zone</SelectItem>
+                      {ZONES.map(z => <SelectItem key={z} value={z}>{z}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
               
               <FormField control={form.control} name="hazardDescription" render={({ field }) => (
                 <FormItem>
@@ -349,6 +435,65 @@ export default function HazardFindingsPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
+              </div>
+
+              {/* Risk Matrix */}
+              <div className="border rounded-md p-4 space-y-3 bg-muted/20">
+                <p className="text-xs uppercase font-bold text-muted-foreground">Risk Matrix (Likelihood × Severity = Score)</p>
+                <div className="grid grid-cols-3 gap-4 items-end">
+                  <FormField control={form.control} name="riskLikelihood" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Likelihood (1-5)</FormLabel>
+                      <Select onValueChange={v => field.onChange(parseInt(v))} value={field.value ? String(field.value) : ""}>
+                        <FormControl><SelectTrigger className="text-sm h-9"><SelectValue placeholder="—" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {RISK_LEVELS.map(n => <SelectItem key={n} value={String(n)}>{n} — {["Rare","Unlikely","Possible","Likely","Almost Certain"][n-1]}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="riskSeverity" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Impact (1-5)</FormLabel>
+                      <Select onValueChange={v => field.onChange(parseInt(v))} value={field.value ? String(field.value) : ""}>
+                        <FormControl><SelectTrigger className="text-sm h-9"><SelectValue placeholder="—" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {RISK_LEVELS.map(n => <SelectItem key={n} value={String(n)}>{n} — {["Negligible","Minor","Moderate","Major","Critical"][n-1]}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Score</p>
+                    <span className={`text-sm font-bold px-3 py-1.5 rounded font-mono ${riskColor(riskScore)}`}>
+                      {riskScore ? riskLabel(riskScore) : "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Anonymous submission */}
+              <div className="border rounded-md p-4 space-y-3 bg-muted/20">
+                <p className="text-xs uppercase font-bold text-muted-foreground">Submission</p>
+                <FormField control={form.control} name="isAnonymous" render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={!!field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <div>
+                      <FormLabel className="text-sm font-medium">Submit anonymously</FormLabel>
+                      <p className="text-xs text-muted-foreground">Worker identity will not be recorded</p>
+                    </div>
+                  </FormItem>
+                )} />
+                {!watchAnonymous && (
+                  <FormField control={form.control} name="submitterName" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Submitted by (optional)</FormLabel>
+                      <FormControl><Input className="text-sm h-8" placeholder="Worker name" {...field} value={field.value || ""} /></FormControl>
+                    </FormItem>
+                  )} />
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -47,7 +47,7 @@ interface UserFormData {
   displayName: string;
   email: string;
   password: string;
-  role: "admin" | "member" | "worker-rep";
+  role: "admin" | "member" | "worker-rep" | "management";
   permissions: string[];
 }
 
@@ -199,7 +199,7 @@ export default function ManageUsersPage() {
       displayName: u.displayName,
       email: u.email ?? "",
       password: "",
-      role: u.role as "admin" | "member" | "worker-rep",
+      role: u.role as "admin" | "member" | "worker-rep" | "management",
       permissions: [...u.permissions],
     });
     setEditingUser(u);
@@ -524,13 +524,14 @@ export default function ManageUsersPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Role</Label>
-              <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v as "admin" | "member" | "worker-rep" }))}>
+              <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v as "admin" | "member" | "worker-rep" | "management" }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin (full access)</SelectItem>
                   <SelectItem value="worker-rep">Worker Rep (verify items, read-only)</SelectItem>
+                  <SelectItem value="management">Management (cannot view Worker Statements/RTR)</SelectItem>
                   <SelectItem value="member">Member (custom permissions)</SelectItem>
                 </SelectContent>
               </Select>

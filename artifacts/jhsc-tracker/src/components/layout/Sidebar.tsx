@@ -21,6 +21,9 @@ import {
   KeyRound,
   GripVertical,
   ArrowUpDown,
+  FileWarning,
+  FileText,
+  ShieldX,
 } from "lucide-react";
 import {
   DndContext,
@@ -54,6 +57,7 @@ interface NavItem {
   permission: string | null;
   badge?: number;
   adminOnly?: boolean;
+  workerRepOnly?: boolean;
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -69,6 +73,9 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "/worker-statements": MessageSquareWarning,
   "/suggestions": Lightbulb,
   "/suggestions-log": ScrollText,
+  "/recommendations": FileWarning,
+  "/meeting-minutes": FileText,
+  "/right-to-refuse": ShieldX,
   "/import-minutes": Upload,
   "/manage-users": Users,
 };
@@ -157,6 +164,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const [reorderMode, setReorderMode] = useState(false);
 
   const isAdmin = user?.role === "admin";
+  const isWorkerRep = user?.role === "worker-rep";
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -175,6 +183,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     .filter((item): item is NavItem => {
       if (!item) return false;
       if (item.adminOnly && !isAdmin) return false;
+      if (item.workerRepOnly && !isAdmin && !isWorkerRep) return false;
       if (item.permission === null) return true;
       return hasPermission(item.permission);
     });

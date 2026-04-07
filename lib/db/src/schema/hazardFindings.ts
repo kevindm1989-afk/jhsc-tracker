@@ -1,4 +1,4 @@
-import { pgTable, serial, text, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, date, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -15,6 +15,14 @@ export const hazardFindingsTable = pgTable("hazard_findings", {
   status: text("status").notNull().default("Open"),
   closedDate: date("closed_date"),
   notes: text("notes"),
+  zone: text("zone"),
+  riskLikelihood: integer("risk_likelihood"),
+  riskSeverity: integer("risk_severity"),
+  riskScore: integer("risk_score"),
+  isAnonymous: boolean("is_anonymous").notNull().default(false),
+  submitterName: text("submitter_name"),
+  responseToken: text("response_token"),
+  responseTokenExpiresAt: timestamp("response_token_expires_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

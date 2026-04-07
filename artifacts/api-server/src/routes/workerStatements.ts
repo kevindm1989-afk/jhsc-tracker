@@ -9,7 +9,13 @@ function genCode(id: number) {
   return "W-" + String(id).padStart(3, "0");
 }
 
-router.get("/", async (req, res) => {
+function requireWorkerRepAccess(req: any, res: any, next: any) {
+  const role = req.session?.role;
+  if (role === "admin" || role === "worker-rep") return next();
+  return res.status(403).json({ error: "Worker statements are confidential. Access restricted to Worker Co-Chair and Admin per OHSA s.8." });
+}
+
+router.get("/", requireWorkerRepAccess, async (req, res) => {
   try {
     const { status, department } = req.query as Record<string, string>;
     const conditions = [];
@@ -50,7 +56,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", requireWorkerRepAccess, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const [item] = await db
