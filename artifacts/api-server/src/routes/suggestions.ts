@@ -102,7 +102,7 @@ router.post("/", async (req, res) => {
             <p><strong>Description:</strong><br>${suggestion.description.replace(/\n/g, "<br>")}</p>
             <p><strong>Proposed Solution:</strong><br>${suggestion.proposedSolution.replace(/\n/g, "<br>")}</p>
             <hr>
-            <p style="font-size:12px;color:#888">The completed form is attached. Submitted via JHSC Co-Chair Tracker.</p>
+            <p style="font-size:12px;color:#888">The completed form is attached. Submitted via JHSC Tracker.</p>
           `,
           attachments: [
             {

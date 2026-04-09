@@ -155,7 +155,7 @@ export default function LoginPage() {
               <ShieldCheck className="w-7 h-7 text-primary" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">JHSC Co-Chair Tracker</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">JHSC Tracker</h1>
           <p className="text-sm text-muted-foreground font-medium">Joint Health &amp; Safety Committee</p>
         </div>
 

@@ -211,7 +211,7 @@ router.post("/email", async (req, res) => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: #1a2744; padding: 20px; border-radius: 6px 6px 0 0;">
             <h2 style="color: #ffffff; margin: 0; font-size: 18px;">JHSC Inspection Report</h2>
-            <p style="color: #aab4cc; margin: 4px 0 0; font-size: 13px;">JHSC Co-Chair Tracker</p>
+            <p style="color: #aab4cc; margin: 4px 0 0; font-size: 13px;">JHSC Tracker</p>
           </div>
           <div style="background: #f8f9fa; padding: 24px; border: 1px solid #e0e0e0; border-radius: 0 0 6px 6px;">
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">

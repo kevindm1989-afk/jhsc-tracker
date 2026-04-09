@@ -181,7 +181,7 @@ router.post("/", async (req, res) => {
             ${report.witnesses ? `<p><strong>Witnesses:</strong> ${report.witnesses}</p>` : ""}
             ${report.suggestedCorrection ? `<p><strong>Suggested Correction:</strong> ${report.suggestedCorrection}</p>` : ""}
             <hr>
-            <p style="font-size:12px;color:#888">The completed Excel form is attached. Submitted via JHSC Co-Chair Tracker.</p>
+            <p style="font-size:12px;color:#888">The completed Excel form is attached. Submitted via JHSC Tracker.</p>
           `,
           attachments: [
             {

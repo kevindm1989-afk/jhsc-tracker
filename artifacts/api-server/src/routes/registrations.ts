@@ -97,14 +97,14 @@ router.patch("/:id", requireAdmin, async (req, res) => {
         await transporter.sendMail({
           from: fromEmail,
           to: reg.email,
-          subject: "Your JHSC Co-Chair Tracker access has been approved",
+          subject: "Your JHSC Tracker access has been approved",
           html: `
             <p>Hi ${reg.name},</p>
-            <p>Your request for access to the <strong>JHSC Co-Chair Tracker</strong> has been <strong>approved</strong>.</p>
+            <p>Your request for access to the <strong>JHSC Tracker</strong> has been <strong>approved</strong>.</p>
             <p>You can now sign in using your username: <strong>${reg.username}</strong></p>
             <p>If you have any questions, please contact your JHSC Co-Chair.</p>
             <br/>
-            <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker</p>
+            <p style="font-size:12px;color:#888;">JHSC Tracker</p>
           `,
         });
       } catch (emailErr) {

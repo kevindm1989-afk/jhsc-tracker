@@ -86,7 +86,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
           {/* Mobile logo (visible only on mobile) */}
           <div className="md:hidden flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground leading-tight truncate">JHSC Co-Chair Tracker</p>
+            <p className="text-sm font-bold text-foreground leading-tight truncate">JHSC Tracker</p>
             <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">JHSC Tracker</p>
           </div>
 

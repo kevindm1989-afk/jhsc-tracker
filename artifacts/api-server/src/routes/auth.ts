@@ -125,7 +125,7 @@ router.post("/register", async (req, res) => {
       await transporter.sendMail({
         from: adminEmail,
         to: adminEmail,
-        subject: "New Access Request — JHSC Co-Chair Tracker",
+        subject: "New Access Request — JHSC Tracker",
         html: `
           <p>A new access request has been submitted and is waiting for your review.</p>
           <table style="border-collapse:collapse;margin:12px 0;">
@@ -136,7 +136,7 @@ router.post("/register", async (req, res) => {
           </table>
           <p>Sign in to the tracker to approve or decline this request.</p>
           <br/>
-          <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker</p>
+          <p style="font-size:12px;color:#888;">JHSC Tracker</p>
         `,
       });
     } catch (emailErr) {
@@ -186,16 +186,16 @@ router.post("/forgot-password", async (req, res) => {
         await transporter.sendMail({
           from,
           to: user.email,
-          subject: "Reset your JHSC Co-Chair Tracker password",
+          subject: "Reset your JHSC Tracker password",
           html: `
             <p>Hi ${user.displayName},</p>
-            <p>We received a request to reset your password for the <strong>JHSC Co-Chair Tracker</strong>.</p>
+            <p>We received a request to reset your password for the <strong>JHSC Tracker</strong>.</p>
             <p><a href="${resetUrl}" style="background:#1d4ed8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;margin:12px 0;">Reset Password</a></p>
             <p>Or copy this link into your browser:</p>
             <p style="word-break:break-all;font-size:13px;color:#555;">${resetUrl}</p>
             <p>This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>
             <br/>
-            <p style="font-size:12px;color:#888;">JHSC Co-Chair Tracker</p>
+            <p style="font-size:12px;color:#888;">JHSC Tracker</p>
           `,
         });
       } catch (emailErr) {

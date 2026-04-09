@@ -33,7 +33,7 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: "JHSC Co-Chair Tracker",
+        name: "JHSC Tracker",
         short_name: "JHSC Tracker",
         description: "Joint Health & Safety Committee Tracker",
         theme_color: "#1a1a2e",
