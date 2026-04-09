@@ -1,0 +1,50 @@
+Perform a full error audit of this project. Check every layer below and report findings grouped by category. Fix anything you can automatically; flag anything that needs my input.
+
+## 1. TypeScript / Build Errors
+- Run `pnpm run build` in both `artifacts/jhsc-tracker` and `artifacts/api-server`
+- List all TypeScript errors (file, line, message)
+- Check for any unused imports or variables that would cause TS strict-mode failures
+
+## 2. Dependency & Package Issues
+- Run `pnpm install` and check for unmet peer deps, resolution conflicts, or audit vulnerabilities (`pnpm audit`)
+- Check for version mismatches between frontend and API workspaces
+- Verify `vite-plugin-pwa` and `workbox-build` are on compatible versions (known past issue)
+
+## 3. Runtime / API Route Errors
+- List all `/api/` routes defined in the Express backend
+- Check each route for: missing error handling, unhandled promise rejections, missing auth middleware, and missing input validation
+- Verify the `member-actions` route has correct permissions for the `co_chair` role
+- Check all Drizzle ORM queries for potential null/undefined returns that aren't handled
+
+## 4. Environment Variables
+- List every `process.env.VAR` reference in the codebase
+- Flag any that are not present in `.env.example` or Replit Secrets documentation
+- Confirm: `DATABASE_URL`, `RESEND_API_KEY`, `ASSEMBLYAI_API_KEY`, `FLY_API_TOKEN`, `ANTHROPIC_API_KEY` are all referenced correctly
+
+## 5. Frontend / React Errors
+- Check all pages in `src/pages/` for: missing default exports, broken imports, undefined props, and missing error boundaries
+- Verify every route in `App.tsx` has a matching entry in `DEFAULT_NAV_ORDER` in `use-nav-order.ts`
+- Check for any hardcoded localhost URLs that would break in production
+
+## 6. PWA / Service Worker
+- Validate `manifest.webmanifest` fields (name, icons, start_url, display)
+- Check Workbox config for any stale precache entries or missing routes
+- Confirm `@vitejs/plugin-legacy` is configured for Samsung Browser compatibility
+
+## 7. Security
+- Scan for any hardcoded secrets, API keys, or passwords in source files
+- Check that all sensitive routes require authentication middleware
+- Verify CORS settings are not set to wildcard `*` in production
+
+## 8. Console Logs & Debug Code
+- Find all `console.log`, `console.error`, and `debugger` statements left in production code
+
+## 9. Git / Deployment Health
+- Check for any stale `.git/refs/remotes/github/main.lock` files and remove them
+- Confirm `.github/workflows/deploy.yml` is targeting the correct branch (`main`) and app (`jhsctracker-api`)
+- Verify `flyctl` binary path is correct in the workflow
+
+## 10. Summary
+At the end, produce a table:
+| Category | Issues Found | Auto-Fixed | Needs Input |
+|----------|-------------|------------|-------------|
