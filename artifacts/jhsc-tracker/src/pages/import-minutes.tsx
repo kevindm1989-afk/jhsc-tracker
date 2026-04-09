@@ -71,7 +71,7 @@ interface MinutesResult {
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
-import { apiUrl, API_BASE } from "@/lib/api";
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const priorityColors: Record<string, string> = {
   High: "bg-red-100 text-red-800 border-red-200",
@@ -177,7 +177,7 @@ function MinutesTab() {
     try {
       const formData = new FormData();
       formData.append("file", f);
-      const resp = await fetch(apiUrl(`/api/import/minutes?preview=true`), { method: "POST", body: formData });
+      const resp = await fetch(`${BASE}/api/import/minutes?preview=true`, { method: "POST", body: formData });
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
         throw new Error(err.error || `Server error ${resp.status}`);
@@ -204,7 +204,7 @@ function MinutesTab() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const resp = await fetch(apiUrl(`/api/import/minutes`), { method: "POST", body: formData });
+      const resp = await fetch(`${BASE}/api/import/minutes`, { method: "POST", body: formData });
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
         throw new Error(err.error || `Server error ${resp.status}`);

@@ -16,7 +16,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 
-import { apiUrl, API_BASE } from "@/lib/api";
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface UserSummary {
   id: number;
@@ -29,7 +29,7 @@ function useUsers() {
   return useQuery<UserSummary[]>({
     queryKey: ["users-list"],
     queryFn: async () => {
-      const res = await fetch(apiUrl(`/api/users`), { credentials: "include" });
+      const res = await fetch(`${BASE}/api/users`, { credentials: "include" });
       if (!res.ok) return [];
       return res.json();
     },

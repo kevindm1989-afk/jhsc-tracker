@@ -4,22 +4,15 @@ import * as schema from "./schema/index.js";
 
 const { Pool } = pg;
 
-const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
-
-if (!connectionString) {
+if (!process.env.DATABASE_URL) {
   throw new Error(
-    "NEON_DATABASE_URL or DATABASE_URL must be set. Did you forget to provision a database?",
+    "DATABASE_URL must be set. Did you forget to provision a database?",
   );
 }
 
 export const pool = new Pool({
-  connectionString,
-  ssl: { rejectUnauthorized: false },
-  keepAlive: true,
-  keepAliveInitialDelayMillis: 10000,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-  max: 10,
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
 });
 export const db = drizzle(pool, { schema });
 

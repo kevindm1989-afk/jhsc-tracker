@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
 import { rm, readFile } from "node:fs/promises";
-import { execSync } from "node:child_process";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
@@ -21,21 +20,7 @@ function uniq(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
-const workspaceRoot = path.resolve(artifactDir, "../..");
-
-function buildWorkspaceLib(pkgName) {
-  console.log(`Building workspace lib: ${pkgName}`);
-  execSync(`pnpm --filter ${pkgName} run build`, {
-    cwd: workspaceRoot,
-    stdio: "inherit",
-  });
-}
-
 async function buildAll() {
-  // Build workspace lib packages that compile to dist/ before bundling.
-  buildWorkspaceLib("@workspace/integrations-anthropic-ai");
-  buildWorkspaceLib("@workspace/db");
-
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 

@@ -11,28 +11,19 @@ const port = Number(process.env["PORT"] || 3000);
 
 async function seedAdminIfNeeded() {
   try {
-    const passwordHash = await bcrypt.hash("Unifor1285!", 10);
-    await db
-      .insert(usersTable)
-      .values({
+    const [{ value }] = await db.select({ value: count() }).from(usersTable);
+    if (Number(value) === 0) {
+      const passwordHash = await bcrypt.hash("Unifor1285!", 12);
+      await db.insert(usersTable).values({
         username: "admin",
         displayName: "Worker Co-Chair",
         passwordHash,
         email: "jhsc1285app@gmail.com",
         role: "admin",
         permissions: [],
-      })
-      .onConflictDoUpdate({
-        target: usersTable.username,
-        set: {
-          displayName: "Worker Co-Chair",
-          passwordHash,
-          email: "jhsc1285app@gmail.com",
-          role: "admin",
-          permissions: [],
-        },
       });
-    logger.info("Admin account ensured — username: admin");
+      logger.info("Default admin account created — username: admin, password: Unifor1285!");
+    }
   } catch (err) {
     logger.error({ err }, "Failed to seed admin account");
   }
@@ -120,11 +111,6 @@ ensureSessionTable()
       logger.info(`Server running on port ${port}`);
       await seedAdminIfNeeded();
       await ensureAdminEmail();
-
-      // Keep Neon DB connection warm — ping every 4 minutes to prevent cold starts
-      cron.schedule("*/4 * * * *", () => {
-        pool.query("SELECT 1").catch(() => {});
-      });
 
       // Run inspection reminder check every day at 08:00
       cron.schedule("0 8 * * *", () => {

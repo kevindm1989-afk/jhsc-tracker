@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ShieldAlert, Send, Loader2, CheckCircle2, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-import { apiUrl, API_BASE } from "@/lib/api";
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const CONCERN_OPTIONS = [
   { key: "unsafe_condition", label: "Unsafe Condition" },
@@ -149,7 +149,7 @@ export default function HealthSafetyReportPage() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const res = await fetch(apiUrl(`/api/health-safety-reports`), {
+      const res = await fetch(`${BASE}/api/health-safety-reports`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -180,7 +180,7 @@ export default function HealthSafetyReportPage() {
     if (showHistory) { setShowHistory(false); return; }
     setHistoryLoading(true);
     try {
-      const res = await fetch(apiUrl(`/api/health-safety-reports`), { credentials: "include" });
+      const res = await fetch(`${BASE}/api/health-safety-reports`, { credentials: "include" });
       setHistory(await res.json());
       setShowHistory(true);
     } catch {
@@ -193,7 +193,7 @@ export default function HealthSafetyReportPage() {
   const deleteReport = async (id: number) => {
     if (!confirm("Delete this report?")) return;
     try {
-      await fetch(apiUrl(`/api/health-safety-reports/${id}`), {
+      await fetch(`${BASE}/api/health-safety-reports/${id}`, {
         method: "DELETE",
         credentials: "include",
       });

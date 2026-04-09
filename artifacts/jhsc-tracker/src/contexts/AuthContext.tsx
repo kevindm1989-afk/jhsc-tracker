@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
-import { apiUrl } from "@/lib/api";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export interface AuthUser {
   id: number;
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch(apiUrl("/api/auth/me"), { credentials: "include" })
+    fetch(`${BASE}/api/auth/me`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => setUser(data))
       .catch(() => setUser(null))
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
-    const resp = await fetch(apiUrl("/api/auth/login"), {
+    const resp = await fetch(`${BASE}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch(apiUrl("/api/auth/logout"), { method: "POST", credentials: "include" });
+    await fetch(`${BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
     setUser(null);
   }, []);
 

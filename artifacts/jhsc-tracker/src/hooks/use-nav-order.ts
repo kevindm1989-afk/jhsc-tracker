@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiUrl } from "@/lib/api";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export const DEFAULT_NAV_ORDER = [
   "/",
@@ -25,7 +26,7 @@ export function useNavOrder() {
   const [order, setOrder] = useState<string[] | null>(null);
 
   useEffect(() => {
-    fetch(apiUrl("/api/settings/nav-order"), { credentials: "include" })
+    fetch(`${BASE}/api/settings/nav-order`, { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
         if (data.order && Array.isArray(data.order)) {
@@ -39,7 +40,7 @@ export function useNavOrder() {
 
   const saveOrder = useCallback(async (newOrder: string[]) => {
     setOrder(newOrder);
-    await fetch(apiUrl("/api/settings/nav-order"), {
+    await fetch(`${BASE}/api/settings/nav-order`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

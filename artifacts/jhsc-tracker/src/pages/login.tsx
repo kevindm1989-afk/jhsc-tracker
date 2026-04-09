@@ -15,7 +15,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShieldCheck, Eye, EyeOff, UserPlus, CheckCircle2, KeyRound } from "lucide-react";
 
-import { apiUrl, API_BASE } from "@/lib/api";
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const DEPARTMENTS = ["Warehouse", "Production", "Both", "Other"];
 const SHIFTS = ["Days", "Afternoons", "Nights", "Rotating"];
@@ -80,7 +80,7 @@ export default function LoginPage() {
     if (!forgotEmail.trim()) return setForgotError("Please enter your email address.");
     setForgotLoading(true);
     try {
-      const resp = await fetch(apiUrl(`/api/auth/forgot-password`), {
+      const resp = await fetch(`${BASE}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail.trim() }),
@@ -114,7 +114,7 @@ export default function LoginPage() {
 
     setRegLoading(true);
     try {
-      const resp = await fetch(apiUrl(`/api/auth/register`), {
+      const resp = await fetch(`${BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Lightbulb, Send, Loader2, CheckCircle2, Plus, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 
-import { apiUrl, API_BASE } from "@/lib/api";
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface Suggestion {
   id: number;
@@ -104,7 +104,7 @@ export default function SuggestionsPage() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const res = await fetch(apiUrl(`/api/suggestions`), {
+      const res = await fetch(`${BASE}/api/suggestions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -131,7 +131,7 @@ export default function SuggestionsPage() {
     if (showHistory) { setShowHistory(false); return; }
     setHistoryLoading(true);
     try {
-      const res = await fetch(apiUrl(`/api/suggestions`), { credentials: "include" });
+      const res = await fetch(`${BASE}/api/suggestions`, { credentials: "include" });
       setHistory(await res.json());
       setShowHistory(true);
     } catch {
@@ -144,7 +144,7 @@ export default function SuggestionsPage() {
   const deleteSuggestion = async (id: number) => {
     if (!confirm("Delete this suggestion?")) return;
     try {
-      await fetch(apiUrl(`/api/suggestions/${id}`), { method: "DELETE", credentials: "include" });
+      await fetch(`${BASE}/api/suggestions/${id}`, { method: "DELETE", credentials: "include" });
       setHistory((h) => h.filter((s) => s.id !== id));
     } catch {
       toast({ title: "Failed to delete", variant: "destructive" });
