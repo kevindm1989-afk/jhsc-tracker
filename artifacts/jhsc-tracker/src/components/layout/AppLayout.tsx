@@ -13,7 +13,6 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
-import AIChatBubble from "@/components/AIChatBubble";
 
 const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 const WARN_BEFORE_MS = 2 * 60 * 1000;
@@ -125,8 +124,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <AIChatBubble />
     </div>
   );
 }

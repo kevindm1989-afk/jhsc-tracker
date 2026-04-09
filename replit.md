@@ -52,8 +52,6 @@ A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo
 - **Authentication** — Session-based login (bcrypt + express-session + PostgreSQL session store); admin auto-seeded on first run (username: admin, password: Unifor1285!)
 - **Manage Users** — Admin-only page to create/edit/delete member accounts and assign per-module permissions
 - **Documents** — Upload, browse, and download safety documents; category-based organisation (Meeting Minutes, Inspection Reports, Hazard Reports, OHSA References, Policies & Procedures, Worker Statements, Other); presigned GCS upload via Replit Object Storage; metadata stored in DB; per-user delete permission
-- **Meeting Transcription** — Record audio in-browser and submit for AssemblyAI transcription; saved as meeting minutes
-- **AI Assistant** — Powered by Claude via Replit AI Integrations (no API key required); conversation sidebar with SSE streaming chat; available to all authenticated users; conversations and messages stored in DB
 
 ### Auth & Permissions
 
@@ -72,8 +70,6 @@ A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo
 - `users` — username, displayName, passwordHash, role, permissions (JSON array), timestamps
 - `documents` — title, description, category, fileName, fileSize, mimeType, objectPath, uploadedBy, timestamps
 - `session` — auto-created by connect-pg-simple for session storage
-- `conversations` — id, user_id, title, created_at (for AI Assistant)
-- `messages` — id, conversation_id, role (user/assistant), content, created_at (for AI Assistant)
 
 ## TypeScript & Composite Projects
 
@@ -137,19 +133,3 @@ Generated Zod schemas from the OpenAPI spec.
 ### `lib/api-client-react` (`@workspace/api-client-react`)
 
 Generated React Query hooks and fetch client from the OpenAPI spec.
-
-**IMPORTANT**: After any schema or route change, rebuild this package:
-```
-cd lib/api-client-react && npx tsc -p tsconfig.json
-```
-The `dist/` directory must be up to date for the frontend typecheck to pass.
-
-### `lib/integrations-anthropic-ai` (`@workspace/integrations-anthropic-ai`)
-
-Anthropic AI client provisioned via Replit AI Integrations (no user API key needed).
-
-- Exports `anthropic` client from `./dist/index.js` (NOT src — must be built)
-- Build: `pnpm --filter @workspace/integrations-anthropic-ai run build` (or `cd lib/integrations-anthropic-ai && npx tsc -p tsconfig.json`)
-- After any changes, delete `lib/integrations-anthropic-ai/tsconfig.tsbuildinfo` before rebuilding to avoid stale cache
-- Model used: `claude-sonnet-4-6`, max_tokens: 8192
-- AI route: `POST /api/anthropic/conversations/:id/messages` — SSE stream (manual `fetch`+`ReadableStream` on frontend, NOT generated React Query hooks)

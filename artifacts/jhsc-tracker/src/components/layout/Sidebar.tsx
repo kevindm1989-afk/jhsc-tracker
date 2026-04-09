@@ -24,7 +24,6 @@ import {
   ShieldX,
   Folder,
   Mic,
-  Bot,
 } from "lucide-react";
 import {
   DndContext,
@@ -77,7 +76,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "/right-to-refuse": ShieldX,
   "/files": Folder,
   "/meeting-transcription": Mic,
-  "/ai-assistant": Bot,
   "/import-minutes": Upload,
   "/manage-users": Users,
 };
