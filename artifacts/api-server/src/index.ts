@@ -11,7 +11,7 @@ const port = Number(process.env["PORT"] || 3000);
 
 async function seedAdminIfNeeded() {
   try {
-    const passwordHash = await bcrypt.hash("Unifor1285!", 12);
+    const passwordHash = await bcrypt.hash("Unifor1285!", 10);
     await db
       .insert(usersTable)
       .values({
@@ -120,6 +120,11 @@ ensureSessionTable()
       logger.info(`Server running on port ${port}`);
       await seedAdminIfNeeded();
       await ensureAdminEmail();
+
+      // Keep Neon DB connection warm — ping every 4 minutes to prevent cold starts
+      cron.schedule("*/4 * * * *", () => {
+        pool.query("SELECT 1").catch(() => {});
+      });
 
       // Run inspection reminder check every day at 08:00
       cron.schedule("0 8 * * *", () => {

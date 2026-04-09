@@ -64,7 +64,7 @@ router.post("/", requireAdmin, async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password, 10);
 
     const [created] = await db
       .insert(usersTable)
@@ -120,7 +120,7 @@ router.patch("/:id", requireAdmin, async (req: Request, res: Response) => {
       if (password.length < 6) {
         return res.status(400).json({ error: "Password must be at least 6 characters" });
       }
-      updates.passwordHash = await bcrypt.hash(password, 12);
+      updates.passwordHash = await bcrypt.hash(password, 10);
     }
 
     const [updated] = await db

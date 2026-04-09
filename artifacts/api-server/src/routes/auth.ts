@@ -106,7 +106,7 @@ router.post("/register", async (req, res) => {
       suffix++;
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password, 10);
 
     await db.insert(registrationsTable).values({
       name: name.trim(),
@@ -239,7 +239,7 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ error: "This reset link has already been used" });
     }
 
-    const passwordHash = await bcrypt.hash(newPassword, 12);
+    const passwordHash = await bcrypt.hash(newPassword, 10);
     await db
       .update(usersTable)
       .set({ passwordHash, updatedAt: now })
@@ -281,7 +281,7 @@ router.post("/change-password", async (req, res) => {
     const valid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!valid) return res.status(401).json({ error: "Current password is incorrect" });
 
-    const newHash = await bcrypt.hash(newPassword, 12);
+    const newHash = await bcrypt.hash(newPassword, 10);
     await db
       .update(usersTable)
       .set({ passwordHash: newHash, updatedAt: new Date() })
