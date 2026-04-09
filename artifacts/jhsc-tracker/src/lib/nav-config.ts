@@ -24,6 +24,7 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Import Data", href: "/import-minutes", permission: "import-data" },
   { name: "Manage Users", href: "/manage-users", permission: null, adminOnly: true },
   { name: "Meeting Transcription", href: "/meeting-transcription", permission: null },
+  { name: "AI Assistant", href: "/ai-assistant", permission: null },
 ];
 
 const seen = new Set<string>();

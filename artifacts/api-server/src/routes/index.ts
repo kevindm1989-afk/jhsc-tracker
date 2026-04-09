@@ -21,6 +21,7 @@ import folderFilesRouter from "./folderFiles";
 import transcriptionRouter from "./transcription";
 import inspectionChecklistsRouter from "./inspectionChecklists";
 import inspectionScheduleRouter from "./inspectionSchedule";
+import anthropicRouter from "./anthropic/index";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
 
 const router: IRouter = Router();
@@ -47,6 +48,8 @@ router.use("/attachments", requireAuth, attachmentsRouter);
 router.use("/folder-files", requireAuth, folderFilesRouter);
 router.use("/checklists", requireAuth, inspectionChecklistsRouter);
 router.use("/inspection-schedule", requireAuth, inspectionScheduleRouter);
+
+router.use("/anthropic", requireAuth, anthropicRouter);
 
 // Admin-only routes
 router.use("/transcription", requireAuth, transcriptionRouter);
