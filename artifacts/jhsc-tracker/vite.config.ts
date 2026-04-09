@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
-import legacy from "@vitejs/plugin-legacy";
 
 const port = Number(process.env.PORT || "3000");
 const basePath = process.env.BASE_PATH || "/";
@@ -13,9 +12,6 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    legacy({
-      targets: ["defaults", "not IE 11"],
-    }),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
