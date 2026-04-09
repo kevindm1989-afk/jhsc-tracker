@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 interface FolderItem {
   id: number;
@@ -68,7 +68,7 @@ function FileIcon({ mimeType, className }: { mimeType: string; className?: strin
 }
 
 async function apiFetch(url: string, opts?: RequestInit) {
-  const res = await fetch(`${BASE}${url}`, { credentials: "include", ...opts });
+  const res = await fetch(apiUrl(url), { credentials: "include", ...opts });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Request failed" }));
     throw new Error(err.error || "Request failed");
@@ -183,7 +183,7 @@ export default function FilesPage() {
     mutationFn: async ({ folderId, files }: { folderId: number; files: File[] }) => {
       const fd = new FormData();
       files.forEach((f) => fd.append("files", f));
-      const res = await fetch(`${BASE}/api/folder-files/folders/${folderId}/files`, {
+      const res = await fetch(apiUrl(`/api/folder-files/folders/${folderId}/files`), {
         method: "POST",
         credentials: "include",
         body: fd,
@@ -273,7 +273,7 @@ export default function FilesPage() {
 
   const handleDownload = (file: FileItem) => {
     const a = document.createElement("a");
-    a.href = `${BASE}/api/folder-files/files/${file.storedName}?name=${encodeURIComponent(file.originalName)}`;
+    a.href = apiUrl(`/api/folder-files/files/${file.storedName}?name=${encodeURIComponent(file.originalName)}`);
     a.download = file.originalName;
     a.click();
   };

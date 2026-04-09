@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 export default function ResetPasswordPage() {
   const [, navigate] = useLocation();
@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
 
     setIsLoading(true);
     try {
-      const resp = await fetch(`${BASE}/api/auth/reset-password`, {
+      const resp = await fetch(apiUrl(`/api/auth/reset-password`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword: password }),

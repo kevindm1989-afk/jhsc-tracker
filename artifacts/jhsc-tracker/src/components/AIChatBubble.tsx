@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
-
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 type Msg = { role: "user" | "assistant"; content: string; streaming?: boolean };
 
@@ -61,7 +60,7 @@ export default function AIChatBubble() {
   useEffect(() => {
     if (open && !convId && !isInit) {
       setIsInit(true);
-      fetch(`${BASE}/api/anthropic/conversations`, {
+      fetch(apiUrl("/api/anthropic/conversations"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: "Quick Chat" }),
@@ -91,7 +90,7 @@ export default function AIChatBubble() {
     setMessages((prev) => [...prev, assistantMsg]);
 
     try {
-      const resp = await fetch(`${BASE}/api/anthropic/conversations/${convId}/messages`, {
+      const resp = await fetch(apiUrl(`/api/anthropic/conversations/${convId}/messages`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: userMsg.content }),

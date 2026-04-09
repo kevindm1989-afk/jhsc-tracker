@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Plus, Trash2, Send, Bot, User, Loader2, MessageSquare } from "lucide-react";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-CA", { hour: "2-digit", minute: "2-digit" });
@@ -88,7 +88,7 @@ export default function AIAssistantPage() {
     setActiveConvId(id);
     setIsLoadingMessages(true);
     try {
-      const resp = await fetch(`${BASE}/api/anthropic/conversations/${id}`);
+      const resp = await fetch(apiUrl(`/api/anthropic/conversations/${id}`));
       const data = await resp.json();
       setMessages(data.messages ?? []);
     } catch {
@@ -109,7 +109,7 @@ export default function AIAssistantPage() {
     setMessages(prev => [...prev, assistantMsg]);
 
     try {
-      const resp = await fetch(`${BASE}/api/anthropic/conversations/${activeConvId}/messages`, {
+      const resp = await fetch(apiUrl(`/api/anthropic/conversations/${activeConvId}/messages`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: userMsg.content }),

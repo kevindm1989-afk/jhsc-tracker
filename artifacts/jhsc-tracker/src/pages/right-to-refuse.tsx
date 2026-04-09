@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Edit2, ShieldX, Lock, AlertTriangle } from "lucide-react";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 type RightToRefuse = {
   id: number;
@@ -76,16 +76,16 @@ export default function RightToRefusePage() {
 
   const { data: items, isLoading } = useQuery<RightToRefuse[]>({
     queryKey: ["right-to-refuse"],
-    queryFn: () => fetch(`${BASE}/api/right-to-refuse`, { credentials: "include" }).then(r => r.json()),
+    queryFn: () => fetch(apiUrl(`/api/right-to-refuse`), { credentials: "include" }).then(r => r.json()),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => fetch(`${BASE}/api/right-to-refuse`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => r.json()),
+    mutationFn: (data: any) => fetch(apiUrl(`/api/right-to-refuse`), { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => r.json()),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["right-to-refuse"] }); setIsOpen(false); toast({ title: "Right-to-Refuse logged" }); },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: any) => fetch(`${BASE}/api/right-to-refuse/${id}`, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => { if (!r.ok) return r.json().then(e => { throw new Error(e.error); }); return r.json(); }),
+    mutationFn: ({ id, data }: any) => fetch(apiUrl(`/api/right-to-refuse/${id}`), { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => { if (!r.ok) return r.json().then(e => { throw new Error(e.error); }); return r.json(); }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["right-to-refuse"] }); setIsOpen(false); setEditing(null); toast({ title: "Record updated" }); },
     onError: (e: any) => toast({ title: "Cannot update", description: e.message, variant: "destructive" }),
   });

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 interface Suggestion {
   id: number;
@@ -79,7 +79,7 @@ export default function SuggestionsLogPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch(`${BASE}/api/suggestions`, { credentials: "include" })
+    fetch(apiUrl(`/api/suggestions`), { credentials: "include" })
       .then((r) => r.json())
       .then((data) => setSuggestions(data))
       .catch(() => toast({ title: "Failed to load suggestions", variant: "destructive" }))
@@ -90,7 +90,7 @@ export default function SuggestionsLogPage() {
     if (!confirm("Delete this suggestion permanently?")) return;
     setDeletingId(id);
     try {
-      const resp = await fetch(`${BASE}/api/suggestions/${id}`, { method: "DELETE", credentials: "include" });
+      const resp = await fetch(apiUrl(`/api/suggestions/${id}`), { method: "DELETE", credentials: "include" });
       if (!resp.ok) throw new Error();
       setSuggestions((s) => s.filter((x) => x.id !== id));
       if (expandedId === id) setExpandedId(null);

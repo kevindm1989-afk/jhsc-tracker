@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 const CONCERN_LABELS: Record<string, string> = {
   unsafe_condition: "Unsafe Condition",
@@ -130,7 +130,7 @@ export default function HSReportsLogPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE}/api/health-safety-reports`, {
+      const res = await fetch(apiUrl(`/api/health-safety-reports`), {
         credentials: "include",
       });
       if (!res.ok) throw new Error();
@@ -148,7 +148,7 @@ export default function HSReportsLogPage() {
     if (!deletingReport) return;
     setDeleting(true);
     try {
-      const res = await fetch(`${BASE}/api/health-safety-reports/${deletingReport.id}`, {
+      const res = await fetch(apiUrl(`/api/health-safety-reports/${deletingReport.id}`), {
         method: "DELETE",
         credentials: "include",
       });

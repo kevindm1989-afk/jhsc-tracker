@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 export default function ChangePasswordPage() {
   const { toast } = useToast();
@@ -36,7 +36,7 @@ export default function ChangePasswordPage() {
 
     setIsLoading(true);
     try {
-      const resp = await fetch(`${BASE}/api/auth/change-password`, {
+      const resp = await fetch(apiUrl(`/api/auth/change-password`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

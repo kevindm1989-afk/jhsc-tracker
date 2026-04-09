@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Pencil, Trash2, ShieldCheck, User, Clock, CheckCircle2, XCircle, Inbox, Mail } from "lucide-react";
 import { PERMISSION_LABELS, ALL_PERMISSIONS } from "@/lib/nav-config";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 interface AppUser {
   id: number;
@@ -84,7 +84,7 @@ export default function ManageUsersPage() {
   async function loadUsers() {
     setIsLoading(true);
     try {
-      const resp = await fetch(`${BASE}/api/users`, { credentials: "include" });
+      const resp = await fetch(apiUrl(`/api/users`), { credentials: "include" });
       if (resp.ok) setUsers(await resp.json());
     } finally {
       setIsLoading(false);
@@ -94,7 +94,7 @@ export default function ManageUsersPage() {
   async function loadRegistrations() {
     setRegsLoading(true);
     try {
-      const resp = await fetch(`${BASE}/api/registrations`, { credentials: "include" });
+      const resp = await fetch(apiUrl(`/api/registrations`), { credentials: "include" });
       if (resp.ok) setRegistrations(await resp.json());
     } finally {
       setRegsLoading(false);
@@ -110,7 +110,7 @@ export default function ManageUsersPage() {
     if (!window.confirm(`Send a password reset email to ${u.displayName}?`)) return;
     setSendingResetId(u.id);
     try {
-      const resp = await fetch(`${BASE}/api/users/${u.id}/send-reset-email`, {
+      const resp = await fetch(apiUrl(`/api/users/${u.id}/send-reset-email`), {
         method: "POST",
         credentials: "include",
       });
@@ -139,7 +139,7 @@ export default function ManageUsersPage() {
     if (!approvingReg) return;
     setReviewingId(approvingReg.id);
     try {
-      const resp = await fetch(`${BASE}/api/registrations/${approvingReg.id}`, {
+      const resp = await fetch(apiUrl(`/api/registrations/${approvingReg.id}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -161,7 +161,7 @@ export default function ManageUsersPage() {
     if (!decliningReg) return;
     setReviewingId(decliningReg.id);
     try {
-      const resp = await fetch(`${BASE}/api/registrations/${decliningReg.id}`, {
+      const resp = await fetch(apiUrl(`/api/registrations/${decliningReg.id}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -234,7 +234,7 @@ export default function ManageUsersPage() {
     try {
       let resp: Response;
       if (dialogMode === "create") {
-        resp = await fetch(`${BASE}/api/users`, {
+        resp = await fetch(apiUrl(`/api/users`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -248,7 +248,7 @@ export default function ManageUsersPage() {
           permissions: form.permissions,
         };
         if (form.password) payload.password = form.password;
-        resp = await fetch(`${BASE}/api/users/${editingUser!.id}`, {
+        resp = await fetch(apiUrl(`/api/users/${editingUser!.id}`), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -273,7 +273,7 @@ export default function ManageUsersPage() {
 
   async function handleDelete(u: AppUser) {
     try {
-      const resp = await fetch(`${BASE}/api/users/${u.id}`, {
+      const resp = await fetch(apiUrl(`/api/users/${u.id}`), {
         method: "DELETE",
         credentials: "include",
       });

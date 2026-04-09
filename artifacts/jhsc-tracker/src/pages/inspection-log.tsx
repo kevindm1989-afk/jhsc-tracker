@@ -28,7 +28,7 @@ import { Plus, Search, Edit2, Trash2, CheckCircle2 } from "lucide-react";
 import { StatusBadge, PriorityBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 type UserInfo = { id: number; displayName: string; username: string; role: string };
 
 const ZONES = [
@@ -73,7 +73,7 @@ export default function InspectionLogPage() {
   const { data: currentUser } = useQuery<UserInfo>({
     queryKey: ["auth-me"],
     queryFn: async () => {
-      const res = await fetch(`${BASE}/api/auth/me`, { credentials: "include" });
+      const res = await fetch(apiUrl(`/api/auth/me`), { credentials: "include" });
       if (!res.ok) return null;
       return res.json();
     },

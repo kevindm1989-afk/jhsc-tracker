@@ -163,7 +163,7 @@ const RATINGS: { value: Rating; label: string; short: string; cls: string; activ
   { value: "X", label: "X — No Issue", short: "X", cls: "border-green-200 text-green-700 hover:bg-green-50", activeCls: "bg-green-600 text-white border-green-600" },
 ];
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiUrl, API_BASE } from "@/lib/api";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -226,7 +226,7 @@ export default function ConductInspectionPage() {
     }
     setIsEmailing(true);
     try {
-      const resp = await fetch(`${BASE}/api/inspect/email`, {
+      const resp = await fetch(apiUrl(`/api/inspect/email`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildPayload()),
