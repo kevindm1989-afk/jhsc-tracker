@@ -1,4 +1,6 @@
-const externalApiUrl = import.meta.env.VITE_API_URL as string | undefined;
+const externalApiUrl = !import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL as string | undefined)
+  : undefined;
 const internalBase = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export const API_BASE = externalApiUrl

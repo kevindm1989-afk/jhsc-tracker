@@ -11,19 +11,28 @@ const port = Number(process.env["PORT"] || 3000);
 
 async function seedAdminIfNeeded() {
   try {
-    const [{ value }] = await db.select({ value: count() }).from(usersTable);
-    if (Number(value) === 0) {
-      const passwordHash = await bcrypt.hash("Unifor1285!", 12);
-      await db.insert(usersTable).values({
+    const passwordHash = await bcrypt.hash("Unifor1285!", 12);
+    await db
+      .insert(usersTable)
+      .values({
         username: "admin",
         displayName: "Worker Co-Chair",
         passwordHash,
         email: "jhsc1285app@gmail.com",
         role: "admin",
         permissions: [],
+      })
+      .onConflictDoUpdate({
+        target: usersTable.username,
+        set: {
+          displayName: "Worker Co-Chair",
+          passwordHash,
+          email: "jhsc1285app@gmail.com",
+          role: "admin",
+          permissions: [],
+        },
       });
-      logger.info("Default admin account created — username: admin, password: Unifor1285!");
-    }
+    logger.info("Admin account ensured — username: admin");
   } catch (err) {
     logger.error({ err }, "Failed to seed admin account");
   }
