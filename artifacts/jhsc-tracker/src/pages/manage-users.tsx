@@ -551,13 +551,15 @@ export default function ManageUsersPage() {
                 <Label>Permissions</Label>
                 <div className="border rounded-md divide-y">
                   {ALL_PERMISSIONS.map((p) => (
-                    <label key={p} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/50">
-                      <Checkbox
-                        checked={form.permissions.includes(p)}
-                        onCheckedChange={() => togglePermission(p)}
-                      />
+                    <div key={p} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/50" onClick={() => togglePermission(p)}>
+                      <span onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={form.permissions.includes(p)}
+                          onCheckedChange={() => togglePermission(p)}
+                        />
+                      </span>
                       <span className="text-sm">{PERMISSION_LABELS[p]}</span>
-                    </label>
+                    </div>
                   ))}
                 </div>
                 <div className="flex gap-2 text-xs">
@@ -625,14 +627,15 @@ export default function ManageUsersPage() {
             </p>
             <div className="rounded-md border divide-y divide-border">
               {ALL_PERMISSIONS.map((p) => (
-                <label key={p} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/40">
-                  <Checkbox
-                    checked={approvePerms.includes(p)}
-                    onCheckedChange={() => toggleApprovePermission(p)}
-                    id={`approve-perm-${p}`}
-                  />
+                <div key={p} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/40" onClick={() => toggleApprovePermission(p)}>
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={approvePerms.includes(p)}
+                      onCheckedChange={() => toggleApprovePermission(p)}
+                    />
+                  </span>
                   <span className="text-sm">{PERMISSION_LABELS[p]}</span>
-                </label>
+                </div>
               ))}
             </div>
             <div className="flex gap-2 justify-end pt-1">
