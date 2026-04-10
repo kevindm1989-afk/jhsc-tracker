@@ -1,11 +1,11 @@
 FROM node:20-alpine
+
 RUN corepack enable
 
-# Create non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
 WORKDIR /app
+
 COPY . .
+
 ENV CI=true
 RUN pnpm install --no-frozen-lockfile
 
@@ -24,15 +24,9 @@ RUN pnpm run build
 
 WORKDIR /app
 
-# Switch to non-root user
-RUN chown -R appuser:appgroup /app
-USER appuser
-
 ENV NODE_ENV=production
 ENV PORT=3000
-EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD wget -qO- http://localhost:3000/health || exit 1
+EXPOSE 3000
 
 CMD ["node", "artifacts/api-server/dist/index.js"]

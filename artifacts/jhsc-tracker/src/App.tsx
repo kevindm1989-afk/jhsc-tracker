@@ -1,4 +1,3 @@
-import { lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,27 +6,26 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 import AppLayout from "@/components/layout/AppLayout";
 import LoginPage from "@/pages/login";
-
-const DashboardPage = lazy(() => import("@/pages/dashboard"));
-const ActionItemsPage = lazy(() => import("@/pages/action-items"));
-const HazardFindingsPage = lazy(() => import("@/pages/hazard-findings"));
-const InspectionLogPage = lazy(() => import("@/pages/inspection-log"));
-const WorkerStatementsPage = lazy(() => import("@/pages/worker-statements"));
-const ImportMinutesPage = lazy(() => import("@/pages/import-minutes"));
-const ConductInspectionPage = lazy(() => import("@/pages/conduct-inspection"));
-const ManageUsersPage = lazy(() => import("@/pages/manage-users"));
-const ClosedItemsLogPage = lazy(() => import("@/pages/closed-items-log"));
-const MemberActionsPage = lazy(() => import("@/pages/member-actions"));
-const HealthSafetyReportPage = lazy(() => import("@/pages/health-safety-report"));
-const HSReportsLogPage = lazy(() => import("@/pages/hs-reports-log"));
-const SuggestionsPage = lazy(() => import("@/pages/suggestions"));
-const SuggestionsLogPage = lazy(() => import("@/pages/suggestions-log"));
-const ResetPasswordPage = lazy(() => import("@/pages/reset-password"));
-const ChangePasswordPage = lazy(() => import("@/pages/change-password"));
-const RightToRefusePage = lazy(() => import("@/pages/right-to-refuse"));
-const FilesPage = lazy(() => import("@/pages/files"));
-const MeetingTranscriptionPage = lazy(() => import("@/pages/meeting-transcription"));
-const NotFound = lazy(() => import("@/pages/not-found"));
+import DashboardPage from "@/pages/dashboard";
+import ActionItemsPage from "@/pages/action-items";
+import HazardFindingsPage from "@/pages/hazard-findings";
+import InspectionLogPage from "@/pages/inspection-log";
+import WorkerStatementsPage from "@/pages/worker-statements";
+import ImportMinutesPage from "@/pages/import-minutes";
+import ConductInspectionPage from "@/pages/conduct-inspection";
+import ManageUsersPage from "@/pages/manage-users";
+import ClosedItemsLogPage from "@/pages/closed-items-log";
+import MemberActionsPage from "@/pages/member-actions";
+import HealthSafetyReportPage from "@/pages/health-safety-report";
+import HSReportsLogPage from "@/pages/hs-reports-log";
+import SuggestionsPage from "@/pages/suggestions";
+import SuggestionsLogPage from "@/pages/suggestions-log";
+import ResetPasswordPage from "@/pages/reset-password";
+import ChangePasswordPage from "@/pages/change-password";
+import RightToRefusePage from "@/pages/right-to-refuse";
+import FilesPage from "@/pages/files";
+import MeetingTranscriptionPage from "@/pages/meeting-transcription";
+import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -99,7 +97,7 @@ function Router() {
         {!user ? (
           <Redirect to="/login" />
         ) : (
-          <AppLayout><Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-muted-foreground text-sm">Loading...</div></div>}>
+          <AppLayout>
             <Switch>
               <Route path="/">
                 <ProtectedRoute component={DashboardPage} permission="dashboard" />
@@ -157,7 +155,7 @@ function Router() {
               </Route>
               <Route component={NotFound} />
             </Switch>
-          </Suspense></AppLayout>
+          </AppLayout>
         )}
       </Route>
     </Switch>

@@ -1,5 +1,3 @@
-import { validate, hazardFindingSchema } from "../lib/validation";
-import { validate, hazardFindingSchema } from "../lib/validation";
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { hazardFindingsTable } from "@workspace/db/schema";
@@ -31,7 +29,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", validate(hazardFindingSchema), async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const body = req.body;
     const [created] = await db
@@ -68,7 +66,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", validate(hazardFindingSchema.partial()), async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const body = req.body;

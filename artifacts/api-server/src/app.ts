@@ -1,6 +1,5 @@
 import express, { type Express } from "express";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import pinoHttp from "pino-http";
@@ -38,40 +37,7 @@ app.use(
   }),
 );
 
-const allowedOrigins = [
-  'https://jhsctracker-app.fly.dev',
-  'https://union-local-1285.fly.dev',
-  ...(process.env['NODE_ENV'] === 'development' ? ['http://localhost:3000', 'http://localhost:5173'] : []),
-];
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-}));
-// Rate limiting
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 500,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' },
-});
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many login attempts, please try again in 15 minutes.' },
-});
-
-app.use(globalLimiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
-app.use('/api/auth/forgot-password', authLimiter);
-
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

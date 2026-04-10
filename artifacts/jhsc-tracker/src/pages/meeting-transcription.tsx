@@ -103,6 +103,7 @@ export default function MeetingTranscription() {
         stream.getTracks().forEach(t => t.stop());
         setTimeout(() => {
           const blob = new Blob(chunksRef.current, { type: mime });
+          console.log("[MeetingTranscription] onstop:", chunksRef.current.length, "chunks, blob size:", blob.size, "bytes, mime:", mime);
           if (blob.size === 0) {
             setStatusMsg("Recording failed — no audio captured. Please check microphone permissions and try again.");
             setAppState("error");
@@ -262,9 +263,7 @@ export default function MeetingTranscription() {
           {appState === "preview" && (
             <div>
               <p style={{ fontSize: "13px", color: "#666", marginBottom: "8px" }}>Preview before submitting:</p>
-              <audio ref={audioRef} controls preload="auto" autoPlay={false} style={{ width: "100%", marginBottom: "16px" }}>
-                {audioUrl && <source src={audioUrl} type={mimeRef.current || undefined} />}
-              </audio>
+              <audio ref={audioRef} src={audioUrl} type={audioUrl ? mimeRef.current : undefined} controls preload="auto" autoPlay={false} style={{ width: "100%", marginBottom: "16px" }} />
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <button onClick={handleSubmit} style={btn("#1a2744", "#fff")}>Submit for Transcription</button>
                 <button onClick={handleDiscard} style={btn("transparent", "#888", "1px solid #ddd")}>Discard & Re-record</button>

@@ -1,5 +1,3 @@
-import { validate, workerStatementSchema } from "../lib/validation";
-import { validate, workerStatementSchema } from "../lib/validation";
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
 import { workerStatementsTable } from "@workspace/db/schema";
@@ -37,7 +35,7 @@ router.get("/", requireWorkerRepAccess, async (req, res) => {
   }
 });
 
-router.post("/", requireWorkerRepAccess, validate(workerStatementSchema), async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const body = req.body;
     const [created] = await db
@@ -74,7 +72,7 @@ router.get("/:id", requireWorkerRepAccess, async (req: Request, res: Response) =
   }
 });
 
-router.put("/:id", requireWorkerRepAccess, validate(workerStatementSchema.partial()), async (req: Request, res: Response) => {
+router.put("/:id", async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id as string);
     const body = req.body;
@@ -93,7 +91,7 @@ router.put("/:id", requireWorkerRepAccess, validate(workerStatementSchema.partia
   }
 });
 
-router.delete("/:id", requireWorkerRepAccess, async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     await db.delete(workerStatementsTable).where(eq(workerStatementsTable.id, id));

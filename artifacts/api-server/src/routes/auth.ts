@@ -35,29 +35,23 @@ router.post("/login", async (req, res) => {
 
     const displayName = user.role === "admin" ? "admin" : user.displayName;
 
-    return req.session.regenerate((regenErr) => {
-      if (regenErr) {
-        console.error("Session regenerate error:", regenErr);
+    req.session.userId = user.id;
+    req.session.username = user.username;
+    req.session.displayName = displayName;
+    req.session.role = user.role;
+    req.session.permissions = user.permissions;
+
+    return req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
         return res.status(500).json({ error: "Login failed" });
       }
-      req.session.userId = user.id;
-      req.session.username = user.username;
-      req.session.displayName = displayName;
-      req.session.role = user.role;
-      req.session.permissions = user.permissions;
-
-      return req.session.save((saveErr) => {
-        if (saveErr) {
-          console.error("Session save error:", saveErr);
-          return res.status(500).json({ error: "Login failed" });
-        }
-        return res.json({
-          id: user.id,
-          username: user.username,
-          displayName,
-          role: user.role,
-          permissions: user.permissions,
-        });
+      return res.json({
+        id: user.id,
+        username: user.username,
+        displayName,
+        role: user.role,
+        permissions: user.permissions,
       });
     });
   } catch (err) {
@@ -304,12 +298,7 @@ router.post("/change-password", async (req, res) => {
 router.post("/logout", (req, res) => {
   return req.session.destroy((err) => {
     if (err) return res.status(500).json({ error: "Logout failed" });
-    res.clearCookie("connect.sid", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      path: "/",
-    });
+    res.clearCookie("connect.sid");
     return res.json({ success: true });
   });
 });
