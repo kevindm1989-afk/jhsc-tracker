@@ -103,7 +103,6 @@ export default function MeetingTranscription() {
         stream.getTracks().forEach(t => t.stop());
         setTimeout(() => {
           const blob = new Blob(chunksRef.current, { type: mime });
-          console.log("[MeetingTranscription] onstop:", chunksRef.current.length, "chunks, blob size:", blob.size, "bytes, mime:", mime);
           if (blob.size === 0) {
             setStatusMsg("Recording failed — no audio captured. Please check microphone permissions and try again.");
             setAppState("error");
