@@ -23,8 +23,10 @@ const ALL_PERMISSIONS = [
   "worker-statements",
   "suggestions",
   "suggestions-log",
+  "right-to-refuse",
   "files",
   "import-data",
+  "meeting-transcription",
 ];
 
 // GET /api/users — list all users (admin only)

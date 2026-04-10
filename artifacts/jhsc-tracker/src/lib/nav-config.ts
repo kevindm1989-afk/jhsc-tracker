@@ -23,13 +23,13 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Files", href: "/files", permission: "files" },
   { name: "Import Data", href: "/import-minutes", permission: "import-data" },
   { name: "Manage Users", href: "/manage-users", permission: null, adminOnly: true },
-  { name: "Meeting Transcription", href: "/meeting-transcription", permission: null },
+  { name: "Meeting Transcription", href: "/meeting-transcription", permission: "meeting-transcription" },
 ];
 
 const seen = new Set<string>();
 export const PERMISSION_LABELS: Record<string, string> = {};
 for (const item of NAV_CONFIGS) {
-  if (item.permission && !item.adminOnly && !item.workerRepOnly && !seen.has(item.permission)) {
+  if (item.permission && !item.adminOnly && !seen.has(item.permission)) {
     seen.add(item.permission);
     PERMISSION_LABELS[item.permission] = item.name;
   }

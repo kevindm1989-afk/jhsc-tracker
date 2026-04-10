@@ -121,7 +121,7 @@ function Router() {
                 <ProtectedRoute component={ImportMinutesPage} permission="import-data" />
               </Route>
               <Route path="/closed-items-log">
-                <ProtectedRoute component={ClosedItemsLogPage} permission="action-items" />
+                <ProtectedRoute component={ClosedItemsLogPage} permission="closed-items-log" />
               </Route>
               <Route path="/member-actions">
                 <ProtectedRoute component={MemberActionsPage} permission="member-actions" />
@@ -136,10 +136,10 @@ function Router() {
                 <ProtectedRoute component={SuggestionsPage} permission="suggestions" />
               </Route>
               <Route path="/suggestions-log">
-                <ProtectedRoute component={SuggestionsLogPage} permission="suggestions" />
+                <ProtectedRoute component={SuggestionsLogPage} permission="suggestions-log" />
               </Route>
               <Route path="/right-to-refuse">
-                <ProtectedRoute component={RightToRefusePage} />
+                <ProtectedRoute component={RightToRefusePage} permission="right-to-refuse" />
               </Route>
               <Route path="/files">
                 <ProtectedRoute component={FilesPage} permission="files" />
@@ -148,7 +148,7 @@ function Router() {
                 <ProtectedRoute component={ManageUsersPage} />
               </Route>
               <Route path="/meeting-transcription">
-                <ProtectedRoute component={MeetingTranscriptionPage} />
+                <ProtectedRoute component={MeetingTranscriptionPage} permission="meeting-transcription" />
               </Route>
               <Route path="/change-password">
                 <ProtectedRoute component={ChangePasswordPage} />

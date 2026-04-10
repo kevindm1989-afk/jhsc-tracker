@@ -184,7 +184,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     .filter((item): item is NavItem => {
       if (!item) return false;
       if (item.adminOnly && !isAdmin) return false;
-      if (item.workerRepOnly && !isAdmin && !isCoChair && !isWorkerRep) return false;
+      if (item.workerRepOnly && !isAdmin && !isCoChair && !isWorkerRep && !hasPermission(item.permission ?? "")) return false;
       if (item.permission === null) return true;
       return hasPermission(item.permission);
     });
