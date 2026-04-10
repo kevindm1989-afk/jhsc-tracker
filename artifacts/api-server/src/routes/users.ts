@@ -22,6 +22,7 @@ const ALL_PERMISSIONS = [
   "conduct-inspection",
   "worker-statements",
   "suggestions",
+  "suggestions-log",
   "files",
   "import-data",
 ];

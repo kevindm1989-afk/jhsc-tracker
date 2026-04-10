@@ -21,6 +21,7 @@ const DEFAULT_MEMBER_PERMISSIONS = [
   "conduct-inspection",
   "worker-statements",
   "suggestions",
+  "suggestions-log",
   "files",
   "import-data",
 ];
