@@ -13,12 +13,16 @@ const router: IRouter = Router();
 const ALL_PERMISSIONS = [
   "dashboard",
   "action-items",
+  "member-actions",
+  "health-safety-report",
+  "hs-reports-log",
   "hazard-findings",
   "inspection-log",
   "conduct-inspection",
   "worker-statements",
+  "suggestions",
+  "files",
   "import-data",
-  "documents",
 ];
 
 // GET /api/users — list all users (admin only)

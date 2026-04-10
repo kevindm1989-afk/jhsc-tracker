@@ -19,8 +19,9 @@ const DEFAULT_MEMBER_PERMISSIONS = [
   "inspection-log",
   "conduct-inspection",
   "worker-statements",
-  "import-data",
   "suggestions",
+  "files",
+  "import-data",
 ];
 
 // GET /api/registrations — admin only, list all registrations
