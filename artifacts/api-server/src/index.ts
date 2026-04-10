@@ -13,12 +13,13 @@ async function seedAdminIfNeeded() {
   try {
     const [{ value }] = await db.select({ value: count() }).from(usersTable);
     if (Number(value) === 0) {
-      const passwordHash = await bcrypt.hash("Unifor1285!", 12);
+      const defaultPassword = process.env["DEFAULT_ADMIN_PASSWORD"] || "Unifor1285!";
+      const passwordHash = await bcrypt.hash(defaultPassword, 12);
       await db.insert(usersTable).values({
         username: "admin",
         displayName: "Worker Co-Chair",
         passwordHash,
-        email: "jhsc1285app@gmail.com",
+        email: process.env["ADMIN_EMAIL"] || "jhsc1285app@gmail.com",
         role: "admin",
         permissions: [],
       });
@@ -33,14 +34,14 @@ async function ensureAdminEmail() {
   try {
     await db
       .update(usersTable)
-      .set({ email: "jhsc1285app@gmail.com" })
+      .set({ email: process.env["ADMIN_EMAIL"] || "jhsc1285app@gmail.com" })
       .where(
         and(
           eq(usersTable.username, "admin"),
           or(
             isNull(usersTable.email),
             eq(usersTable.email, ""),
-            eq(usersTable.email, "kevindm1989@gmail.com")
+            eq(usersTable.email, process.env["ADMIN_EMAIL_OLD"] || "kevindm1989@gmail.com")
           )
         )
       );
