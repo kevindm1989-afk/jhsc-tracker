@@ -35,7 +35,7 @@ router.get("/", requireWorkerRepAccess, async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requireWorkerRepAccess, async (req, res) => {
   try {
     const body = req.body;
     const [created] = await db
@@ -72,7 +72,7 @@ router.get("/:id", requireWorkerRepAccess, async (req: Request, res: Response) =
   }
 });
 
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", requireWorkerRepAccess, async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id as string);
     const body = req.body;
@@ -91,7 +91,7 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireWorkerRepAccess, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     await db.delete(workerStatementsTable).where(eq(workerStatementsTable.id, id));
