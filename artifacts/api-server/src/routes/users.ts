@@ -13,6 +13,7 @@ const router: IRouter = Router();
 const ALL_PERMISSIONS = [
   "dashboard",
   "action-items",
+  "closed-items-log",
   "member-actions",
   "health-safety-report",
   "hs-reports-log",

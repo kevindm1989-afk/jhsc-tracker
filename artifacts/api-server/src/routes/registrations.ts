@@ -12,6 +12,7 @@ const router: IRouter = Router();
 const DEFAULT_MEMBER_PERMISSIONS = [
   "dashboard",
   "action-items",
+  "closed-items-log",
   "member-actions",
   "health-safety-report",
   "hs-reports-log",

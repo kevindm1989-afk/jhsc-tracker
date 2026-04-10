@@ -35,7 +35,7 @@ router.use("/action-items", requireAuth, requirePermission("action-items"), acti
 router.use("/hazard-findings", requireAuth, requirePermission("hazard-findings"), hazardFindingsRouter);
 router.use("/inspection-log", requireAuth, requirePermission("inspection-log"), inspectionLogRouter);
 router.use("/worker-statements", requireAuth, requirePermission("worker-statements"), workerStatementsRouter);
-router.use("/closed-items-log", requireAuth, requirePermission("action-items"), closedItemsLogRouter);
+router.use("/closed-items-log", requireAuth, requirePermission("closed-items-log"), closedItemsLogRouter);
 router.use("/member-actions", requireAuth, memberActionsRouter);
 router.use("/health-safety-reports", requireAuth, healthSafetyReportsRouter);
 router.use("/suggestions", requireAuth, suggestionsRouter);
