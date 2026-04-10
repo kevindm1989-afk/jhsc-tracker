@@ -1,3 +1,5 @@
+import { validate, suggestionSchema } from "../lib/validation";
+import { validate, suggestionSchema } from "../lib/validation";
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { suggestionsTable } from "@workspace/db/schema";
@@ -50,7 +52,7 @@ router.get("/", async (req, res) => {
 });
 
 // POST /suggestions — submit a new suggestion
-router.post("/", async (req, res) => {
+router.post("/", validate(suggestionSchema), async (req, res) => {
   try {
     const session = req.session as any;
     const submittedByUserId: number = session?.userId ?? null;
