@@ -26,7 +26,7 @@ export default defineConfig({
             urlPattern: /^\/api\/(dashboard|action-items|hazard-findings|inspection-log|closed-items-log)/,
             handler: "StaleWhileRevalidate",
             options: {
-              cacheName: "jhsc-api-cache",
+              cacheName: "jhsc-api-cache-v2",
               expiration: { maxEntries: 100, maxAgeSeconds: 86400 },
             },
           },
