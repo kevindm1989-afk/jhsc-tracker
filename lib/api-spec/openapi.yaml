@@ -711,6 +711,19 @@ paths:
                 items:
                   $ref: "#/components/schemas/RecentItem"
 
+  /dashboard/closed-this-period:
+    get:
+      operationId: getDashboardClosedThisPeriod
+      tags: [dashboard]
+      summary: Get closed/completed items from the most recent minutes import
+      responses:
+        "200":
+          description: Closed items for the current period
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClosedThisPeriodResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -1227,6 +1240,38 @@ components:
         status:
           type: string
       required: [itemCode, description, date, module, status]
+
+    ClosedThisPeriodItem:
+      type: object
+      properties:
+        itemCode:
+          type: string
+        description:
+          type: string
+        assignedTo:
+          type: string
+        department:
+          type: string
+        closedDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required: [itemCode, description, assignedTo, department]
+
+    ClosedThisPeriodResponse:
+      type: object
+      properties:
+        meetingDate:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClosedThisPeriodItem"
+      required: [meetingDate, items]
 
     ClosedItem:
       type: object

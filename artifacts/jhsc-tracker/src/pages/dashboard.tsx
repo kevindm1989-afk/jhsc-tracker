@@ -1,4 +1,4 @@
-import { useGetDashboardSummary, useGetDashboardOverdue, useGetDashboardRecent } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useGetDashboardOverdue, useGetDashboardClosedThisPeriod } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, ListChecks, CheckCircle2, MessageSquareWarning, ShieldAlert } from "lucide-react";
@@ -10,7 +10,7 @@ import { useLocation } from "wouter";
 export default function DashboardPage() {
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
   const { data: overdueItems, isLoading: isLoadingOverdue } = useGetDashboardOverdue();
-  const { data: recentItems, isLoading: isLoadingRecent } = useGetDashboardRecent();
+  const { data: closedPeriod, isLoading: isLoadingClosed } = useGetDashboardClosedThisPeriod();
   const [, navigate] = useLocation();
 
   return (
@@ -122,45 +122,57 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Recent Activity Panel */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-4 border-b">
-            <CardTitle className="text-lg">Recent Activity</CardTitle>
-            <CardDescription>Latest logged items across all modules</CardDescription>
+        {/* Closed / Completed Items (This Period) Panel */}
+        <Card className="border-green-500/20 shadow-sm">
+          <CardHeader className="bg-green-500/5 pb-4 border-b border-green-500/10">
+            <CardTitle className="text-lg flex items-center gap-2 text-green-700">
+              <CheckCircle2 className="w-5 h-5" />
+              Completed / Closed Items (This Period)
+            </CardTitle>
+            <CardDescription>
+              {closedPeriod?.meetingDate
+                ? `From minutes dated ${format(new Date(closedPeriod.meetingDate + 'T00:00:00'), 'MMMM d, yyyy')}`
+                : "Items closed in the most recent minutes import"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            {isLoadingRecent ? (
+            {isLoadingClosed ? (
               <div className="p-4 space-y-4">
                 {[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
               </div>
-            ) : recentItems?.length === 0 ? (
+            ) : !closedPeriod?.items?.length ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
-                No recent activity.
+                No closed items found. Import minutes to populate this section.
               </div>
             ) : (
               <div className="divide-y">
-                {recentItems?.map((item) => (
-                  <div key={item.itemCode} className="p-4 flex flex-col gap-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate(`/${item.module}`)}>
+                {closedPeriod.items.map((item) => (
+                  <div key={item.itemCode} className="p-4 flex flex-col gap-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/closed-items-log')}>
                     <div className="flex items-start justify-between gap-4">
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className="font-mono rounded-sm text-xs">
+                          <Badge variant="outline" className="font-mono rounded-sm text-xs border-green-500/30 text-green-700 bg-green-500/10">
                             {item.itemCode}
                           </Badge>
                           <Badge variant="secondary" className="text-[10px] uppercase rounded-sm font-semibold tracking-wider">
-                            {item.status}
+                            {item.department}
                           </Badge>
                         </div>
                         <TruncatedText text={item.description} lines={2} label="Description" className="text-sm font-medium leading-snug text-foreground/80" />
+                        {item.assignedTo && (
+                          <p className="text-xs text-muted-foreground mt-1">Assigned to: {item.assignedTo}</p>
+                        )}
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-xs text-muted-foreground block font-mono">
-                          {format(new Date(item.date), 'MMM d')}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider block mt-1">
-                          {item.module.replace('-', ' ')}
-                        </span>
-                      </div>
+                      {item.closedDate && (
+                        <div className="text-right shrink-0">
+                          <span className="text-xs text-green-700 block font-mono">
+                            {format(new Date(item.closedDate + 'T00:00:00'), 'MMM d')}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider block mt-1">
+                            closed
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

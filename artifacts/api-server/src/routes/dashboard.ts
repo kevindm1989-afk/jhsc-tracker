@@ -6,8 +6,9 @@ import {
   inspectionLogTable,
   workerStatementsTable,
   healthSafetyReportsTable,
+  closedItemsLogTable,
 } from "@workspace/db/schema";
-import { ne, and, lt, or, isNotNull, desc } from "drizzle-orm";
+import { ne, and, lt, or, isNotNull, desc, eq, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -175,6 +176,44 @@ router.get("/recent", async (req, res) => {
     );
   } catch (err) {
     req.log.error({ err }, "Failed to get recent items");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/closed-this-period", async (req, res) => {
+  try {
+    const latestRow = await db
+      .select({ meetingDate: closedItemsLogTable.meetingDate })
+      .from(closedItemsLogTable)
+      .where(isNotNull(closedItemsLogTable.meetingDate))
+      .orderBy(desc(closedItemsLogTable.meetingDate))
+      .limit(1);
+
+    if (latestRow.length === 0) {
+      return res.json({ meetingDate: null, items: [] });
+    }
+
+    const latestMeetingDate = latestRow[0].meetingDate!;
+
+    const items = await db
+      .select()
+      .from(closedItemsLogTable)
+      .where(eq(closedItemsLogTable.meetingDate, latestMeetingDate))
+      .orderBy(closedItemsLogTable.itemCode);
+
+    res.json({
+      meetingDate: latestMeetingDate,
+      items: items.map((i) => ({
+        itemCode: i.itemCode,
+        description: i.description,
+        assignedTo: i.assignedTo,
+        department: i.department,
+        closedDate: i.closedDate,
+        notes: i.notes,
+      })),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to get closed-this-period items");
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -20,6 +20,7 @@ import type {
   ActionItem,
   AssignClosedItemVerifierBody,
   ClosedItem,
+  ClosedThisPeriodResponse,
   CreateActionItem,
   CreateClosedItem,
   CreateHazardFinding,
@@ -3138,6 +3139,86 @@ export function useGetDashboardRecent<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetDashboardRecentQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get closed/completed items from the most recent minutes import
+ */
+export const getGetDashboardClosedThisPeriodUrl = () => {
+  return `/api/dashboard/closed-this-period`;
+};
+
+export const getDashboardClosedThisPeriod = async (
+  options?: RequestInit,
+): Promise<ClosedThisPeriodResponse> => {
+  return customFetch<ClosedThisPeriodResponse>(
+    getGetDashboardClosedThisPeriodUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetDashboardClosedThisPeriodQueryKey = () => {
+  return [`/api/dashboard/closed-this-period`] as const;
+};
+
+export const getGetDashboardClosedThisPeriodQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDashboardClosedThisPeriod>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardClosedThisPeriod>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetDashboardClosedThisPeriodQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDashboardClosedThisPeriod>>
+  > = ({ signal }) =>
+    getDashboardClosedThisPeriod({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardClosedThisPeriod>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDashboardClosedThisPeriodQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDashboardClosedThisPeriod>>
+>;
+export type GetDashboardClosedThisPeriodQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get closed/completed items from the most recent minutes import
+ */
+
+export function useGetDashboardClosedThisPeriod<
+  TData = Awaited<ReturnType<typeof getDashboardClosedThisPeriod>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardClosedThisPeriod>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDashboardClosedThisPeriodQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

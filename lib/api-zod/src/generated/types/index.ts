@@ -13,6 +13,8 @@ export * from "./actionItemStatus";
 export * from "./assignClosedItemVerifierBody";
 export * from "./closedItem";
 export * from "./closedItemDepartment";
+export * from "./closedThisPeriodItem";
+export * from "./closedThisPeriodResponse";
 export * from "./createActionItem";
 export * from "./createActionItemDepartment";
 export * from "./createActionItemPriority";

@@ -824,3 +824,20 @@ export const GetDashboardRecentResponseItem = zod.object({
 export const GetDashboardRecentResponse = zod.array(
   GetDashboardRecentResponseItem,
 );
+
+/**
+ * @summary Get closed/completed items from the most recent minutes import
+ */
+export const GetDashboardClosedThisPeriodResponse = zod.object({
+  meetingDate: zod.string().nullable(),
+  items: zod.array(
+    zod.object({
+      itemCode: zod.string(),
+      description: zod.string(),
+      assignedTo: zod.string(),
+      department: zod.string(),
+      closedDate: zod.coerce.date().nullish(),
+      notes: zod.string().nullish(),
+    }),
+  ),
+});

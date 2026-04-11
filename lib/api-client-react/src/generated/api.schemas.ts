@@ -541,6 +541,20 @@ export interface RecentItem {
   status: string;
 }
 
+export interface ClosedThisPeriodItem {
+  itemCode: string;
+  description: string;
+  assignedTo: string;
+  department: string;
+  closedDate?: string | null;
+  notes?: string | null;
+}
+
+export interface ClosedThisPeriodResponse {
+  meetingDate: string | null;
+  items: ClosedThisPeriodItem[];
+}
+
 export type ClosedItemDepartment =
   (typeof ClosedItemDepartment)[keyof typeof ClosedItemDepartment];
 
@@ -711,6 +725,11 @@ export interface UpdateMemberAction {
 export type ListActionItemsParams = {
   status?: string;
   department?: string;
+};
+
+export type ListClosedItemsParams = {
+  department?: string;
+  search?: string;
 };
 
 export type AssignClosedItemVerifierBody = {
