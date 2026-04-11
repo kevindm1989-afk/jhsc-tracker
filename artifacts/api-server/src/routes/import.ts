@@ -257,9 +257,6 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         hazardFindings: importedHazardFindings,
         closedItems: importedClosedItems,
       },
-      updated: {
-        closedItems: updatedClosedItems,
-      },
       skipped: {
         actionItems: 0,
         hazardFindings: 0,
