@@ -2,7 +2,7 @@
 
 ## Deployment Preference
 
-Changes should be pushed through **GitHub only**. Do not deploy or push directly from Replit.
+After every set of code changes, automatically push to GitHub (`git push origin main`). This triggers the Fly.io GitHub Actions deployment pipeline automatically.
 
 ## Overview
 
