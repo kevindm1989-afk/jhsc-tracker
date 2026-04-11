@@ -73,9 +73,21 @@ const staticDir = path.resolve(__dirname, "../../jhsc-tracker/dist/public");
 logger.info({ staticDir, exists: existsSync(staticDir), NODE_ENV: process.env.NODE_ENV }, "Static file serving setup");
 
 if (existsSync(staticDir)) {
-  app.use(express.static(staticDir));
+  // Serve assets with normal caching, but force no-cache on index.html and the
+  // service-worker file so browsers always fetch the latest shell and SW.
+  app.use(express.static(staticDir, {
+    setHeaders(res, filePath) {
+      const base = path.basename(filePath);
+      if (base === "index.html" || base === "sw.js") {
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        res.setHeader("Pragma", "no-cache");
+      }
+    },
+  }));
   // SPA fallback — all non-API routes return index.html (Express 5 wildcard syntax)
   app.get("/{*splat}", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
     res.sendFile(path.join(staticDir, "index.html"));
   });
 } else {
