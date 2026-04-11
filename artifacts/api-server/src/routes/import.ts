@@ -50,8 +50,10 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     let importedActionItems = 0;
     let importedHazardFindings = 0;
 
-    // Only import items from the Meeting Minutes COMPLETED section — ignore the Closed Items sheet entirely.
+    // "Closed Items" = current-period items from Meeting Minutes COMPLETED section (get meetingDate → show on dashboard)
+    // "Closed Items Sheet" = historical items from the dedicated Closed Items tab (no meetingDate → Closed Items Log only)
     const closedThisPeriod = parsed.actionItems.filter((a) => a.source === "Closed Items");
+    const closedHistorical = parsed.actionItems.filter((a) => a.source === "Closed Items Sheet");
     const regularActionItems = parsed.actionItems.filter((a) => a.source !== "Closed Items" && a.source !== "Closed Items Sheet");
 
     const isIsoDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -116,6 +118,45 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         .where(eq(closedItemsLogTable.id, created.id));
 
       importedClosedItems++;
+    }
+
+    // Import historical Closed Items sheet items — upsert by description, no meetingDate (Closed Items Log only)
+    for (const item of closedHistorical) {
+      const [existing] = await db
+        .select()
+        .from(closedItemsLogTable)
+        .where(eq(closedItemsLogTable.description, item.description));
+
+      if (existing) {
+        const updates: Record<string, unknown> = {};
+        if (item.closedDate && !existing.closedDate) updates.closedDate = item.closedDate;
+        if (item.notes && item.notes !== existing.notes) updates.notes = item.notes;
+        if (item.assignedTo && item.assignedTo !== "Unassigned" && item.assignedTo !== existing.assignedTo) updates.assignedTo = item.assignedTo;
+        if (item.department && item.department !== existing.department) updates.department = item.department;
+        if (Object.keys(updates).length > 0) {
+          await db.update(closedItemsLogTable).set(updates).where(eq(closedItemsLogTable.id, existing.id));
+        }
+        continue;
+      }
+
+      const [created] = await db
+        .insert(closedItemsLogTable)
+        .values({
+          itemCode: "CI-000",
+          date: item.date,
+          department: item.department,
+          description: item.description,
+          assignedTo: item.assignedTo,
+          closedDate: item.closedDate ?? null,
+          meetingDate: null,   // deliberately null — never shown on dashboard
+          notes: item.notes ?? null,
+        })
+        .returning();
+
+      await db
+        .update(closedItemsLogTable)
+        .set({ itemCode: "CI-" + String(created.id).padStart(3, "0") })
+        .where(eq(closedItemsLogTable.id, created.id));
     }
 
     // Clear ALL existing hazard findings, then insert fresh from the import
