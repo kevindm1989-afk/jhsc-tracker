@@ -76,7 +76,12 @@ export default function RightToRefusePage() {
 
   const { data: items, isLoading } = useQuery<RightToRefuse[]>({
     queryKey: ["right-to-refuse"],
-    queryFn: () => fetch(`${BASE}/api/right-to-refuse`, { credentials: "include" }).then(r => r.json()),
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/right-to-refuse`, { credentials: "include" });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Error ${r.status}`);
+      const data = await r.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const createMutation = useMutation({
