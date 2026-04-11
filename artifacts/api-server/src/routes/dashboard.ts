@@ -20,12 +20,13 @@ router.get("/summary", async (req, res) => {
     const today = todayStr();
     const thisMonth = thisMonthStr();
 
-    const [aiItems, hfItems, ilItems, wsItems, hsItems] = await Promise.all([
+    const [aiItems, hfItems, ilItems, wsItems, hsItems, closedPeriodItems] = await Promise.all([
       db.select().from(actionItemsTable),
       db.select().from(hazardFindingsTable),
       db.select().from(inspectionLogTable),
       db.select().from(workerStatementsTable),
       db.select({ id: healthSafetyReportsTable.id }).from(healthSafetyReportsTable),
+      db.select({ id: closedItemsLogTable.id }).from(closedItemsLogTable).where(isNotNull(closedItemsLogTable.meetingDate)),
     ]);
 
     const isOverdue = (dueDate: string | null, status: string) =>
@@ -38,17 +39,13 @@ router.get("/summary", async (req, res) => {
     const openAI = aiItems.filter((i) => i.status !== "Closed").length;
     const openHF = hfItems.filter((i) => i.status !== "Closed").length;
 
-    const closedAI = aiItems.filter((i) => i.status === "Closed" && (i.closedDate || "").startsWith(thisMonth)).length;
-    const closedHF = hfItems.filter((i) => i.status === "Closed" && (i.closedDate || "").startsWith(thisMonth)).length;
-    const closedIL = ilItems.filter((i) => i.status === "Closed" && (i.closedDate || "").startsWith(thisMonth)).length;
-
     res.json({
       overdueCount: overdueAI + overdueHF + overdueIL,
       openActionItems: openAI,
       openHazardFindings: openHF,
       totalWorkerStatements: wsItems.length,
       totalHSReports: hsItems.length,
-      closedThisMonth: closedAI + closedHF + closedIL,
+      closedThisMonth: closedPeriodItems.length,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to get dashboard summary");

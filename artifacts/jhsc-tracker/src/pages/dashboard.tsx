@@ -67,12 +67,11 @@ export default function DashboardPage() {
           onClick={() => navigate("/hs-reports-log")}
         />
         <StatCard 
-          title="Closed This Month" 
+          title="Closed This Period" 
           value={summary?.closedThisMonth} 
           icon={CheckCircle2} 
           isLoading={isLoadingSummary}
           valueClass="text-green-600"
-          onClick={() => navigate("/closed-items-log")}
         />
       </div>
 
