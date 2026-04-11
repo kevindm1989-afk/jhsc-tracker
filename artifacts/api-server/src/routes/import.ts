@@ -50,11 +50,8 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     let importedActionItems = 0;
     let importedHazardFindings = 0;
 
-    // Separate items: "Closed Items" = current-period COMPLETED section in Meeting Minutes
-    //                 "Closed Items Sheet" = historical items from dedicated Closed Items tab
+    // Only import items from the Meeting Minutes COMPLETED section — ignore the Closed Items sheet entirely.
     const closedThisPeriod = parsed.actionItems.filter((a) => a.source === "Closed Items");
-    const closedHistorical = parsed.actionItems.filter((a) => a.source === "Closed Items Sheet");
-    const closedItemsFromSheet = [...closedThisPeriod, ...closedHistorical];
     const regularActionItems = parsed.actionItems.filter((a) => a.source !== "Closed Items" && a.source !== "Closed Items Sheet");
 
     const isIsoDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -88,46 +85,17 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       importedActionItems++;
     }
 
-    // Import closed items.
-    // Current-period items (from Meeting Minutes COMPLETED section) get meetingDate stamped.
-    // Historical items (from dedicated Closed Items sheet) get meetingDate: null.
+    // Import closed items from the Meeting Minutes COMPLETED section only.
     let importedClosedItems = 0;
-    let updatedClosedItems = 0;
     const currentMeetingDate = parsed.meetingDate || null;
 
     // Purge any corrupted records (e.g. "[object Object]" from previous buggy imports)
     await db.delete(closedItemsLogTable).where(like(closedItemsLogTable.description, "%object Object%"));
 
-    // Clear ALL "this period" records (any row with a meetingDate stamped) before inserting
-    // fresh ones from this import. This ensures the dashboard always reflects the latest import.
+    // Clear ALL previously imported "this period" records, then insert fresh from this import.
     await db.delete(closedItemsLogTable).where(isNotNull(closedItemsLogTable.meetingDate));
 
-    for (const item of closedItemsFromSheet) {
-      const isCurrentPeriod = item.source === "Closed Items";
-      const itemMeetingDate = isCurrentPeriod ? currentMeetingDate : null;
-
-      if (!isCurrentPeriod) {
-        // Historical items: upsert by description, never overwrite meetingDate
-        const [existing] = await db
-          .select()
-          .from(closedItemsLogTable)
-          .where(eq(closedItemsLogTable.description, item.description));
-
-        if (existing) {
-          const updates: Record<string, unknown> = {};
-          if (item.closedDate && !existing.closedDate) updates.closedDate = item.closedDate;
-          if (item.notes && item.notes !== existing.notes) updates.notes = item.notes;
-          if (item.assignedTo && item.assignedTo !== "Unassigned" && item.assignedTo !== existing.assignedTo) updates.assignedTo = item.assignedTo;
-          if (item.department && item.department !== existing.department) updates.department = item.department;
-          if (Object.keys(updates).length > 0) {
-            await db.update(closedItemsLogTable).set(updates).where(eq(closedItemsLogTable.id, existing.id));
-            updatedClosedItems++;
-          }
-          continue;
-        }
-      }
-
-      // Current-period items: always insert fresh (old records deleted above)
+    for (const item of closedThisPeriod) {
       const [created] = await db
         .insert(closedItemsLogTable)
         .values({
@@ -137,7 +105,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
           description: item.description,
           assignedTo: item.assignedTo,
           closedDate: item.closedDate ?? null,
-          meetingDate: itemMeetingDate,
+          meetingDate: currentMeetingDate,
           notes: item.notes ?? null,
         })
         .returning();
