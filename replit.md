@@ -1,5 +1,9 @@
 # Workspace
 
+## Deployment Preference
+
+Changes should be pushed through **GitHub only**. Do not deploy or push directly from Replit.
+
 ## Overview
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
