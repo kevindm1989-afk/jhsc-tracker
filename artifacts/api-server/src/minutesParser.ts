@@ -20,17 +20,37 @@ function normalizeCellValue(val: ExcelJS.CellValue | undefined): unknown {
     if ("richText" in val) {
       return (val as ExcelJS.CellRichTextValue).richText.map((rt) => rt.text).join("");
     }
+    if ("sharedFormula" in val) {
+      const sv = val as { sharedFormula: string; result?: ExcelJS.CellValue };
+      const result = sv.result;
+      if (result == null) return "";
+      if (result instanceof Date) return result;
+      if (typeof result === "object" && result !== null && "error" in result) return "";
+      return result;
+    }
     if ("formula" in val) {
       const result = (val as ExcelJS.CellFormulaValue).result;
       if (result == null) return "";
       if (result instanceof Date) return result;
-      if (typeof result === "object" && "error" in result) return "";
+      if (typeof result === "object" && result !== null && "error" in result) return "";
       return result;
     }
     if ("error" in val) return "";
     if ("text" in val) return (val as ExcelJS.CellHyperlinkValue).text;
   }
   return val;
+}
+
+function textDateToISO(raw: string): string | null {
+  if (!raw) return null;
+  // Strip optional leading weekday name e.g. "Thursday, March 26, 2026" → "March 26, 2026"
+  const stripped = raw.replace(/^[A-Za-z]+,\s*/, "").trim();
+  const d = new Date(stripped);
+  if (isNaN(d.getTime())) return null;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function sheetToRows(worksheet: ExcelJS.Worksheet): unknown[][] {
@@ -85,7 +105,7 @@ export interface ParsedActionItem {
   status: string;
   notes?: string;
   closedDate?: string | null;
-  source: "New Business" | "Old Business" | "Closed Items";
+  source: "New Business" | "Old Business" | "Closed Items" | "Closed Items Sheet";
 }
 
 export interface ParsedHazardFinding {
@@ -185,7 +205,7 @@ function parseClosedItemsSheet(
         status: "Closed",
         closedDate,
         notes,
-        source: "Closed Items",
+        source: "Closed Items Sheet",
       });
     }
   }
@@ -232,8 +252,11 @@ export async function parseMinutesFile(buffer: Buffer): Promise<ParsedMinutes> {
     const row = rows[i];
     const cell0 = str(row[0]);
     if (cell0 === "Meeting Date:") {
-      // Prefer ISO conversion (handles Date objects and numeric serials); fall back to raw string
-      result.meetingDate = excelDateToISO(row[3]) || str(row[3]);
+      // Prefer ISO conversion (handles Date objects and numeric serials);
+      // fall back to parsing text like "Thursday, March 26, 2026" → "2026-03-26";
+      // final fallback: raw string as-is
+      const rawDate = str(row[3]);
+      result.meetingDate = excelDateToISO(row[3]) || textDateToISO(rawDate) || rawDate;
     }
     if (cell0 === "Facility / Plant:") result.facility = str(row[3]);
     if (cell0 === "Quorum Met:") result.quorumMet = str(row[3]);
