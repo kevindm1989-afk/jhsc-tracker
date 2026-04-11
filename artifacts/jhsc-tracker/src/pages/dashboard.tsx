@@ -3,9 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, ListChecks, CheckCircle2, MessageSquareWarning, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useLocation } from "wouter";
+
+function safeFmt(dateStr: string | null | undefined, fmt: string, fallback = "—"): string {
+  if (!dateStr) return fallback;
+  const isoCandidate = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
+    ? parseISO(dateStr)
+    : new Date(dateStr);
+  return isValid(isoCandidate) ? format(isoCandidate, fmt) : dateStr;
+}
 
 export default function DashboardPage() {
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
@@ -108,7 +116,7 @@ export default function DashboardPage() {
                       <div className="text-right shrink-0">
                         <span className="text-xs font-bold text-destructive flex items-center justify-end gap-1">
                           <Clock className="w-3 h-3" />
-                          {item.dueDate ? format(new Date(item.dueDate), 'MMM d, yyyy') : "No due date"}
+                          {item.dueDate ? safeFmt(item.dueDate, 'MMM d, yyyy', 'No due date') : "No due date"}
                         </span>
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mt-1">
                           {item.module.replace('-', ' ')}
@@ -131,7 +139,7 @@ export default function DashboardPage() {
             </CardTitle>
             <CardDescription>
               {closedPeriod?.meetingDate
-                ? `From minutes dated ${format(new Date(closedPeriod.meetingDate + 'T00:00:00'), 'MMMM d, yyyy')}`
+                ? `From minutes dated ${safeFmt(closedPeriod.meetingDate, 'MMMM d, yyyy')}`
                 : "Items closed in the most recent minutes import"}
             </CardDescription>
           </CardHeader>
@@ -166,7 +174,7 @@ export default function DashboardPage() {
                       {item.closedDate && (
                         <div className="text-right shrink-0">
                           <span className="text-xs text-green-700 block font-mono">
-                            {item.closedDate ? format(new Date(item.closedDate + 'T00:00:00'), 'MMM d') : ''}
+                            {item.closedDate ? safeFmt(item.closedDate, 'MMM d') : ''}
                           </span>
                           <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider block mt-1">
                             closed
