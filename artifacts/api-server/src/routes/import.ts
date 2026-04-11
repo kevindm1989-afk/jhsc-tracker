@@ -5,7 +5,7 @@ import { existsSync } from "fs";
 import multer from "multer";
 import { db, pool } from "@workspace/db";
 import { actionItemsTable, hazardFindingsTable, inspectionLogTable, closedItemsLogTable } from "@workspace/db/schema";
-import { eq, and, like, or, isNull } from "drizzle-orm";
+import { eq, and, like, or, isNull, isNotNull } from "drizzle-orm";
 import { parseMinutesFile } from "../minutesParser";
 import { parseInspectionFile } from "../inspectionParser";
 import "../sessionTypes";
@@ -98,11 +98,9 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     // Purge any corrupted records (e.g. "[object Object]" from previous buggy imports)
     await db.delete(closedItemsLogTable).where(like(closedItemsLogTable.description, "%object Object%"));
 
-    // For current-period items: delete all existing records for this meetingDate first,
-    // then insert fresh — this makes re-importing fully idempotent.
-    if (currentMeetingDate && closedThisPeriod.length > 0) {
-      await db.delete(closedItemsLogTable).where(eq(closedItemsLogTable.meetingDate, currentMeetingDate));
-    }
+    // Clear ALL "this period" records (any row with a meetingDate stamped) before inserting
+    // fresh ones from this import. This ensures the dashboard always reflects the latest import.
+    await db.delete(closedItemsLogTable).where(isNotNull(closedItemsLogTable.meetingDate));
 
     for (const item of closedItemsFromSheet) {
       const isCurrentPeriod = item.source === "Closed Items";
