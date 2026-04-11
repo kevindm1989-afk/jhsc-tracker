@@ -212,7 +212,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     <div className="flex flex-col w-64 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
       <div className="p-4 md:p-6 flex flex-col gap-1 border-b border-sidebar-border">
         <h1 className="font-bold text-lg text-sidebar-foreground uppercase tracking-wider leading-tight">
-          JHSC Tracker
+          JHSC Advisor
         </h1>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-primary flex-shrink-0" />

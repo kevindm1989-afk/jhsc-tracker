@@ -210,16 +210,16 @@ router.post("/:id/send-reset-email", requireAdmin, async (req: Request, res: Res
     await transporter.sendMail({
       from,
       to: user.email,
-      subject: "Reset your JHSC Tracker password",
+      subject: "Reset your JHSC Advisor password",
       html: `
         <p>Hi ${user.displayName},</p>
-        <p>An administrator has sent you a password reset link for the <strong>JHSC Tracker</strong>.</p>
+        <p>An administrator has sent you a password reset link for the <strong>JHSC Advisor</strong>.</p>
         <p><a href="${resetUrl}" style="background:#1d4ed8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;margin:12px 0;">Reset Password</a></p>
         <p>Or copy this link into your browser:</p>
         <p style="word-break:break-all;font-size:13px;color:#555;">${resetUrl}</p>
         <p>This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>
         <br/>
-        <p style="font-size:12px;color:#888;">JHSC Tracker</p>
+        <p style="font-size:12px;color:#888;">JHSC Advisor</p>
       `,
     });
 

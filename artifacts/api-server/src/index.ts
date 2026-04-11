@@ -83,11 +83,11 @@ async function scheduleInspectionReminders() {
           to: emails.join(", "),
           subject: `Reminder: Monthly JHSC Inspection scheduled for ${inspDateStr}`,
           html: `
-            <p>This is an automated reminder from the JHSC Tracker.</p>
+            <p>This is an automated reminder from the JHSC Advisor.</p>
             <p>Your monthly joint health and safety inspection is scheduled for <strong>${inspDateStr}</strong> (${leadDays} days from today).</p>
             <p>Please ensure all inspection checklists and PPE are prepared in advance.</p>
             <p><em>OHSA s.9(26) requires a minimum one inspection per month of each part of the workplace.</em></p>
-            <br><p><em>JHSC Tracker</em></p>
+            <br><p><em>JHSC Advisor</em></p>
           `,
         });
         logger.info({ emails, inspectionDate: thisMonth }, "Inspection reminder sent");
