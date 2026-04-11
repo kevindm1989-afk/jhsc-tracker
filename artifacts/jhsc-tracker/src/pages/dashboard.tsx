@@ -108,7 +108,7 @@ export default function DashboardPage() {
                       <div className="text-right shrink-0">
                         <span className="text-xs font-bold text-destructive flex items-center justify-end gap-1">
                           <Clock className="w-3 h-3" />
-                          {format(new Date(item.dueDate), 'MMM d, yyyy')}
+                          {item.dueDate ? format(new Date(item.dueDate), 'MMM d, yyyy') : "No due date"}
                         </span>
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mt-1">
                           {item.module.replace('-', ' ')}
