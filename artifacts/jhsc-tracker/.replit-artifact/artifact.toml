@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "JHSC Tracker"
+title = "JHSC Advisor"
 version = "1.0.0"
 id = "artifacts/jhsc-tracker"
 router = "path"
@@ -19,7 +19,7 @@ run = "pnpm --filter @workspace/jhsc-tracker run dev"
 
 [services.production]
 build = ["sh", "-c", "BASE_PATH=/ pnpm --filter @workspace/jhsc-tracker run build && pnpm --filter @workspace/api-server run build"]
-run = ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]
+run = ["node", "--enable-source-maps", "artifacts/api-server/dist/index.js"]
 
 [services.env]
 PORT = "25745"
