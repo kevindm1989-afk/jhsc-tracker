@@ -97,11 +97,21 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     // Clear ALL previously imported "this period" records, then insert fresh from this import.
     await db.delete(closedItemsLogTable).where(isNotNull(closedItemsLogTable.meetingDate));
 
+    // Determine next sequential CI number from whatever is already in the DB.
+    const existingCodes = await db.select({ itemCode: closedItemsLogTable.itemCode }).from(closedItemsLogTable);
+    let nextCiNum = existingCodes.reduce((max, row) => {
+      const m = row.itemCode.match(/^CI-(\d+)$/);
+      return m ? Math.max(max, parseInt(m[1], 10)) : max;
+    }, 0) + 1;
+
+    const genCiCode = () => "CI-" + String(nextCiNum++).padStart(3, "0");
+
+    // Insert current-period items (from Meeting Minutes COMPLETED section) with sequential codes.
     for (const item of closedThisPeriod) {
-      const [created] = await db
+      await db
         .insert(closedItemsLogTable)
         .values({
-          itemCode: "CI-000",
+          itemCode: genCiCode(),
           date: item.date,
           department: item.department,
           description: item.description,
@@ -109,13 +119,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
           closedDate: item.closedDate ?? null,
           meetingDate: currentMeetingDate,
           notes: item.notes ?? null,
-        })
-        .returning();
-
-      await db
-        .update(closedItemsLogTable)
-        .set({ itemCode: "CI-" + String(created.id).padStart(3, "0") })
-        .where(eq(closedItemsLogTable.id, created.id));
+        });
 
       importedClosedItems++;
     }
@@ -130,10 +134,10 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
 
       if (existing) continue;   // already in DB — skip regardless of verified status
 
-      const [created] = await db
+      await db
         .insert(closedItemsLogTable)
         .values({
-          itemCode: "CI-000",
+          itemCode: genCiCode(),
           date: item.date,
           department: item.department,
           description: item.description,
@@ -141,13 +145,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
           closedDate: item.closedDate ?? null,
           meetingDate: null,   // no meetingDate — never shown on dashboard
           notes: item.notes ?? null,
-        })
-        .returning();
-
-      await db
-        .update(closedItemsLogTable)
-        .set({ itemCode: "CI-" + String(created.id).padStart(3, "0") })
-        .where(eq(closedItemsLogTable.id, created.id));
+        });
     }
 
     // Clear ALL existing hazard findings, then insert fresh from the import
