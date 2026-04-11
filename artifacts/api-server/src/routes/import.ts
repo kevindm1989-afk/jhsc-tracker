@@ -61,11 +61,12 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     // Clear ALL existing action items, then insert fresh from the import
     await db.delete(actionItemsTable);
 
+    let aiNum = 1;
     for (const item of regularActionItems) {
-      const [created] = await db
+      await db
         .insert(actionItemsTable)
         .values({
-          itemCode: "AI-000",
+          itemCode: "AI-" + String(aiNum++).padStart(3, "0"),
           date: item.date,
           department: item.department,
           description: item.description,
@@ -76,13 +77,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
           notes: item.notes ?? null,
           closedDate: item.closedDate ?? null,
           dueDate: null,
-        })
-        .returning();
-
-      await db
-        .update(actionItemsTable)
-        .set({ itemCode: genActionCode(created.id) })
-        .where(eq(actionItemsTable.id, created.id));
+        });
 
       importedActionItems++;
     }
@@ -162,11 +157,12 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     // Clear ALL existing hazard findings, then insert fresh from the import
     await db.delete(hazardFindingsTable);
 
+    let hfNum = 1;
     for (const finding of parsed.hazardFindings) {
-      const [created] = await db
+      await db
         .insert(hazardFindingsTable)
         .values({
-          itemCode: "HF-000",
+          itemCode: "HF-" + String(hfNum++).padStart(3, "0"),
           date: finding.date,
           department: finding.department,
           hazardDescription: finding.hazardDescription,
@@ -177,13 +173,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
           status: finding.status,
           notes: finding.notes ?? null,
           closedDate: null,
-        })
-        .returning();
-
-      await db
-        .update(hazardFindingsTable)
-        .set({ itemCode: genHazardCode(created.id) })
-        .where(eq(hazardFindingsTable.id, created.id));
+        });
 
       importedHazardFindings++;
     }
