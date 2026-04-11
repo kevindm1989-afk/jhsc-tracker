@@ -1,4 +1,4 @@
-app = "union-local-1285"
+app = "jhsctracker-api"
 primary_region = "yyz"
 
 [build]
