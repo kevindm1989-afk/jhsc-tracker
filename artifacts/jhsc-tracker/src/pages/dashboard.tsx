@@ -166,7 +166,7 @@ export default function DashboardPage() {
                       {item.closedDate && (
                         <div className="text-right shrink-0">
                           <span className="text-xs text-green-700 block font-mono">
-                            {format(new Date(item.closedDate + 'T00:00:00'), 'MMM d')}
+                            {item.closedDate ? format(new Date(item.closedDate + 'T00:00:00'), 'MMM d') : ''}
                           </span>
                           <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider block mt-1">
                             closed
