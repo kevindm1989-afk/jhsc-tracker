@@ -94,8 +94,11 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     // Purge any corrupted records (e.g. "[object Object]" from previous buggy imports)
     await db.delete(closedItemsLogTable).where(like(closedItemsLogTable.description, "%object Object%"));
 
-    // Clear ALL previously imported "this period" records, then insert fresh from this import.
-    await db.delete(closedItemsLogTable).where(isNotNull(closedItemsLogTable.meetingDate));
+    // Delete only UNVERIFIED current-period records so we can re-insert fresh from this import.
+    // Verified records are preserved — they will be skipped during insertion below.
+    await db
+      .delete(closedItemsLogTable)
+      .where(and(isNotNull(closedItemsLogTable.meetingDate), isNull(closedItemsLogTable.verifiedAt)));
 
     // Determine next sequential CI number from whatever is already in the DB.
     const existingCodes = await db.select({ itemCode: closedItemsLogTable.itemCode }).from(closedItemsLogTable);
@@ -107,7 +110,15 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     const genCiCode = () => "CI-" + String(nextCiNum++).padStart(3, "0");
 
     // Insert current-period items (from Meeting Minutes COMPLETED section) with sequential codes.
+    // Skip any that already exist (e.g. previously verified items kept from a prior import).
     for (const item of closedThisPeriod) {
+      const [existing] = await db
+        .select({ id: closedItemsLogTable.id })
+        .from(closedItemsLogTable)
+        .where(eq(closedItemsLogTable.description, item.description));
+
+      if (existing) continue;   // verified copy still in DB — leave it alone
+
       await db
         .insert(closedItemsLogTable)
         .values({
