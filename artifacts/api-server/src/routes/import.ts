@@ -120,24 +120,15 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       importedClosedItems++;
     }
 
-    // Import historical Closed Items sheet items — upsert by description, no meetingDate (Closed Items Log only)
+    // Import new items from the Closed Items sheet only.
+    // Never touch records that already exist in the DB — this protects verified items.
     for (const item of closedHistorical) {
       const [existing] = await db
-        .select()
+        .select({ id: closedItemsLogTable.id })
         .from(closedItemsLogTable)
         .where(eq(closedItemsLogTable.description, item.description));
 
-      if (existing) {
-        const updates: Record<string, unknown> = {};
-        if (item.closedDate && !existing.closedDate) updates.closedDate = item.closedDate;
-        if (item.notes && item.notes !== existing.notes) updates.notes = item.notes;
-        if (item.assignedTo && item.assignedTo !== "Unassigned" && item.assignedTo !== existing.assignedTo) updates.assignedTo = item.assignedTo;
-        if (item.department && item.department !== existing.department) updates.department = item.department;
-        if (Object.keys(updates).length > 0) {
-          await db.update(closedItemsLogTable).set(updates).where(eq(closedItemsLogTable.id, existing.id));
-        }
-        continue;
-      }
+      if (existing) continue;   // already in DB — skip regardless of verified status
 
       const [created] = await db
         .insert(closedItemsLogTable)
@@ -148,7 +139,7 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
           description: item.description,
           assignedTo: item.assignedTo,
           closedDate: item.closedDate ?? null,
-          meetingDate: null,   // deliberately null — never shown on dashboard
+          meetingDate: null,   // no meetingDate — never shown on dashboard
           notes: item.notes ?? null,
         })
         .returning();
