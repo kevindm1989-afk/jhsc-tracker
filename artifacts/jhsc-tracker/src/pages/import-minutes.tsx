@@ -63,7 +63,6 @@ interface MinutesResult {
   meetingDate: string;
   facility: string;
   imported: { actionItems: number; hazardFindings: number; closedItems: number };
-  updated: { closedItems: number };
   skipped: { actionItems: number; hazardFindings: number };
   fileSaved?: boolean;
   savedToFolder?: string;
@@ -251,7 +250,6 @@ function MinutesTab() {
                 { label: "Action Items Loaded", val: result.imported.actionItems, cls: "text-green-700" },
                 { label: "Recommendations Imported", val: result.imported.hazardFindings, cls: "text-green-700" },
                 { label: "Closed Items Imported", val: result.imported.closedItems, cls: "text-green-700" },
-                { label: "Closed Items Updated", val: result.updated.closedItems, cls: "text-blue-700" },
               ].map(({ label, val, cls }) => (
                 <div key={label} className="bg-white rounded-md border border-green-200 p-3 text-center">
                   <p className={cn("text-2xl font-bold", cls)}>{val}</p>
