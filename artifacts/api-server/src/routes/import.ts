@@ -5,7 +5,7 @@ import { existsSync } from "fs";
 import multer from "multer";
 import { db, pool } from "@workspace/db";
 import { actionItemsTable, hazardFindingsTable, inspectionLogTable, closedItemsLogTable } from "@workspace/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, like, or, isNull } from "drizzle-orm";
 import { parseMinutesFile } from "../minutesParser";
 import { parseInspectionFile } from "../inspectionParser";
 import "../sessionTypes";
@@ -88,40 +88,48 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       importedActionItems++;
     }
 
-    // Import closed items — upsert by description.
+    // Import closed items.
     // Current-period items (from Meeting Minutes COMPLETED section) get meetingDate stamped.
     // Historical items (from dedicated Closed Items sheet) get meetingDate: null.
     let importedClosedItems = 0;
     let updatedClosedItems = 0;
     const currentMeetingDate = parsed.meetingDate || null;
 
+    // Purge any corrupted records (e.g. "[object Object]" from previous buggy imports)
+    await db.delete(closedItemsLogTable).where(like(closedItemsLogTable.description, "%object Object%"));
+
+    // For current-period items: delete all existing records for this meetingDate first,
+    // then insert fresh — this makes re-importing fully idempotent.
+    if (currentMeetingDate && closedThisPeriod.length > 0) {
+      await db.delete(closedItemsLogTable).where(eq(closedItemsLogTable.meetingDate, currentMeetingDate));
+    }
+
     for (const item of closedItemsFromSheet) {
       const isCurrentPeriod = item.source === "Closed Items";
       const itemMeetingDate = isCurrentPeriod ? currentMeetingDate : null;
 
-      const [existing] = await db
-        .select()
-        .from(closedItemsLogTable)
-        .where(eq(closedItemsLogTable.description, item.description));
+      if (!isCurrentPeriod) {
+        // Historical items: upsert by description, never overwrite meetingDate
+        const [existing] = await db
+          .select()
+          .from(closedItemsLogTable)
+          .where(eq(closedItemsLogTable.description, item.description));
 
-      if (existing) {
-        const updates: Record<string, unknown> = {};
-        if (item.closedDate && !existing.closedDate) updates.closedDate = item.closedDate;
-        if (item.notes && item.notes !== existing.notes) updates.notes = item.notes;
-        if (item.assignedTo && item.assignedTo !== "Unassigned" && item.assignedTo !== existing.assignedTo) updates.assignedTo = item.assignedTo;
-        if (item.department && item.department !== existing.department) updates.department = item.department;
-        // Only stamp meetingDate for current-period items
-        if (isCurrentPeriod && itemMeetingDate && itemMeetingDate !== existing.meetingDate) {
-          updates.meetingDate = itemMeetingDate;
+        if (existing) {
+          const updates: Record<string, unknown> = {};
+          if (item.closedDate && !existing.closedDate) updates.closedDate = item.closedDate;
+          if (item.notes && item.notes !== existing.notes) updates.notes = item.notes;
+          if (item.assignedTo && item.assignedTo !== "Unassigned" && item.assignedTo !== existing.assignedTo) updates.assignedTo = item.assignedTo;
+          if (item.department && item.department !== existing.department) updates.department = item.department;
+          if (Object.keys(updates).length > 0) {
+            await db.update(closedItemsLogTable).set(updates).where(eq(closedItemsLogTable.id, existing.id));
+            updatedClosedItems++;
+          }
+          continue;
         }
-
-        if (Object.keys(updates).length > 0) {
-          await db.update(closedItemsLogTable).set(updates).where(eq(closedItemsLogTable.id, existing.id));
-          updatedClosedItems++;
-        }
-        continue;
       }
 
+      // Current-period items: always insert fresh (old records deleted above)
       const [created] = await db
         .insert(closedItemsLogTable)
         .values({
