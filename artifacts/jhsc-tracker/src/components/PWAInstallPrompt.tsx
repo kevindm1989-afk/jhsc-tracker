@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Download, ShieldCheck } from "lucide-react";
 
-const DISMISSED_KEY = "pwa-install-dismissed";
+const IOS_DISMISSED_KEY = "pwa-install-ios-dismissed";
 
 function isIOS() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as any).MSStream;
@@ -20,18 +20,20 @@ export default function PWAInstallPrompt() {
   const [isIOSDevice, setIsIOSDevice] = useState(false);
 
   useEffect(() => {
+    // Never show if already installed
     if (isInStandaloneMode()) return;
-    if (sessionStorage.getItem(DISMISSED_KEY)) return;
 
     const ios = isIOS();
     setIsIOSDevice(ios);
 
     if (ios) {
-      // Small delay so the page finishes loading before showing the prompt
+      // On iOS: only suppress if dismissed this session
+      if (sessionStorage.getItem(IOS_DISMISSED_KEY)) return;
       const t = setTimeout(() => setOpen(true), 2000);
       return () => clearTimeout(t);
     }
 
+    // On Android/Chrome: always show — no dismissal memory
     const handler = (e: Event) => {
       e.preventDefault();
       setPrompt(e);
@@ -48,12 +50,13 @@ export default function PWAInstallPrompt() {
     const { outcome } = await prompt.userChoice;
     if (outcome === "accepted") setPrompt(null);
     setOpen(false);
-    sessionStorage.setItem(DISMISSED_KEY, "1");
   };
 
   const handleDismiss = () => {
     setOpen(false);
-    sessionStorage.setItem(DISMISSED_KEY, "1");
+    // iOS: remember dismissal for this session so it doesn't re-appear mid-session
+    if (isIOSDevice) sessionStorage.setItem(IOS_DISMISSED_KEY, "1");
+    // Android: no storage — will show again on next visit
   };
 
   if (!open) return null;
