@@ -1,0 +1,15 @@
+{
+  "packageId": "com.jhscadvisor.app",
+  "host": "jhscadvisor.com",
+  "name": "JHSC Advisor",
+  "launcherName": "JHSC Advisor",
+  "display": "standalone",
+  "themeColor": "#1e3a5f",
+  "backgroundColor": "#ffffff",
+  "startUrl": "/",
+  "iconUrl": "https://jhscadvisor.com/icon-512.png",
+  "maskableIconUrl": "https://jhscadvisor.com/icon-512.png",
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "signingMode": "none"
+}
