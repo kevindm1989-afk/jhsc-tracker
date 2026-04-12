@@ -52,7 +52,7 @@ jobs:
 
       - name: Init TWA project from web manifest
         run: |
-          bubblewrap init \
+          echo "n" | bubblewrap init \
             --manifest=https://jhscadvisor.com/manifest.webmanifest \
             --directory=twa-project \
             --skipPwaValidation
@@ -103,7 +103,7 @@ jobs:
 
       - name: Build TWA
         working-directory: twa-project
-        run: bubblewrap build --skipPwaValidation
+        run: echo "n" | bubblewrap build --skipPwaValidation
         env:
           JAVA_HOME: ${{ env.JAVA_HOME }}
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
