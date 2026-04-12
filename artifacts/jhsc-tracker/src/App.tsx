@@ -50,6 +50,7 @@ import RightToRefusePage from "@/pages/right-to-refuse";
 import FilesPage from "@/pages/files";
 import MeetingTranscriptionPage from "@/pages/meeting-transcription";
 import NotFound from "@/pages/not-found";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -196,6 +197,7 @@ function App() {
               <Router />
             </AuthProvider>
           </WouterRouter>
+          <PWAInstallPrompt />
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
