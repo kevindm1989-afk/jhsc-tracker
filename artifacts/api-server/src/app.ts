@@ -37,7 +37,24 @@ app.use(
   }),
 );
 
-app.use(cors({ origin: true, credentials: true }));
+const allowedOrigins = [
+  "https://jhsctracker-api.fly.dev",
+  "https://jhscadvisor.com",
+  "https://www.jhscadvisor.com",
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
