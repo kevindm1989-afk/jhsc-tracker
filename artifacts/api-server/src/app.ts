@@ -83,6 +83,16 @@ app.get("/health", (_req, res) => {
   res.status(200).send("OK");
 });
 
+// Serve Digital Asset Links for TWA verification — must come before SPA catch-all
+app.use(
+  "/.well-known",
+  express.static(path.join(__dirname, "../public/.well-known"), {
+    setHeaders: (res) => {
+      res.setHeader("Content-Type", "application/json");
+    },
+  }),
+);
+
 // Always attempt to serve the JHSC tracker frontend static build.
 // In development the dist directory won't exist so express.static is a no-op;
 // in production (or after a local build) it serves the SPA correctly.
