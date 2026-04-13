@@ -239,7 +239,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground font-mono uppercase tracking-wider">
-          OHSA s.9 | O. Reg. 297/13
+          OHSA S.9 | Reg. 851 | CSA B335-15
         </p>
       </div>
 

@@ -304,7 +304,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
           Sign Out
         </Button>
         <p className="mt-2 text-[10px] text-sidebar-foreground/40 font-mono uppercase tracking-wider px-1">
-          OHSA s.9 | O. Reg. 297/13
+          OHSA S.9 | Reg. 851 | CSA B335-15
         </p>
       </div>
     </div>
