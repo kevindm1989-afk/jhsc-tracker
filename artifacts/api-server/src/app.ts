@@ -83,6 +83,9 @@ app.get("/health", (_req, res) => {
   res.status(200).send("OK");
 });
 
+// Serve privacy policy page
+app.use("/privacy.html", express.static(path.join(__dirname, "../public/privacy.html")));
+
 // Serve Digital Asset Links for TWA verification — must come before SPA catch-all
 app.use(
   "/.well-known",
