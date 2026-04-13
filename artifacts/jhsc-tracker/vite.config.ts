@@ -19,6 +19,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
+      useCredentials: true,
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
@@ -36,10 +37,20 @@ export default defineConfig({
         name: "JHSC Advisor",
         short_name: "JHSC Advisor",
         description: "Joint Health & Safety Committee Advisor",
-        theme_color: "#1a1a2e",
-        background_color: "#f8fafc",
+        id: "com.jhscadvisor.app",
+        theme_color: "#1e3a5f",
+        background_color: "#ffffff",
         display: "standalone",
-        icons: [{ src: "/favicon.ico", sizes: "any", type: "image/x-icon" }],
+        orientation: "portrait",
+        scope: "/",
+        start_url: "/",
+        dir: "ltr",
+        icons: [
+          { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          { src: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
+          { src: "/icon-512.svg", sizes: "512x512", type: "image/svg+xml" },
+        ],
       },
     }),
   ],
