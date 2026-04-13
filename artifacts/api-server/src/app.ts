@@ -83,18 +83,10 @@ app.get("/health", (_req, res) => {
   res.status(200).send("OK");
 });
 
-// Serve privacy policy page
-app.use("/privacy.html", express.static(path.join(__dirname, "../public/privacy.html")));
-
-// Serve Digital Asset Links for TWA verification — must come before SPA catch-all
-app.use(
-  "/.well-known",
-  express.static(path.join(__dirname, "../public/.well-known"), {
-    setHeaders: (res) => {
-      res.setHeader("Content-Type", "application/json");
-    },
-  }),
-);
+// Serve all files from the public folder (privacy policy, assetlinks, etc.)
+// dotfiles: 'allow' is required so .well-known/assetlinks.json is not ignored.
+// Must come before the SPA catch-all so these files are returned directly.
+app.use(express.static(path.join(__dirname, "../public"), { dotfiles: "allow" }));
 
 // Always attempt to serve the JHSC tracker frontend static build.
 // In development the dist directory won't exist so express.static is a no-op;
