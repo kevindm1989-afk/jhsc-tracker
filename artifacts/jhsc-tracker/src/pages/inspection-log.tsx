@@ -73,7 +73,7 @@ function MonthSection({ month, items }: { month: string; items: CompletedInspect
           {items.map((item) => {
             const zone = parseZoneFromName(item.originalName);
             const dateLabel = parseDateFromName(item.originalName);
-            const downloadUrl = `${BASE}/api/folder-files/${item.id}/download?name=${encodeURIComponent(item.originalName)}`;
+            const downloadUrl = `${BASE}/api/folder-files/files/${encodeURIComponent(item.storedName)}?name=${encodeURIComponent(item.originalName)}`;
 
             return (
               <a
