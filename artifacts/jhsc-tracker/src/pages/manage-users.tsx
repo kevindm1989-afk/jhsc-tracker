@@ -430,7 +430,7 @@ export default function ManageUsersPage() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground font-mono mt-0.5">@{u.username}</p>
-                      {u.role === "member" && (
+                      {(u.role === "member" || u.role === "worker-rep") && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {u.permissions.length === 0 ? (
                             <span className="text-xs text-muted-foreground italic">No permissions assigned</span>
@@ -448,9 +448,6 @@ export default function ManageUsersPage() {
                       )}
                       {u.role === "co-chair" && (
                         <span className="text-xs text-muted-foreground mt-1 block">Full access to all JHSC modules</span>
-                      )}
-                      {u.role === "worker-rep" && (
-                        <span className="text-xs text-muted-foreground mt-1 block">Can verify items — read-only access</span>
                       )}
                     </div>
                   </div>
@@ -540,13 +537,13 @@ export default function ManageUsersPage() {
                 <SelectContent>
                   <SelectItem value="admin">Admin (system administration only)</SelectItem>
                   <SelectItem value="co-chair">Worker Co-Chair (full module access)</SelectItem>
-                  <SelectItem value="worker-rep">Worker Rep (verify items, read-only)</SelectItem>
+                  <SelectItem value="worker-rep">Worker Rep (custom permissions)</SelectItem>
                   <SelectItem value="management">Management (cannot view Worker Statements/RTR)</SelectItem>
                   <SelectItem value="member">Member (custom permissions)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            {form.role === "member" && (
+            {(form.role === "member" || form.role === "worker-rep") && (
               <div className="space-y-2">
                 <Label>Permissions</Label>
                 <div className="border rounded-md divide-y">
