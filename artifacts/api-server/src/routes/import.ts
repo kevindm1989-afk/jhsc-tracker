@@ -224,8 +224,8 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
 
       fileSaved = true;
       savedToFolder = `Minutes › ${subfolderName}`;
-    } catch (saveErr) {
-      console.error("Minutes file save error:", saveErr);
+    } catch (saveErr: any) {
+      req.log.error({ err: saveErr }, "Minutes file save error");
     }
 
     return res.json({

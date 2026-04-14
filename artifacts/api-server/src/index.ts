@@ -49,6 +49,18 @@ async function ensureAdminEmail() {
   }
 }
 
+async function ensureFileDataColumns() {
+  try {
+    await pool.query(`
+      ALTER TABLE folder_files ADD COLUMN IF NOT EXISTS file_data bytea;
+      ALTER TABLE inspection_log ADD COLUMN IF NOT EXISTS file_data bytea;
+    `);
+    logger.info("File data columns verified");
+  } catch (err) {
+    logger.error({ err }, "Failed to ensure file_data columns");
+  }
+}
+
 async function scheduleInspectionReminders() {
   try {
     const client = await pool.connect();
@@ -111,6 +123,7 @@ ensureSessionTable()
       logger.info(`Server running on port ${port}`);
       await seedAdminIfNeeded();
       await ensureAdminEmail();
+      await ensureFileDataColumns();
 
       // Run inspection reminder check every day at 08:00
       cron.schedule("0 8 * * *", () => {
