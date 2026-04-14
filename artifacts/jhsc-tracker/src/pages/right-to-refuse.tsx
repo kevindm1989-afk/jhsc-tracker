@@ -69,6 +69,7 @@ export default function RightToRefusePage() {
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "co-chair" || user?.role === "worker-rep";
   const canDelete = user?.role === "admin" || user?.role === "co-chair";
+  const canSeeWorkerName = user?.role === "admin" || user?.role === "co-chair" || user?.role === "worker-rep";
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -173,7 +174,7 @@ export default function RightToRefusePage() {
                           <span className="font-mono text-[10px] text-muted-foreground">{item.refuseCode}</span>
                           <span className="text-[10px] text-muted-foreground">{format(new Date(item.refusalDate), 'MMM d')}</span>
                         </div>
-                        <p className="text-sm font-semibold">{item.workerName}</p>
+                        {canSeeWorkerName && <p className="text-sm font-semibold">{item.workerName}</p>}
                         <span className="text-xs text-muted-foreground">{item.zone}</span>
                         <span className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.hazardDescription}</span>
                       </div>
