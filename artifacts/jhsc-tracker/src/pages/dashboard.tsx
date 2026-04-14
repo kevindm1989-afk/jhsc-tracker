@@ -36,7 +36,6 @@ export default function DashboardPage() {
           icon={AlertTriangle} 
           isLoading={isLoadingSummary}
           valueClass={summary?.overdueCount && summary.overdueCount > 0 ? "text-destructive" : ""}
-          onClick={() => navigate("/action-items")}
         />
         <StatCard 
           title="Open Actions" 
