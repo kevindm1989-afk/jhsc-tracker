@@ -303,18 +303,43 @@ router.post("/logout", (req, res) => {
   });
 });
 
-// GET /api/auth/me
-router.get("/me", (req, res) => {
+// GET /api/auth/me — always reads fresh from DB so permission changes take effect immediately
+router.get("/me", async (req, res) => {
   if (!req.session?.userId) {
     return res.status(401).json({ error: "Not authenticated" });
   }
-  return res.json({
-    id: req.session.userId,
-    username: req.session.username,
-    displayName: req.session.displayName,
-    role: req.session.role,
-    permissions: req.session.permissions,
-  });
+  try {
+    const [user] = await db
+      .select({
+        id: usersTable.id,
+        username: usersTable.username,
+        displayName: usersTable.displayName,
+        role: usersTable.role,
+        permissions: usersTable.permissions,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.session.userId));
+
+    if (!user) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Keep session in sync so requirePermission middleware stays accurate
+    req.session.role = user.role;
+    req.session.permissions = user.permissions;
+
+    return res.json({
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      role: user.role,
+      permissions: user.permissions,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch current user");
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 export default router;
