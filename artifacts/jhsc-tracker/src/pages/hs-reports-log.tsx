@@ -256,7 +256,7 @@ export default function HSReportsLogPage() {
               {canSeePrivate && <TableHead>Employee</TableHead>}
               <TableHead className="hidden md:table-cell">Dept / Shift</TableHead>
               <TableHead>Concern Type(s)</TableHead>
-              <TableHead className="hidden xl:table-cell">What Happened</TableHead>
+              <TableHead className="hidden md:table-cell">What Happened</TableHead>
               <TableHead className="hidden lg:table-cell">Location</TableHead>
               <TableHead className="hidden sm:table-cell">Date</TableHead>
               <TableHead className="w-[60px]" />
@@ -315,7 +315,7 @@ export default function HSReportsLogPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground max-w-[220px]">
+                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[220px]">
                         <span className="line-clamp-2">{r.whatHappened}</span>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell text-sm text-foreground">

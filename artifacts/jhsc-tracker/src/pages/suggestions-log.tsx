@@ -43,7 +43,7 @@ function PriorityBadge({ level }: { level: string }) {
   );
 }
 
-function ExpandedRow({ s }: { s: Suggestion }) {
+function ExpandedRow({ s, canSeeIdentity }: { s: Suggestion; canSeeIdentity: boolean }) {
   return (
     <div className="px-4 py-4 bg-muted/30 border-t space-y-3 text-sm">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -59,7 +59,7 @@ function ExpandedRow({ s }: { s: Suggestion }) {
       <div className="flex flex-wrap gap-4 pt-2 border-t text-xs text-muted-foreground">
         <span><span className="font-medium">Date Observed:</span> {s.dateObserved}</span>
         <span><span className="font-medium">Date Submitted:</span> {s.dateSubmitted}</span>
-        <span><span className="font-medium">Submitted by:</span> {s.submittedByName}</span>
+        {canSeeIdentity && <span><span className="font-medium">Submitted by:</span> {s.submittedByName}</span>}
         <span><span className="font-medium">Logged:</span> {new Date(s.createdAt).toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" })}</span>
       </div>
     </div>
@@ -70,6 +70,7 @@ export default function SuggestionsLogPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const canAdmin = user?.role === "admin" || user?.role === "co-chair";
+  const canSeeIdentity = user?.role === "admin" || user?.role === "co-chair" || user?.role === "worker-rep";
 
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -224,7 +225,7 @@ export default function SuggestionsLogPage() {
                     onClick={() => setExpandedId(expanded ? null : s.id)}
                   >
                     <span className="w-24 font-mono text-xs font-semibold text-foreground">{s.suggestionCode}</span>
-                    <span className="text-sm text-foreground truncate">{s.employeeName}</span>
+                    <span className="text-sm text-foreground truncate">{canSeeIdentity ? s.employeeName : "—"}</span>
                     <span className="text-sm text-muted-foreground truncate">{s.department} · {s.shift}</span>
                     <TruncatedText text={s.locationOfConcern} lines={1} label="Location" className="text-sm text-muted-foreground" />
                     <span className="w-16 flex justify-center"><PriorityBadge level={s.priorityLevel} /></span>
@@ -255,7 +256,7 @@ export default function SuggestionsLogPage() {
                           <span className="font-mono text-xs font-bold text-foreground">{s.suggestionCode}</span>
                           <PriorityBadge level={s.priorityLevel} />
                         </div>
-                        <p className="text-sm text-foreground font-medium truncate">{s.employeeName}</p>
+                        {canSeeIdentity && <p className="text-sm text-foreground font-medium truncate">{s.employeeName}</p>}
                         <p className="text-xs text-muted-foreground">{s.department} · {s.shift}</p>
                         <p className="text-xs text-muted-foreground">{s.locationOfConcern} · {s.dateSubmitted}</p>
                       </div>
@@ -279,7 +280,7 @@ export default function SuggestionsLogPage() {
                   </button>
 
                   {/* Expanded details */}
-                  {expanded && <ExpandedRow s={s} />}
+                  {expanded && <ExpandedRow s={s} canSeeIdentity={canSeeIdentity} />}
                 </div>
               );
             })}
