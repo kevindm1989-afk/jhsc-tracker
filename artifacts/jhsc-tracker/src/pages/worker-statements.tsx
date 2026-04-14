@@ -275,19 +275,21 @@ export default function WorkerStatementsPage() {
                     <StatusBadge status={item.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" 
-                        onClick={() => {
-                          if(window.confirm('Permanently delete this statement?')) {
-                            deleteMutation.mutate({ id: item.id });
-                          }
-                        }}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {canSeeAll && (
+                      <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => {
+                            if (window.confirm('Permanently delete this statement?')) {
+                              deleteMutation.mutate({ id: item.id });
+                            }
+                          }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

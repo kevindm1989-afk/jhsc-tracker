@@ -88,16 +88,12 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
   try {
+    if (!isAdminOrCoChair(req)) {
+      return res.status(403).json({ error: "Only admin or co-chair can edit worker statements" });
+    }
+
     const id = parseInt(req.params.id as string);
     const body = req.body;
-
-    if (!isAdminOrCoChair(req)) {
-      const [existing] = await db.select().from(workerStatementsTable).where(eq(workerStatementsTable.id, id));
-      const username = req.session?.username || req.session?.displayName || "";
-      if (!existing || existing.loggedBy !== username) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-    }
 
     const [updated] = await db
       .update(workerStatementsTable)
@@ -115,16 +111,11 @@ router.put("/:id", async (req: Request, res: Response) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-
     if (!isAdminOrCoChair(req)) {
-      const [existing] = await db.select().from(workerStatementsTable).where(eq(workerStatementsTable.id, id));
-      const username = req.session?.username || req.session?.displayName || "";
-      if (!existing || existing.loggedBy !== username) {
-        return res.status(403).json({ error: "Access denied" });
-      }
+      return res.status(403).json({ error: "Only admin or co-chair can delete worker statements" });
     }
 
+    const id = parseInt(req.params.id);
     await db.delete(workerStatementsTable).where(eq(workerStatementsTable.id, id));
     res.status(204).send();
   } catch (err) {
