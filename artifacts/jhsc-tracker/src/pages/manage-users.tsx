@@ -396,7 +396,10 @@ export default function ManageUsersPage() {
             <div className="p-6 text-center text-muted-foreground">No users found.</div>
           ) : (
             <div className="divide-y divide-border">
-              {users.map((u) => (
+              {[...users].sort((a, b) => {
+                const order: Record<string, number> = { admin: 0, "co-chair": 1, "worker-rep": 2, management: 3, member: 4 };
+                return (order[a.role] ?? 5) - (order[b.role] ?? 5);
+              }).map((u) => (
                 <div key={u.id} className="flex items-start justify-between p-4 gap-4">
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-sidebar flex items-center justify-center shrink-0">
