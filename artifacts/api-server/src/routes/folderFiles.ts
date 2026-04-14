@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
+import { requirePermission } from "../middleware/requireAuth";
 import { db, pool } from "@workspace/db";
 import { foldersTable, folderFilesTable } from "@workspace/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -167,6 +168,30 @@ router.delete("/files/:id", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to delete file");
     return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/minutes-log", requirePermission("minutes-log"), async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        ff.id,
+        ff.original_name  AS "originalName",
+        ff.stored_name    AS "storedName",
+        ff.size_bytes     AS "sizeBytes",
+        ff.uploaded_by    AS "uploadedBy",
+        ff.created_at     AS "createdAt",
+        sub.name          AS "meetingDate"
+      FROM folder_files ff
+      JOIN folders sub ON ff.folder_id = sub.id
+      JOIN folders top ON sub.parent_id = top.id
+      WHERE top.name = 'Minutes'
+      ORDER BY ff.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    req.log.error({ err }, "Failed to load minutes log");
+    res.status(500).json({ error: "Failed to load minutes log" });
   }
 });
 

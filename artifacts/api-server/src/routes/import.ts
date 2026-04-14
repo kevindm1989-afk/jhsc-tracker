@@ -328,29 +328,4 @@ router.post("/inspection", upload.single("file"), async (req, res) => {
   }
 });
 
-router.get("/minutes-log", async (req, res) => {
-  try {
-    const { rows } = await pool.query(`
-      SELECT
-        ff.id,
-        ff.original_name  AS "originalName",
-        ff.stored_name    AS "storedName",
-        ff.size_bytes     AS "sizeBytes",
-        ff.uploaded_by    AS "uploadedBy",
-        ff.created_at     AS "createdAt",
-        sub.name          AS "meetingDate"
-      FROM folder_files ff
-      JOIN folders sub ON ff.folder_id = sub.id
-      JOIN folders top ON sub.parent_id = top.id
-      WHERE top.name = 'Minutes'
-      ORDER BY ff.created_at DESC
-    `);
-    res.json(rows);
-  } catch (err) {
-    console.error("Minutes log error:", err);
-    res.status(500).json({ error: "Failed to load minutes log" });
-  }
-});
-
 export default router;
-

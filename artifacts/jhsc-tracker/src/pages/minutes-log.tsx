@@ -20,7 +20,7 @@ function useMinutesLog() {
   return useQuery<MinutesFile[]>({
     queryKey: ["minutes-log"],
     queryFn: async () => {
-      const res = await fetch(`${BASE}/api/import/minutes-log`, { credentials: "include" });
+      const res = await fetch(`${BASE}/api/folder-files/minutes-log`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to load");
       return res.json();
     },
