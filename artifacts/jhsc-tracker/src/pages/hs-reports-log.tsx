@@ -256,6 +256,7 @@ export default function HSReportsLogPage() {
               {canSeePrivate && <TableHead>Employee</TableHead>}
               <TableHead className="hidden md:table-cell">Dept / Shift</TableHead>
               <TableHead>Concern Type(s)</TableHead>
+              <TableHead className="hidden xl:table-cell">What Happened</TableHead>
               <TableHead className="hidden lg:table-cell">Location</TableHead>
               <TableHead className="hidden sm:table-cell">Date</TableHead>
               <TableHead className="w-[60px]" />
@@ -265,14 +266,14 @@ export default function HSReportsLogPage() {
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: canSeePrivate ? 7 : 6 }).map((_, j) => (
+                  {Array.from({ length: canSeePrivate ? 8 : 7 }).map((_, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
               ))
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canSeePrivate ? 7 : 6} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={canSeePrivate ? 8 : 7} className="text-center py-12 text-muted-foreground">
                   {reports.length === 0 ? "No reports have been submitted yet." : "No reports match your search."}
                 </TableCell>
               </TableRow>
@@ -314,6 +315,9 @@ export default function HSReportsLogPage() {
                           )}
                         </div>
                       </TableCell>
+                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground max-w-[220px]">
+                        <span className="line-clamp-2">{r.whatHappened}</span>
+                      </TableCell>
                       <TableCell className="hidden lg:table-cell text-sm text-foreground">
                         {r.areaLocation}
                       </TableCell>
@@ -349,7 +353,7 @@ export default function HSReportsLogPage() {
                     {/* Expanded detail row */}
                     {expanded && (
                       <TableRow key={`${r.id}-detail`} className="bg-muted/20 hover:bg-muted/20">
-                        <TableCell colSpan={canSeePrivate ? 7 : 6} className="py-4 px-6">
+                        <TableCell colSpan={canSeePrivate ? 8 : 7} className="py-4 px-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
                             {/* Left column */}
                             <div className="space-y-2">
