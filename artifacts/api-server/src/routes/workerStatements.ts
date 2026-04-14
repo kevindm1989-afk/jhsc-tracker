@@ -9,16 +9,22 @@ function genCode(id: number) {
   return "W-" + String(id).padStart(3, "0");
 }
 
-function requireWorkerRepAccess(req: Request, res: Response, next: NextFunction) {
+function isPrivileged(req: Request): boolean {
   const role = req.session?.role;
-  if (role === "admin" || role === "worker-rep") return next();
-  return res.status(403).json({ error: "Worker statements are confidential. Access restricted to Worker Co-Chair and Admin per OHSA s.8." });
+  return role === "admin" || role === "worker-rep";
 }
 
-router.get("/", requireWorkerRepAccess, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { status, department } = req.query as Record<string, string>;
     const conditions = [];
+
+    if (!isPrivileged(req)) {
+      const username = req.session?.username;
+      if (!username) return res.json([]);
+      conditions.push(eq(workerStatementsTable.submittedBy, username));
+    }
+
     if (status) conditions.push(eq(workerStatementsTable.status, status));
     if (department) conditions.push(eq(workerStatementsTable.department, department));
 
@@ -38,9 +44,23 @@ router.get("/", requireWorkerRepAccess, async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const body = req.body;
+    const submittedBy = req.session?.username || "unknown";
+
+    const insertData: any = {
+      ...body,
+      statementCode: "W-000",
+      submittedBy,
+    };
+
+    // Non-privileged users cannot set status or notes — always default
+    if (!isPrivileged(req)) {
+      insertData.status = "Received";
+      insertData.notes = null;
+    }
+
     const [created] = await db
       .insert(workerStatementsTable)
-      .values({ ...body, statementCode: "W-000" })
+      .values(insertData)
       .returning();
 
     const [updated] = await db
@@ -56,7 +76,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/:id", requireWorkerRepAccess, async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id as string);
     const [item] = await db
@@ -65,6 +85,11 @@ router.get("/:id", requireWorkerRepAccess, async (req: Request, res: Response) =
       .where(eq(workerStatementsTable.id, id));
 
     if (!item) return res.status(404).json({ error: "Not found" });
+
+    if (!isPrivileged(req) && item.submittedBy !== req.session?.username) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
     return res.json(item);
   } catch (err) {
     req.log.error({ err }, "Failed to get worker statement");
@@ -75,7 +100,25 @@ router.get("/:id", requireWorkerRepAccess, async (req: Request, res: Response) =
 router.put("/:id", async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id as string);
-    const body = req.body;
+
+    const [existing] = await db
+      .select()
+      .from(workerStatementsTable)
+      .where(eq(workerStatementsTable.id, id));
+
+    if (!existing) return res.status(404).json({ error: "Not found" });
+
+    if (!isPrivileged(req) && existing.submittedBy !== req.session?.username) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const body = { ...req.body };
+
+    // Non-privileged users cannot update status or co-chair notes
+    if (!isPrivileged(req)) {
+      delete body.status;
+      delete body.notes;
+    }
 
     const [updated] = await db
       .update(workerStatementsTable)
@@ -83,7 +126,6 @@ router.put("/:id", async (req: Request, res: Response) => {
       .where(eq(workerStatementsTable.id, id))
       .returning();
 
-    if (!updated) return res.status(404).json({ error: "Not found" });
     return res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to update worker statement");
@@ -94,6 +136,18 @@ router.put("/:id", async (req: Request, res: Response) => {
 router.delete("/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+
+    const [existing] = await db
+      .select()
+      .from(workerStatementsTable)
+      .where(eq(workerStatementsTable.id, id));
+
+    if (!existing) return res.status(404).json({ error: "Not found" });
+
+    if (!isPrivileged(req) && existing.submittedBy !== req.session?.username) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
     await db.delete(workerStatementsTable).where(eq(workerStatementsTable.id, id));
     res.status(204).send();
   } catch (err) {
