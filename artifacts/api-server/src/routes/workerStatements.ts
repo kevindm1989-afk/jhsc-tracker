@@ -1,4 +1,4 @@
-import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { workerStatementsTable } from "@workspace/db/schema";
 import { eq, desc, and } from "drizzle-orm";
@@ -9,18 +9,22 @@ function genCode(id: number) {
   return "W-" + String(id).padStart(3, "0");
 }
 
-function requireWorkerRepAccess(req: Request, res: Response, next: NextFunction) {
+function isAdminOrCoChair(req: Request) {
   const role = req.session?.role;
-  if (role === "admin" || role === "worker-rep") return next();
-  return res.status(403).json({ error: "Worker statements are confidential. Access restricted to Worker Co-Chair and Admin per OHSA s.8." });
+  return role === "admin" || role === "co-chair";
 }
 
-router.get("/", requireWorkerRepAccess, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { status, department } = req.query as Record<string, string>;
     const conditions = [];
     if (status) conditions.push(eq(workerStatementsTable.status, status));
     if (department) conditions.push(eq(workerStatementsTable.department, department));
+
+    if (!isAdminOrCoChair(req)) {
+      const username = req.session?.username || req.session?.displayName || "";
+      conditions.push(eq(workerStatementsTable.loggedBy, username));
+    }
 
     const items = await db
       .select()
@@ -38,9 +42,11 @@ router.get("/", requireWorkerRepAccess, async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const body = req.body;
+    const loggedBy = req.session?.username || req.session?.displayName || "Unknown";
+
     const [created] = await db
       .insert(workerStatementsTable)
-      .values({ ...body, statementCode: "W-000" })
+      .values({ ...body, statementCode: "W-000", loggedBy })
       .returning();
 
     const [updated] = await db
@@ -56,7 +62,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/:id", requireWorkerRepAccess, async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id as string);
     const [item] = await db
@@ -65,6 +71,14 @@ router.get("/:id", requireWorkerRepAccess, async (req: Request, res: Response) =
       .where(eq(workerStatementsTable.id, id));
 
     if (!item) return res.status(404).json({ error: "Not found" });
+
+    if (!isAdminOrCoChair(req)) {
+      const username = req.session?.username || req.session?.displayName || "";
+      if (item.loggedBy !== username) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
+
     return res.json(item);
   } catch (err) {
     req.log.error({ err }, "Failed to get worker statement");
@@ -76,6 +90,14 @@ router.put("/:id", async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id as string);
     const body = req.body;
+
+    if (!isAdminOrCoChair(req)) {
+      const [existing] = await db.select().from(workerStatementsTable).where(eq(workerStatementsTable.id, id));
+      const username = req.session?.username || req.session?.displayName || "";
+      if (!existing || existing.loggedBy !== username) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
 
     const [updated] = await db
       .update(workerStatementsTable)
@@ -94,6 +116,15 @@ router.put("/:id", async (req: Request, res: Response) => {
 router.delete("/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+
+    if (!isAdminOrCoChair(req)) {
+      const [existing] = await db.select().from(workerStatementsTable).where(eq(workerStatementsTable.id, id));
+      const username = req.session?.username || req.session?.displayName || "";
+      if (!existing || existing.loggedBy !== username) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
+
     await db.delete(workerStatementsTable).where(eq(workerStatementsTable.id, id));
     res.status(204).send();
   } catch (err) {

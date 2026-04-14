@@ -13,6 +13,7 @@ export const workerStatementsTable = pgTable("worker_statements", {
   linkedItemCode: text("linked_item_code"),
   status: text("status").notNull().default("Received"),
   notes: text("notes"),
+  loggedBy: text("logged_by").notNull().default("Unknown"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -54,6 +54,7 @@ async function ensureFileDataColumns() {
     await pool.query(`
       ALTER TABLE folder_files ADD COLUMN IF NOT EXISTS file_data bytea;
       ALTER TABLE inspection_log ADD COLUMN IF NOT EXISTS file_data bytea;
+      ALTER TABLE worker_statements ADD COLUMN IF NOT EXISTS logged_by text NOT NULL DEFAULT 'Unknown';
     `);
     logger.info("File data columns verified");
   } catch (err) {

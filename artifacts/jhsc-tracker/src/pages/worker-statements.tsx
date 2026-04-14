@@ -15,6 +15,7 @@ import {
   WorkerStatementShift
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,8 @@ export default function WorkerStatementsPage() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const canSeeAll = user?.role === "admin" || user?.role === "co-chair";
 
   const queryParams = {
     ...(statusFilter !== "all" && { status: statusFilter }),
@@ -198,6 +201,7 @@ export default function WorkerStatementsPage() {
               <TableHead className="w-[90px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Date</TableHead>
               <TableHead className="font-bold text-xs uppercase tracking-wider">Concern details</TableHead>
               <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider hidden md:table-cell">Linked To</TableHead>
+              {canSeeAll && <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider hidden lg:table-cell">Logged By</TableHead>}
               <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider">Status</TableHead>
               <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">Actions</TableHead>
             </TableRow>
@@ -210,13 +214,14 @@ export default function WorkerStatementsPage() {
                   <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-full" /></TableCell>
                   <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
+                  {canSeeAll && <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-20" /></TableCell>}
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
               ))
             ) : items?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={canSeeAll ? 7 : 6} className="h-32 text-center text-muted-foreground">
                   No statements logged.
                 </TableCell>
               </TableRow>
@@ -254,6 +259,13 @@ export default function WorkerStatementsPage() {
                       <span className="text-xs text-muted-foreground">-</span>
                     )}
                   </TableCell>
+                  {canSeeAll && (
+                    <TableCell className="hidden lg:table-cell">
+                      <span className="text-xs font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded border border-muted">
+                        {(item as WorkerStatement & { loggedBy?: string }).loggedBy || "Unknown"}
+                      </span>
+                    </TableCell>
+                  )}
                   <TableCell>
                     <StatusBadge status={item.status} />
                   </TableCell>
