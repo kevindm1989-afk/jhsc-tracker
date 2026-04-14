@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, FileSpreadsheet, Download, ClipboardCheck, Loader2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, ChevronRight, FileSpreadsheet, Download, ClipboardCheck, Loader2, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
@@ -48,7 +48,9 @@ function parseDateFromName(name: string): string {
 function MonthSection({ month, items }: { month: string; items: CompletedInspection[] }) {
   const [open, setOpen] = useState(true);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const { toast } = useToast();
+  const qc = useQueryClient();
 
   async function handleDownload(item: CompletedInspection) {
     if (downloadingId === item.id) return;
@@ -73,6 +75,24 @@ function MonthSection({ month, items }: { month: string; items: CompletedInspect
       toast({ title: "Download failed", description: e.message, variant: "destructive" });
     } finally {
       setDownloadingId(null);
+    }
+  }
+
+  async function handleDelete(item: CompletedInspection) {
+    if (deletingId === item.id) return;
+    setDeletingId(item.id);
+    try {
+      const resp = await fetch(`${BASE}/api/folder-files/files/${item.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!resp.ok) throw new Error("Delete failed");
+      await qc.invalidateQueries({ queryKey: ["completed-inspections"] });
+      toast({ title: "Deleted", description: `${parseZoneFromName(item.originalName)} inspection removed.` });
+    } catch {
+      toast({ title: "Delete failed", description: "Could not delete the inspection.", variant: "destructive" });
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -101,13 +121,12 @@ function MonthSection({ month, items }: { month: string; items: CompletedInspect
             const zone = parseZoneFromName(item.originalName);
             const dateLabel = parseDateFromName(item.originalName);
             const isDownloading = downloadingId === item.id;
+            const isDeleting = deletingId === item.id;
 
             return (
-              <button
+              <div
                 key={item.id}
-                onClick={() => handleDownload(item)}
-                disabled={isDownloading}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group text-left disabled:opacity-60"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
               >
                 <div className="w-8 h-8 rounded bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
                   {isDownloading
@@ -123,13 +142,28 @@ function MonthSection({ month, items }: { month: string; items: CompletedInspect
                     {item.sizeBytes > 0 && <span> · {formatBytes(item.sizeBytes)}</span>}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground hidden sm:inline">
-                    {isDownloading ? "Downloading…" : "Download"}
-                  </span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handleDownload(item)}
+                    disabled={isDownloading || isDeleting}
+                    title="Download"
+                    className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item)}
+                    disabled={isDeleting || isDownloading}
+                    title="Delete"
+                    className="p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-40"
+                  >
+                    {isDeleting
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <Trash2 className="w-4 h-4" />
+                    }
+                  </button>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -158,7 +192,7 @@ export default function InspectionLogPage() {
           Inspections Conducted
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          All completed zone inspections organized by month. Click any entry to download the report.
+          All completed zone inspections organized by month. Click the download icon to save a report.
         </p>
       </div>
 
