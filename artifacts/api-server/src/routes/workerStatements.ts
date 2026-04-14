@@ -11,7 +11,7 @@ function genCode(id: number) {
 
 function isPrivileged(req: Request): boolean {
   const role = req.session?.role;
-  return role === "admin" || role === "worker-rep";
+  return role === "admin" || role === "worker-rep" || role === "co-chair";
 }
 
 router.get("/", async (req, res) => {

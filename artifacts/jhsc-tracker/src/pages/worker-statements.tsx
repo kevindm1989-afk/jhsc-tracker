@@ -52,7 +52,8 @@ export default function WorkerStatementsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
-  const isPrivileged = user?.role === "admin" || user?.role === "worker-rep";
+  const isPrivileged = user?.role === "admin" || user?.role === "worker-rep" || user?.role === "co-chair";
+  const canSeeUsernames = user?.role === "admin" || user?.role === "co-chair";
 
   const queryParams = {
     ...(statusFilter !== "all" && { status: statusFilter }),
