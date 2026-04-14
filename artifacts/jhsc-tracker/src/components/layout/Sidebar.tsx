@@ -24,6 +24,7 @@ import {
   ShieldX,
   Folder,
   Mic,
+  BookOpen,
 } from "lucide-react";
 import {
   DndContext,
@@ -77,6 +78,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "/files": Folder,
   "/meeting-transcription": Mic,
   "/import-minutes": Upload,
+  "/minutes-log": BookOpen,
   "/manage-users": Users,
 };
 

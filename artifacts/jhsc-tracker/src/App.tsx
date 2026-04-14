@@ -36,6 +36,7 @@ import HazardFindingsPage from "@/pages/hazard-findings";
 import InspectionLogPage from "@/pages/inspection-log";
 import WorkerStatementsPage from "@/pages/worker-statements";
 import ImportMinutesPage from "@/pages/import-minutes";
+import MinutesLogPage from "@/pages/minutes-log";
 import ConductInspectionPage from "@/pages/conduct-inspection";
 import ManageUsersPage from "@/pages/manage-users";
 import ClosedItemsLogPage from "@/pages/closed-items-log";
@@ -144,6 +145,9 @@ function Router() {
               </Route>
               <Route path="/import-minutes">
                 <ProtectedRoute component={ImportMinutesPage} permission="import-data" />
+              </Route>
+              <Route path="/minutes-log">
+                <ProtectedRoute component={MinutesLogPage} permission="minutes-log" />
               </Route>
               <Route path="/closed-items-log">
                 <ProtectedRoute component={ClosedItemsLogPage} permission="closed-items-log" />
