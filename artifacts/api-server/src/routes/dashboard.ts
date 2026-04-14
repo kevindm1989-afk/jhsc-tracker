@@ -8,14 +8,7 @@ import {
   healthSafetyReportsTable,
   closedItemsLogTable,
 } from "@workspace/db/schema";
-import { ne, and, lt, or, isNotNull, desc, eq, sql, type SQL } from "drizzle-orm";
-
-function workerStatementsFilter(req: import("express").Request): SQL | undefined {
-  const role = req.session?.role;
-  if (role === "admin" || role === "co-chair") return undefined;
-  const username = req.session?.username || req.session?.displayName || "";
-  return eq(workerStatementsTable.loggedBy, username);
-}
+import { ne, and, lt, or, isNotNull, desc, eq, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -31,7 +24,7 @@ router.get("/summary", async (req, res) => {
       db.select().from(actionItemsTable),
       db.select().from(hazardFindingsTable),
       db.select().from(inspectionLogTable),
-      db.select().from(workerStatementsTable).where(workerStatementsFilter(req)),
+      db.select().from(workerStatementsTable),
       db.select({ id: healthSafetyReportsTable.id }).from(healthSafetyReportsTable),
       db.select({ id: closedItemsLogTable.id }).from(closedItemsLogTable).where(isNotNull(closedItemsLogTable.meetingDate)),
     ]);
@@ -126,7 +119,7 @@ router.get("/recent", async (req, res) => {
       db.select().from(actionItemsTable).orderBy(desc(actionItemsTable.createdAt)).limit(10),
       db.select().from(hazardFindingsTable).orderBy(desc(hazardFindingsTable.createdAt)).limit(10),
       db.select().from(inspectionLogTable).orderBy(desc(inspectionLogTable.createdAt)).limit(10),
-      db.select().from(workerStatementsTable).where(workerStatementsFilter(req)).orderBy(desc(workerStatementsTable.createdAt)).limit(10),
+      db.select().from(workerStatementsTable).orderBy(desc(workerStatementsTable.createdAt)).limit(10),
     ]);
 
     type RecentItem = {

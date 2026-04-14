@@ -30,15 +30,7 @@ router.get("/", async (req, res) => {
   try {
     const query = db.select().from(rightToRefuseTable);
 
-    let items;
-    if (isAdminOrCoChair(req)) {
-      items = await query.orderBy(desc(rightToRefuseTable.createdAt));
-    } else {
-      const username = req.session?.username || req.session?.displayName || "";
-      items = await query
-        .where(eq(rightToRefuseTable.loggedBy, username))
-        .orderBy(desc(rightToRefuseTable.createdAt));
-    }
+    const items = await query.orderBy(desc(rightToRefuseTable.createdAt));
 
     res.json(items);
   } catch (err) {

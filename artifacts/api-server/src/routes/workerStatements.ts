@@ -21,11 +21,6 @@ router.get("/", async (req, res) => {
     if (status) conditions.push(eq(workerStatementsTable.status, status));
     if (department) conditions.push(eq(workerStatementsTable.department, department));
 
-    if (!isAdminOrCoChair(req)) {
-      const username = req.session?.username || req.session?.displayName || "";
-      conditions.push(eq(workerStatementsTable.loggedBy, username));
-    }
-
     const items = await db
       .select()
       .from(workerStatementsTable)
@@ -71,13 +66,6 @@ router.get("/:id", async (req: Request, res: Response) => {
       .where(eq(workerStatementsTable.id, id));
 
     if (!item) return res.status(404).json({ error: "Not found" });
-
-    if (!isAdminOrCoChair(req)) {
-      const username = req.session?.username || req.session?.displayName || "";
-      if (item.loggedBy !== username) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-    }
 
     return res.json(item);
   } catch (err) {
