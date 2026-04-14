@@ -140,6 +140,26 @@ router.post("/folders/:id/files", upload.array("files", 20), async (req, res) =>
   }
 });
 
+router.get("/files/by-id/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid file ID" });
+    const [file] = await db
+      .select()
+      .from(folderFilesTable)
+      .where(eq(folderFilesTable.id, id));
+    if (!file) return res.status(404).json({ error: "File not found" });
+    if (!file.fileData) return res.status(410).json({ error: "This file was imported before file storage was updated. Please re-import it to make it downloadable." });
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(file.originalName)}"`);
+    res.setHeader("Content-Type", file.mimeType || "application/octet-stream");
+    res.setHeader("Content-Length", file.fileData.length);
+    return res.end(file.fileData);
+  } catch (err) {
+    req.log.error({ err }, "Failed to download file by id");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("/files/:storedName", async (req, res) => {
   try {
     const storedName = req.params.storedName as string;
@@ -148,10 +168,10 @@ router.get("/files/:storedName", async (req, res) => {
       .from(folderFilesTable)
       .where(eq(folderFilesTable.storedName, storedName));
     if (!file) return res.status(404).json({ error: "File not found" });
-    if (!file.fileData) return res.status(410).json({ error: "File data unavailable — this file was uploaded before storage was moved to the database and is no longer accessible." });
+    if (!file.fileData) return res.status(410).json({ error: "This file was imported before file storage was updated. Please re-import it to make it downloadable." });
     const downloadName = (req.query.name as string | undefined) || file.originalName;
     res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(downloadName)}"`);
-    res.setHeader("Content-Type", file.mimeType);
+    res.setHeader("Content-Type", file.mimeType || "application/octet-stream");
     res.setHeader("Content-Length", file.fileData.length);
     return res.end(file.fileData);
   } catch (err) {

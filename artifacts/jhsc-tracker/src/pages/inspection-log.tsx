@@ -54,7 +54,7 @@ function MonthSection({ month, items }: { month: string; items: CompletedInspect
     if (downloadingId === item.id) return;
     setDownloadingId(item.id);
     try {
-      const url = `${BASE}/api/folder-files/files/${encodeURIComponent(item.storedName)}?name=${encodeURIComponent(item.originalName)}`;
+      const url = `${BASE}/api/folder-files/files/by-id/${item.id}`;
       const resp = await fetch(url, { credentials: "include" });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
