@@ -68,6 +68,7 @@ const PRIORITY_OPTIONS: Array<{ value: "high" | "medium" | "low"; label: string;
 
 export default function SuggestionsPage() {
   const { user } = useAuth();
+  const canSeeIdentity = user?.role === "admin" || user?.role === "co-chair" || user?.role === "worker-rep";
   const { toast } = useToast();
   const [form, setForm] = useState({ ...emptyForm });
   const [submitting, setSubmitting] = useState(false);
@@ -180,7 +181,7 @@ export default function SuggestionsPage() {
                 <div key={s.id} className="flex items-start justify-between gap-3 border rounded-md p-3 bg-card">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold font-mono text-foreground">{s.suggestionCode}</p>
-                    <p className="text-xs text-muted-foreground truncate">{s.employeeName} · {s.department}</p>
+                    <p className="text-xs text-muted-foreground truncate">{canSeeIdentity ? `${s.employeeName} · ` : ""}{s.department}</p>
                     <p className="text-xs text-muted-foreground">{s.dateObserved} · {s.locationOfConcern}</p>
                   </div>
                   {user?.role === "admin" && (
@@ -329,7 +330,7 @@ export default function SuggestionsPage() {
                 <div key={s.id} className="flex items-start justify-between gap-3 border rounded-md p-3 bg-card">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold font-mono text-foreground">{s.suggestionCode}</p>
-                    <p className="text-xs text-muted-foreground truncate">{s.employeeName} · {s.department} · {s.shift}</p>
+                    <p className="text-xs text-muted-foreground truncate">{canSeeIdentity ? `${s.employeeName} · ` : ""}{s.department} · {s.shift}</p>
                     <p className="text-xs text-muted-foreground">{s.dateObserved} · {s.locationOfConcern} · <span className="capitalize">{s.priorityLevel}</span> priority</p>
                   </div>
                   {user?.role === "admin" && (
