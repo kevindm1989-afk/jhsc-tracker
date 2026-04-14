@@ -28,7 +28,6 @@ import { Plus, Search, Edit2, Trash2, ShieldAlert, LockIcon, Link as LinkIcon } 
 import { StatusBadge, DeptBadge } from "@/components/ui/status-badges";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   dateReceived: z.string().min(1, "Date is required"),
@@ -51,9 +50,6 @@ export default function WorkerStatementsPage() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const isPrivileged = user?.role === "admin" || user?.role === "worker-rep" || user?.role === "co-chair";
-  const canSeeUsernames = user?.role === "admin" || user?.role === "co-chair";
 
   const queryParams = {
     ...(statusFilter !== "all" && { status: statusFilter }),
@@ -163,9 +159,7 @@ export default function WorkerStatementsPage() {
         <ShieldAlert className="h-5 w-5 text-destructive" />
         <AlertTitle className="text-destructive font-bold uppercase tracking-wider">Confidentiality Notice</AlertTitle>
         <AlertDescription className="text-destructive/90 font-medium">
-          {isPrivileged
-            ? "All worker statements are tracked by statement code only. Do not record worker names, clock numbers, or identifying details in any field below."
-            : "Statements are confidential and visible only to you and the Worker Co-Chair. Do not include your name or identifying details in any field."}
+          All worker statements are tracked by statement code only. Do not record worker names, clock numbers, or identifying details in any field below.
         </AlertDescription>
       </Alert>
 
@@ -175,17 +169,15 @@ export default function WorkerStatementsPage() {
           <span className="text-sm font-medium">Filter:</span>
         </div>
         
-        {isPrivileged && (
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs font-medium">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {Object.values(WorkerStatementStatus).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        )}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs font-medium">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            {Object.values(WorkerStatementStatus).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
 
         <Select value={deptFilter} onValueChange={setDeptFilter}>
           <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs font-medium">
@@ -347,7 +339,7 @@ export default function WorkerStatementsPage() {
                 </FormItem>
               )} />
 
-              <div className={`grid grid-cols-1 gap-4 ${isPrivileged ? "sm:grid-cols-2" : ""}`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={form.control} name="linkedItemCode" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Linked Record (Optional)</FormLabel>
@@ -355,31 +347,27 @@ export default function WorkerStatementsPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                {isPrivileged && (
-                  <FormField control={form.control} name="status" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {Object.values(WorkerStatementStatus).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                )}
-              </div>
-
-              {isPrivileged && (
-                <FormField control={form.control} name="notes" render={({ field }) => (
+                <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Co-Chair Notes</FormLabel>
-                    <FormControl><Textarea className="resize-none h-16 text-sm" {...field} value={field.value || ""} /></FormControl>
+                    <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {Object.values(WorkerStatementStatus).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
-              )}
+              </div>
+
+              <FormField control={form.control} name="notes" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Co-Chair Notes</FormLabel>
+                  <FormControl><Textarea className="resize-none h-16 text-sm" {...field} value={field.value || ""} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
               <DialogFooter className="pt-4 border-t mt-4">
                 <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
