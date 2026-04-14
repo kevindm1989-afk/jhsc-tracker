@@ -1,4 +1,8 @@
-import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, customType } from "drizzle-orm/pg-core";
+
+const bytea = customType<{ data: Buffer }>({
+  dataType() { return "bytea"; },
+});
 
 export const foldersTable = pgTable("folders", {
   id: serial("id").primaryKey(),
