@@ -37,6 +37,7 @@ router.get("/", requireAdmin, async (_req, res) => {
         id: usersTable.id,
         username: usersTable.username,
         displayName: usersTable.displayName,
+        email: usersTable.email,
         role: usersTable.role,
         permissions: usersTable.permissions,
         createdAt: usersTable.createdAt,
