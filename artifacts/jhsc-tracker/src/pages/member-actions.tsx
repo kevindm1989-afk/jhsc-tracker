@@ -422,9 +422,11 @@ export default function MemberActionsPage() {
                         <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value ? String(field.value) : ""}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Select member" /></SelectTrigger></FormControl>
                           <SelectContent>
-                            {(users ?? []).map((u) => (
-                              <SelectItem key={u.id} value={String(u.id)}>{u.displayName}</SelectItem>
-                            ))}
+                            {(users ?? [])
+                              .filter((u) => ["co-chair", "worker-rep", "management"].includes(u.role))
+                              .map((u) => (
+                                <SelectItem key={u.id} value={String(u.id)}>{u.displayName}</SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
