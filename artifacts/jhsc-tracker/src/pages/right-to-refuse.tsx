@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Edit2, ShieldX, Lock, AlertTriangle } from "lucide-react";
+import { Plus, Edit2, Trash2, ShieldX, Lock, AlertTriangle } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -68,6 +68,7 @@ const emptyForm = (): Partial<RightToRefuse> => ({
 export default function RightToRefusePage() {
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "co-chair" || user?.role === "worker-rep";
+  const canDelete = user?.role === "admin" || user?.role === "co-chair";
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -94,6 +95,12 @@ export default function RightToRefusePage() {
     mutationFn: ({ id, data }: any) => fetch(`${BASE}/api/right-to-refuse/${id}`, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => { if (!r.ok) return r.json().then(e => { throw new Error(e.error); }); return r.json(); }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["right-to-refuse"] }); setIsOpen(false); setEditing(null); toast({ title: "Record updated" }); },
     onError: (e: any) => toast({ title: "Cannot update", description: e.message, variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => fetch(`${BASE}/api/right-to-refuse/${id}`, { method: "DELETE", credentials: "include" }).then(r => { if (!r.ok) return r.json().then(e => { throw new Error(e.error); }); }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["right-to-refuse"] }); toast({ title: "Record deleted", variant: "destructive" }); },
+    onError: (e: any) => toast({ title: "Cannot delete", description: e.message, variant: "destructive" }),
   });
 
   const handleCreate = () => { setEditing(null); setForm(emptyForm()); setIsOpen(true); };
@@ -185,6 +192,12 @@ export default function RightToRefusePage() {
                         {canEdit && !isLocked(item) && (
                           <Button variant="ghost" size="icon" className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => handleEdit(item)}>
                             <Edit2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => { if (window.confirm('Permanently delete this record?')) deleteMutation.mutate(item.id); }}>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>

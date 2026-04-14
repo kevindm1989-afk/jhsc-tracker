@@ -92,4 +92,19 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    if (!isAdminOrCoChair(req)) {
+      return res.status(403).json({ error: "Only admin or co-chair can delete right-to-refuse records" });
+    }
+
+    const id = parseInt(req.params.id);
+    await db.delete(rightToRefuseTable).where(eq(rightToRefuseTable.id, id));
+    res.status(204).send();
+  } catch (err) {
+    req.log.error({ err }, "Failed to delete right-to-refuse record");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;
