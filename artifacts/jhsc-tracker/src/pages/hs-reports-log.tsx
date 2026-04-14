@@ -117,6 +117,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 
 export default function HSReportsLogPage() {
   const { user } = useAuth();
+  const canSeePrivate = user?.role === "admin" || user?.role === "co-chair";
   const { toast } = useToast();
   const [reports, setReports] = useState<HSReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -252,7 +253,7 @@ export default function HSReportsLogPage() {
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-[110px]">Report #</TableHead>
-              <TableHead>Employee</TableHead>
+              {canSeePrivate && <TableHead>Employee</TableHead>}
               <TableHead className="hidden md:table-cell">Dept / Shift</TableHead>
               <TableHead>Concern Type(s)</TableHead>
               <TableHead className="hidden lg:table-cell">Location</TableHead>
@@ -264,14 +265,14 @@ export default function HSReportsLogPage() {
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 7 }).map((_, j) => (
+                  {Array.from({ length: canSeePrivate ? 7 : 6 }).map((_, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
               ))
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={canSeePrivate ? 7 : 6} className="text-center py-12 text-muted-foreground">
                   {reports.length === 0 ? "No reports have been submitted yet." : "No reports match your search."}
                 </TableCell>
               </TableRow>
@@ -291,10 +292,12 @@ export default function HSReportsLogPage() {
                       <TableCell className="font-mono text-xs font-semibold text-foreground">
                         {r.reportCode}
                       </TableCell>
-                      <TableCell>
-                        <p className="text-sm font-medium text-foreground leading-tight">{r.employeeName}</p>
-                        <p className="text-xs text-muted-foreground">{r.jobTitle}</p>
-                      </TableCell>
+                      {canSeePrivate && (
+                        <TableCell>
+                          <p className="text-sm font-medium text-foreground leading-tight">{r.employeeName}</p>
+                          <p className="text-xs text-muted-foreground">{r.jobTitle}</p>
+                        </TableCell>
+                      )}
                       <TableCell className="hidden md:table-cell">
                         <p className="text-sm text-foreground">{r.department}</p>
                         <p className="text-xs text-muted-foreground">{r.shift}</p>
@@ -346,14 +349,14 @@ export default function HSReportsLogPage() {
                     {/* Expanded detail row */}
                     {expanded && (
                       <TableRow key={`${r.id}-detail`} className="bg-muted/20 hover:bg-muted/20">
-                        <TableCell colSpan={7} className="py-4 px-6">
+                        <TableCell colSpan={canSeePrivate ? 7 : 6} className="py-4 px-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
                             {/* Left column */}
                             <div className="space-y-2">
                               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Employee Details</p>
-                              <DetailRow label="Supervisor / Manager" value={r.supervisorManager} />
+                              {canSeePrivate && <DetailRow label="Supervisor / Manager" value={r.supervisorManager} />}
                               <DetailRow label="Date Reported" value={fmtDate(r.dateReported)} />
-                              <DetailRow label="Submitted via app by" value={r.submittedByName} />
+                              {canSeePrivate && <DetailRow label="Submitted via app by" value={r.submittedByName} />}
 
                               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-4 mb-2">Incident</p>
                               <DetailRow label="Location" value={r.areaLocation} />
@@ -380,16 +383,20 @@ export default function HSReportsLogPage() {
 
                               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-4 mb-2">Immediate Action</p>
                               <DetailRow label="Reported to supervisor" value={r.reportedToSupervisor ? "Yes" : "No"} />
-                              <DetailRow label="Who was notified" value={r.whoNotified} />
+                              {canSeePrivate && <DetailRow label="Who was notified" value={r.whoNotified} />}
                               <DetailRow label="Action taken" value={r.immediateActionTaken} />
 
                               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-4 mb-2">Witnesses &amp; Correction</p>
-                              <DetailRow label="Witnesses" value={r.witnesses} />
+                              {canSeePrivate && <DetailRow label="Witnesses" value={r.witnesses} />}
                               <DetailRow label="Suggested correction" value={r.suggestedCorrection} />
 
-                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-4 mb-2">Signature</p>
-                              <DetailRow label="Employee signature" value={r.employeeSignature} />
-                              <DetailRow label="Signed on" value={fmtDate(r.signatureDate)} />
+                              {canSeePrivate && (
+                                <>
+                                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-4 mb-2">Signature</p>
+                                  <DetailRow label="Employee signature" value={r.employeeSignature} />
+                                  <DetailRow label="Signed on" value={fmtDate(r.signatureDate)} />
+                                </>
+                              )}
                             </div>
                           </div>
                         </TableCell>
