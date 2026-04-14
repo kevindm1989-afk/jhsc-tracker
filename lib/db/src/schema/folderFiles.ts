@@ -21,6 +21,7 @@ export const folderFilesTable = pgTable("folder_files", {
   sizeBytes: integer("size_bytes").notNull(),
   uploadedBy: text("uploaded_by").notNull().default("Unknown"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  fileData: bytea("file_data"),
 });
 
 export type Folder = typeof foldersTable.$inferSelect & { fileCount?: number; subfolderCount?: number };

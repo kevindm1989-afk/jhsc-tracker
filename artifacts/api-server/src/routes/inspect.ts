@@ -1,7 +1,6 @@
 import { Router, type IRouter } from "express";
 import path from "path";
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
+import { readFile } from "fs/promises";
 import XlsxPopulate from "xlsx-populate";
 import { db, pool } from "@workspace/db";
 import { inspectionLogTable } from "@workspace/db/schema";
@@ -9,8 +8,6 @@ import { eq } from "drizzle-orm";
 import { CHECKLIST_SECTIONS, ZONE_NAMES, ADDITIONAL_COMMENTS_ROW } from "../checklistData";
 import { createTransporter, getSenderAddress } from "../emailClient";
 import "../sessionTypes";
-
-const UPLOAD_DIR = process.env["UPLOAD_DIR"] || path.join(process.cwd(), "uploads");
 
 const CO_CHAIR_EMAIL = "kevin_de_melo@hotmail.com";
 
@@ -320,11 +317,6 @@ router.post("/email", async (req, res) => {
     let fileSaved = false;
     let savedToFolder = "";
     try {
-      if (!existsSync(UPLOAD_DIR)) await mkdir(UPLOAD_DIR, { recursive: true });
-
-      const storedName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.xlsx`;
-      await writeFile(path.join(UPLOAD_DIR, storedName), outBuffer);
-
       // Find or create top-level "Inspections" folder
       let inspRes = await pool.query(
         `SELECT id FROM folders WHERE name = 'Inspections' AND parent_id IS NULL LIMIT 1`
@@ -359,15 +351,16 @@ router.post("/email", async (req, res) => {
         monthFolderId = r.rows[0].id;
       }
 
-      // Insert file record — name is the full inspection date (e.g. "April 7, 2026.xlsx")
+      // Insert file record — store bytes directly in DB so they survive deploys
       const uploadedBy = (req as any).session?.displayName || "System";
       const displayFileName = `${displayDate} — Zone ${zoneIndex + 1}.xlsx`;
+      const storedName = displayFileName;
       await pool.query(
-        `INSERT INTO folder_files (folder_id, original_name, stored_name, mime_type, size_bytes, uploaded_by)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
+        `INSERT INTO folder_files (folder_id, original_name, stored_name, mime_type, size_bytes, uploaded_by, file_data)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [monthFolderId, displayFileName, storedName,
          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-         outBuffer.length, uploadedBy]
+         outBuffer.length, uploadedBy, outBuffer]
       );
 
       fileSaved = true;

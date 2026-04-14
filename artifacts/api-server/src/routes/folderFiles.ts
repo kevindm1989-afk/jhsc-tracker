@@ -1,24 +1,11 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 import { db, pool } from "@workspace/db";
 import { foldersTable, folderFilesTable } from "@workspace/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
-
-const UPLOAD_DIR = process.env["UPLOAD_DIR"] || path.join(process.cwd(), "uploads");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${unique}${path.extname(file.originalname)}`);
-  },
-});
+import { eq, desc } from "drizzle-orm";
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = [
@@ -93,11 +80,6 @@ router.patch("/folders/:id", async (req, res) => {
 router.delete("/folders/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const files = await db.select().from(folderFilesTable).where(eq(folderFilesTable.folderId, id));
-    files.forEach((f) => {
-      const fp = path.join(UPLOAD_DIR, f.storedName);
-      if (fs.existsSync(fp)) fs.unlink(fp, () => {});
-    });
     await db.delete(foldersTable).where(eq(foldersTable.id, id));
     res.json({ success: true });
   } catch (err) {
@@ -112,7 +94,16 @@ router.get("/folders/:id/files", async (req, res) => {
   try {
     const folderId = parseInt(req.params.id);
     const files = await db
-      .select()
+      .select({
+        id: folderFilesTable.id,
+        folderId: folderFilesTable.folderId,
+        originalName: folderFilesTable.originalName,
+        storedName: folderFilesTable.storedName,
+        mimeType: folderFilesTable.mimeType,
+        sizeBytes: folderFilesTable.sizeBytes,
+        uploadedBy: folderFilesTable.uploadedBy,
+        createdAt: folderFilesTable.createdAt,
+      })
       .from(folderFilesTable)
       .where(eq(folderFilesTable.folderId, folderId))
       .orderBy(desc(folderFilesTable.createdAt));
@@ -134,10 +125,11 @@ router.post("/folders/:id/files", upload.array("files", 20), async (req, res) =>
       .values(files.map((f) => ({
         folderId,
         originalName: f.originalname,
-        storedName: f.filename,
+        storedName: f.originalname,
         mimeType: f.mimetype,
         sizeBytes: f.size,
         uploadedBy,
+        fileData: f.buffer,
       })))
       .returning();
     return res.status(201).json(inserted);
@@ -147,22 +139,30 @@ router.post("/folders/:id/files", upload.array("files", 20), async (req, res) =>
   }
 });
 
-router.get("/files/:storedName", (req, res) => {
-  const filePath = path.join(UPLOAD_DIR, req.params.storedName as string);
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found" });
-  const downloadName = req.query.name as string | undefined;
-  return downloadName ? res.download(filePath, downloadName) : res.download(filePath);
+router.get("/files/:storedName", async (req, res) => {
+  try {
+    const storedName = req.params.storedName as string;
+    const [file] = await db
+      .select()
+      .from(folderFilesTable)
+      .where(eq(folderFilesTable.storedName, storedName));
+    if (!file) return res.status(404).json({ error: "File not found" });
+    if (!file.fileData) return res.status(410).json({ error: "File data unavailable — this file was uploaded before storage was moved to the database and is no longer accessible." });
+    const downloadName = (req.query.name as string | undefined) || file.originalName;
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(downloadName)}"`);
+    res.setHeader("Content-Type", file.mimeType);
+    res.setHeader("Content-Length", file.fileData.length);
+    return res.end(file.fileData);
+  } catch (err) {
+    req.log.error({ err }, "Failed to download file");
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 router.delete("/files/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const [file] = await db.select().from(folderFilesTable).where(eq(folderFilesTable.id, id));
-    if (file) {
-      const fp = path.join(UPLOAD_DIR, file.storedName);
-      if (fs.existsSync(fp)) fs.unlink(fp, () => {});
-      await db.delete(folderFilesTable).where(eq(folderFilesTable.id, id));
-    }
+    await db.delete(folderFilesTable).where(eq(folderFilesTable.id, id));
     return res.json({ success: true });
   } catch (err) {
     req.log.error({ err }, "Failed to delete file");

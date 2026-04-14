@@ -56,7 +56,10 @@ function MonthSection({ month, items }: { month: string; items: CompletedInspect
     try {
       const url = `${BASE}/api/folder-files/files/${encodeURIComponent(item.storedName)}?name=${encodeURIComponent(item.originalName)}`;
       const resp = await fetch(url, { credentials: "include" });
-      if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error(body.error || `Server returned ${resp.status}`);
+      }
       const blob = await resp.blob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
