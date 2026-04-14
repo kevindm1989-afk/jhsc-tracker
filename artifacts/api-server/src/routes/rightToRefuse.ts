@@ -5,6 +5,13 @@ import { eq, desc } from "drizzle-orm";
 
 const router: IRouter = Router();
 
+router.use((req: Request, res: Response, next) => {
+  if (req.session?.role === "management") {
+    return res.status(403).json({ error: "Management role does not have access to right-to-refuse records" });
+  }
+  return next();
+});
+
 function genCode(id: number) {
   return "RTR-" + String(id).padStart(3, "0");
 }
