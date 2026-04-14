@@ -87,9 +87,10 @@ function formatMeetingDate(isoDate: string) {
 
 function buildFolderOptions(folders: FolderItem[]): { id: number; label: string }[] {
   const options: { id: number; label: string }[] = [];
+  const inspectionsId = folders.find((f) => f.parentId === null && f.name === "Inspections")?.id;
   const addLevel = (parentId: number | null, prefix: string) => {
     folders
-      .filter((f) => f.parentId === parentId)
+      .filter((f) => f.parentId === parentId && f.id !== inspectionsId)
       .forEach((f) => {
         options.push({ id: f.id, label: `${prefix}${f.name}` });
         addLevel(f.id, `${prefix}  › `);
@@ -126,7 +127,7 @@ export default function FilesPage() {
     queryFn: () => apiFetch("/api/folder-files/folders"),
   });
 
-  const topLevelFolders = folders.filter((f) => f.parentId === null);
+  const topLevelFolders = folders.filter((f) => f.parentId === null && f.name !== "Inspections");
   const subfolders = folders.filter((f) => f.parentId === currentFolderId);
 
   const { data: files = [], isLoading: filesLoading } = useQuery<FileItem[]>({

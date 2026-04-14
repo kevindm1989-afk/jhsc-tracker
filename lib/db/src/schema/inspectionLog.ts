@@ -1,6 +1,10 @@
-import { pgTable, serial, text, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, date, timestamp, customType } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+
+const bytea = customType<{ data: Buffer }>({
+  dataType() { return "bytea"; },
+});
 
 export const inspectionLogTable = pgTable("inspection_log", {
   id: serial("id").primaryKey(),
@@ -21,6 +25,7 @@ export const inspectionLogTable = pgTable("inspection_log", {
   verifiedBy: text("verified_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  fileData: bytea("file_data"),
 });
 
 export const insertInspectionEntrySchema = createInsertSchema(inspectionLogTable).omit({
