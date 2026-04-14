@@ -9,6 +9,11 @@ function genCode(id: number) {
   return "RTR-" + String(id).padStart(3, "0");
 }
 
+function canEdit(req: Request) {
+  const role = req.session?.role;
+  return role === "admin" || role === "co-chair" || role === "worker-rep";
+}
+
 function isAdminOrCoChair(req: Request) {
   const role = req.session?.role;
   return role === "admin" || role === "co-chair";
@@ -66,11 +71,8 @@ router.put("/:id", async (req: Request, res: Response) => {
 
     if (!existing) return res.status(404).json({ error: "Not found" });
 
-    if (!isAdminOrCoChair(req)) {
-      const username = req.session?.username || req.session?.displayName || "";
-      if (existing.loggedBy !== username) {
-        return res.status(403).json({ error: "Access denied" });
-      }
+    if (!canEdit(req)) {
+      return res.status(403).json({ error: "Only worker-rep, co-chair, or admin can edit right-to-refuse records" });
     }
 
     if (existing.lockedAt && new Date() > new Date(existing.lockedAt)) {

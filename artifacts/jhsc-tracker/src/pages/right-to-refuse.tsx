@@ -67,6 +67,7 @@ const emptyForm = (): Partial<RightToRefuse> => ({
 
 export default function RightToRefusePage() {
   const { user } = useAuth();
+  const canEdit = user?.role === "admin" || user?.role === "co-chair" || user?.role === "worker-rep";
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -181,7 +182,7 @@ export default function RightToRefusePage() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {isLocked(item) && <Lock className="w-3 h-3 text-muted-foreground" />}
-                        {!isLocked(item) && (
+                        {canEdit && !isLocked(item) && (
                           <Button variant="ghost" size="icon" className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => handleEdit(item)}>
                             <Edit2 className="h-4 w-4" />
                           </Button>
