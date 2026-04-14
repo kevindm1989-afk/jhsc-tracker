@@ -246,6 +246,11 @@ export default function WorkerStatementsPage() {
                           {item.shift} Shift
                         </span>
                         <span className="sm:hidden text-[10px] font-mono text-sidebar-primary font-bold">{item.statementCode}</span>
+                        {canSeeAll && (
+                          <span className="lg:hidden text-[10px] text-muted-foreground font-semibold bg-muted/60 px-1.5 py-0.5 rounded border border-muted">
+                            By: {(item as WorkerStatement & { loggedBy?: string }).loggedBy || "Unknown"}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </TableCell>
