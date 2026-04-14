@@ -26,6 +26,32 @@ router.get("/checklist", (_req, res) => {
   res.json({ sections: CHECKLIST_SECTIONS, zones: ZONE_NAMES });
 });
 
+// GET /api/inspect/completed — all submitted inspection files grouped by month
+router.get("/completed", async (_req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        ff.id,
+        ff.original_name AS "originalName",
+        ff.stored_name   AS "storedName",
+        ff.size_bytes    AS "sizeBytes",
+        ff.uploaded_by   AS "uploadedBy",
+        ff.created_at    AS "createdAt",
+        mf.name          AS "monthLabel"
+      FROM folder_files ff
+      JOIN folders mf ON ff.folder_id = mf.id
+      JOIN folders top ON mf.parent_id = top.id
+      WHERE top.name = 'Inspections'
+        AND ff.original_name ILIKE '%.xlsx'
+      ORDER BY ff.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("Completed inspections error:", err);
+    res.status(500).json({ error: "Failed to load completed inspections" });
+  }
+});
+
 interface ItemResponse {
   rating: "A" | "B" | "C" | "X" | null;
   correctiveAction?: string;
