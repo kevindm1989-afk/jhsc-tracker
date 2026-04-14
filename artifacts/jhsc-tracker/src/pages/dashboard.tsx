@@ -36,6 +36,7 @@ export default function DashboardPage() {
           icon={AlertTriangle} 
           isLoading={isLoadingSummary}
           valueClass={summary?.overdueCount && summary.overdueCount > 0 ? "text-destructive" : ""}
+          onClick={() => navigate("/action-items")}
         />
         <StatCard 
           title="Open Actions" 
@@ -96,7 +97,7 @@ export default function DashboardPage() {
             ) : (
               <div className="divide-y">
                 {overdueItems?.map((item) => (
-                  <div key={item.itemCode} className="p-4 flex flex-col gap-2">
+                  <div key={item.itemCode} className="p-4 flex flex-col gap-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate(`/${item.module}`)}>
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
