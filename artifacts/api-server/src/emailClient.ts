@@ -2,8 +2,6 @@ import nodemailer from "nodemailer";
 
 export function createTransporter() {
   const user = process.env.GMAIL_USER?.trim();
-  // Strip all spaces — Google displays app passwords as "xxxx xxxx xxxx xxxx"
-  // but they must be sent without spaces
   const pass = process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, "");
 
   if (!user || !pass) {
@@ -11,8 +9,11 @@ export function createTransporter() {
   }
 
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
     auth: { user, pass },
+    tls: { rejectUnauthorized: false },
   });
 }
 

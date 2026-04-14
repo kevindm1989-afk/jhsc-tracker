@@ -351,9 +351,10 @@ router.post("/email", async (req, res) => {
     }
 
     return res.json({ success: true, sentTo: CO_CHAIR_EMAIL, fileName, imported, fileSaved, savedToFolder });
-  } catch (err) {
-    console.error("Inspection email error:", err);
-    return res.status(500).json({ error: "Failed to send inspection email." });
+  } catch (err: any) {
+    console.error("Inspection email error:", err?.message ?? err);
+    const detail = err?.message ?? "Unknown error";
+    return res.status(500).json({ error: `Failed to send inspection email: ${detail}` });
   }
 });
 
