@@ -26,6 +26,7 @@ const ALL_PERMISSIONS = [
   "right-to-refuse",
   "files",
   "import-data",
+  "minutes-log",
   "meeting-transcription",
 ];
 
