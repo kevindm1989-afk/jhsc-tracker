@@ -76,21 +76,13 @@ async function apiFetch(url: string, opts?: RequestInit) {
   return res.json();
 }
 
-function formatMeetingDate(isoDate: string) {
-  const [year, month, day] = isoDate.split("-").map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString("en-CA", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 function buildFolderOptions(folders: FolderItem[]): { id: number; label: string }[] {
   const options: { id: number; label: string }[] = [];
   const inspectionsId = folders.find((f) => f.parentId === null && f.name === "Inspections")?.id;
+  const minutesId = folders.find((f) => f.parentId === null && f.name === "Minutes")?.id;
   const addLevel = (parentId: number | null, prefix: string) => {
     folders
-      .filter((f) => f.parentId === parentId && f.id !== inspectionsId)
+      .filter((f) => f.parentId === parentId && f.id !== inspectionsId && f.id !== minutesId)
       .forEach((f) => {
         options.push({ id: f.id, label: `${prefix}${f.name}` });
         addLevel(f.id, `${prefix}  › `);
@@ -113,7 +105,6 @@ export default function FilesPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFolderId, setUploadFolderId] = useState<string>("");
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
-  const [meetingDate, setMeetingDate] = useState<string>("");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -127,7 +118,7 @@ export default function FilesPage() {
     queryFn: () => apiFetch("/api/folder-files/folders"),
   });
 
-  const topLevelFolders = folders.filter((f) => f.parentId === null && f.name !== "Inspections");
+  const topLevelFolders = folders.filter((f) => f.parentId === null && f.name !== "Inspections" && f.name !== "Minutes");
   const subfolders = folders.filter((f) => f.parentId === currentFolderId);
 
   const { data: files = [], isLoading: filesLoading } = useQuery<FileItem[]>({
@@ -137,9 +128,6 @@ export default function FilesPage() {
   });
 
   const folderOptions = buildFolderOptions(folders);
-
-  const minutesFolder = folders.find((f) => f.parentId === null && f.name === "Minutes");
-  const isMinutesDest = !!minutesFolder && uploadFolderId === String(minutesFolder.id);
 
   // ── Mutations ────────────────────────────────────────────────────────────────
 
@@ -234,27 +222,6 @@ export default function FilesPage() {
     if (!uploadFolderId || !uploadFiles.length) return;
 
     let targetFolderId = parseInt(uploadFolderId);
-
-    if (isMinutesDest && meetingDate) {
-      const folderName = formatMeetingDate(meetingDate);
-      const existing = folders.find((f) => f.parentId === targetFolderId && f.name === folderName);
-      if (existing) {
-        targetFolderId = existing.id;
-      } else {
-        try {
-          const created = await apiFetch("/api/folder-files/folders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: folderName, parentId: targetFolderId }),
-          });
-          await qc.invalidateQueries({ queryKey: ["folders"] });
-          targetFolderId = created.id;
-        } catch {
-          toast({ title: "Error", description: "Could not create date subfolder", variant: "destructive" });
-          return;
-        }
-      }
-    }
 
     uploadMut.mutate({ folderId: targetFolderId, files: uploadFiles });
   };
@@ -652,29 +619,6 @@ export default function FilesPage() {
               </Select>
             </div>
 
-            {/* Meeting date — shown only when Minutes folder is selected */}
-            {isMinutesDest && (
-              <div className="space-y-1.5">
-                <label className="text-xs uppercase font-bold text-muted-foreground">
-                  Meeting Date <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  type="date"
-                  value={meetingDate}
-                  onChange={(e) => setMeetingDate(e.target.value)}
-                  max={new Date().toISOString().split("T")[0]}
-                />
-                {meetingDate && (
-                  <p className="text-xs text-muted-foreground">
-                    File will be saved to:{" "}
-                    <span className="font-medium text-foreground">
-                      Minutes &rsaquo; {formatMeetingDate(meetingDate)}
-                    </span>
-                  </p>
-                )}
-              </div>
-            )}
-
             <div
               className={cn(
                 "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
@@ -714,12 +658,12 @@ export default function FilesPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setUploadOpen(false); setUploadFiles([]); setUploadFolderId(""); setMeetingDate(""); }}>
+            <Button variant="outline" onClick={() => { setUploadOpen(false); setUploadFiles([]); setUploadFolderId(""); }}>
               Cancel
             </Button>
             <Button
               onClick={handleUpload}
-              disabled={!uploadFolderId || !uploadFiles.length || uploadMut.isPending || (isMinutesDest && !meetingDate)}
+              disabled={!uploadFolderId || !uploadFiles.length || uploadMut.isPending}
             >
               {uploadMut.isPending ? "Uploading…" : `Upload ${uploadFiles.length || ""} File${uploadFiles.length !== 1 ? "s" : ""}`}
             </Button>
