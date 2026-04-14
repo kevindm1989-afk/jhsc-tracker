@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { ChevronDown, ChevronRight, FileSpreadsheet, Download, ClipboardCheck } from "lucide-react";
+import { ChevronDown, ChevronRight, FileSpreadsheet, Download, ClipboardCheck, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -48,6 +47,31 @@ function parseDateFromName(name: string): string {
 
 function MonthSection({ month, items }: { month: string; items: CompletedInspection[] }) {
   const [open, setOpen] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const { toast } = useToast();
+
+  async function handleDownload(item: CompletedInspection) {
+    if (downloadingId === item.id) return;
+    setDownloadingId(item.id);
+    try {
+      const url = `${BASE}/api/folder-files/files/${encodeURIComponent(item.storedName)}?name=${encodeURIComponent(item.originalName)}`;
+      const resp = await fetch(url, { credentials: "include" });
+      if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+      const blob = await resp.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = item.originalName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (e: any) {
+      toast({ title: "Download failed", description: e.message, variant: "destructive" });
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -73,18 +97,20 @@ function MonthSection({ month, items }: { month: string; items: CompletedInspect
           {items.map((item) => {
             const zone = parseZoneFromName(item.originalName);
             const dateLabel = parseDateFromName(item.originalName);
-            const downloadUrl = `${BASE}/api/folder-files/files/${encodeURIComponent(item.storedName)}?name=${encodeURIComponent(item.originalName)}`;
+            const isDownloading = downloadingId === item.id;
 
             return (
-              <a
+              <button
                 key={item.id}
-                href={downloadUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
+                onClick={() => handleDownload(item)}
+                disabled={isDownloading}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group text-left disabled:opacity-60"
               >
                 <div className="w-8 h-8 rounded bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
-                  <FileSpreadsheet className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  {isDownloading
+                    ? <Loader2 className="w-4 h-4 text-green-600 dark:text-green-400 animate-spin" />
+                    : <FileSpreadsheet className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  }
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{zone}</p>
@@ -96,9 +122,11 @@ function MonthSection({ month, items }: { month: string; items: CompletedInspect
                 </div>
                 <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground hidden sm:inline">Download</span>
+                  <span className="text-xs text-muted-foreground hidden sm:inline">
+                    {isDownloading ? "Downloading…" : "Download"}
+                  </span>
                 </div>
-              </a>
+              </button>
             );
           })}
         </div>
