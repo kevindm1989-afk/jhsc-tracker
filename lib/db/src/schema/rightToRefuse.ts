@@ -17,6 +17,7 @@ export const rightToRefuseTable = pgTable("right_to_refuse", {
   molFileNumber: text("mol_file_number"),
   outcome: text("outcome").notNull().default("Ongoing"),
   notes: text("notes"),
+  loggedBy: text("logged_by").notNull().default("Unknown"),
   lockedAt: timestamp("locked_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

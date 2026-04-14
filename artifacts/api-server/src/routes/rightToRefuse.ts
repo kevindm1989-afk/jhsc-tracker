@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { rightToRefuseTable } from "@workspace/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -9,17 +9,25 @@ function genCode(id: number) {
   return "RTR-" + String(id).padStart(3, "0");
 }
 
-function requireWorkerRepOrAdmin(req: any, res: any, next: any) {
+function isAdminOrCoChair(req: Request) {
   const role = req.session?.role;
-  if (role === "admin" || role === "worker-rep") return next();
-  return res.status(403).json({ error: "Access restricted to Worker Co-Chair and Admin only" });
+  return role === "admin" || role === "co-chair";
 }
-
-router.use(requireWorkerRepOrAdmin);
 
 router.get("/", async (req, res) => {
   try {
-    const items = await db.select().from(rightToRefuseTable).orderBy(desc(rightToRefuseTable.createdAt));
+    const query = db.select().from(rightToRefuseTable);
+
+    let items;
+    if (isAdminOrCoChair(req)) {
+      items = await query.orderBy(desc(rightToRefuseTable.createdAt));
+    } else {
+      const username = req.session?.username || req.session?.displayName || "";
+      items = await query
+        .where(eq(rightToRefuseTable.loggedBy, username))
+        .orderBy(desc(rightToRefuseTable.createdAt));
+    }
+
     res.json(items);
   } catch (err) {
     req.log.error({ err }, "Failed to list right-to-refuse records");
@@ -30,12 +38,12 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const body = req.body;
-    const createdAt = new Date();
-    const lockedAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+    const loggedBy = req.session?.username || req.session?.displayName || "Unknown";
+    const lockedAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const [created] = await db
       .insert(rightToRefuseTable)
-      .values({ ...body, refuseCode: "RTR-000", lockedAt })
+      .values({ ...body, refuseCode: "RTR-000", loggedBy, lockedAt })
       .returning();
 
     const [updated] = await db
@@ -51,12 +59,19 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     const [existing] = await db.select().from(rightToRefuseTable).where(eq(rightToRefuseTable.id, id));
 
     if (!existing) return res.status(404).json({ error: "Not found" });
+
+    if (!isAdminOrCoChair(req)) {
+      const username = req.session?.username || req.session?.displayName || "";
+      if (existing.loggedBy !== username) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
 
     if (existing.lockedAt && new Date() > new Date(existing.lockedAt)) {
       return res.status(403).json({ error: "Record is locked — cannot be edited after 24 hours" });
