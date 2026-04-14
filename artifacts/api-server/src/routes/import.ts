@@ -1,7 +1,4 @@
 import { Router, type IRouter } from "express";
-import path from "path";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
 import multer from "multer";
 import { db, pool } from "@workspace/db";
 import { actionItemsTable, hazardFindingsTable, inspectionLogTable, closedItemsLogTable } from "@workspace/db/schema";
@@ -12,8 +9,6 @@ import "../sessionTypes";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
-
-const UPLOAD_DIR = process.env["UPLOAD_DIR"] || path.join(process.cwd(), "uploads");
 
 function meetingDateToFolderName(meetingDate: string): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(meetingDate)) {
@@ -182,12 +177,6 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
     let fileSaved = false;
     let savedToFolder = "";
     try {
-      if (!existsSync(UPLOAD_DIR)) await mkdir(UPLOAD_DIR, { recursive: true });
-
-      const ext = path.extname(req.file!.originalname) || ".xlsx";
-      const storedName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-      await writeFile(path.join(UPLOAD_DIR, storedName), req.file!.buffer);
-
       const mimeType = req.file!.mimetype ||
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
@@ -224,12 +213,13 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         subFolderId = r.rows[0].id;
       }
 
-      // Insert file record
+      // Insert file record — store bytes directly in DB so they survive deploys
       const uploadedBy = (req as any).session?.displayName || "System";
+      const storedName = req.file!.originalname;
       await pool.query(
-        `INSERT INTO folder_files (folder_id, original_name, stored_name, mime_type, size_bytes, uploaded_by)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [subFolderId, req.file!.originalname, storedName, mimeType, req.file!.size, uploadedBy]
+        `INSERT INTO folder_files (folder_id, original_name, stored_name, mime_type, size_bytes, uploaded_by, file_data)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [subFolderId, req.file!.originalname, storedName, mimeType, req.file!.size, uploadedBy, req.file!.buffer]
       );
 
       fileSaved = true;
