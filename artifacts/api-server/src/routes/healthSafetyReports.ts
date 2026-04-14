@@ -87,18 +87,14 @@ async function generateExcel(report: typeof healthSafetyReportsTable.$inferSelec
   return wb.outputAsync() as Promise<Buffer>;
 }
 
-// GET /health-safety-reports — admin sees all, member sees own
+// GET /health-safety-reports — all authenticated users see all reports
 router.get("/", async (req, res) => {
   try {
-    const session = req.session as any;
-    const role = session?.role;
-    const userId = session?.userId;
     const reports = await db
       .select()
       .from(healthSafetyReportsTable)
       .orderBy(desc(healthSafetyReportsTable.createdAt));
-    const filtered = (role === "admin" || role === "co-chair") ? reports : reports.filter((r) => r.submittedByUserId === userId);
-    res.json(filtered);
+    res.json(reports);
   } catch (err) {
     console.error("GET health-safety-reports error", err);
     res.status(500).json({ error: "Failed to fetch reports" });
