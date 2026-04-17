@@ -21,6 +21,7 @@ import folderFilesRouter from "./folderFiles";
 import transcriptionRouter from "./transcription";
 import inspectionChecklistsRouter from "./inspectionChecklists";
 import inspectionScheduleRouter from "./inspectionSchedule";
+import meetingsRouter from "./meetings";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
 
 const router: IRouter = Router();
@@ -47,6 +48,8 @@ router.use("/attachments", requireAuth, attachmentsRouter);
 router.use("/folder-files", requireAuth, folderFilesRouter);
 router.use("/checklists", requireAuth, inspectionChecklistsRouter);
 router.use("/inspection-schedule", requireAuth, inspectionScheduleRouter);
+
+router.use("/meetings", requireAuth, requirePermission("meetings"), meetingsRouter);
 
 // Admin-only routes
 router.use("/transcription", requireAuth, transcriptionRouter);

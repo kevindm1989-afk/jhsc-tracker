@@ -28,6 +28,7 @@ const ALL_PERMISSIONS = [
   "import-data",
   "minutes-log",
   "meeting-transcription",
+  "meetings",
 ];
 
 // GET /api/users — list all users (admin only)

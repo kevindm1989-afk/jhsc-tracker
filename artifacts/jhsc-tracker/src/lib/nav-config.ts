@@ -25,6 +25,7 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Minutes Log", href: "/minutes-log", permission: "minutes-log" },
   { name: "Manage Users", href: "/manage-users", permission: null, adminOnly: true },
   { name: "Meeting Transcription", href: "/meeting-transcription", permission: "meeting-transcription" },
+  { name: "Meeting Schedule", href: "/meetings", permission: "meetings" },
 ];
 
 const seen = new Set<string>();

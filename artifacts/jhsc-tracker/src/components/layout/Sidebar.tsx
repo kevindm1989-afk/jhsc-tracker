@@ -25,6 +25,7 @@ import {
   Folder,
   Mic,
   BookOpen,
+  CalendarDays,
 } from "lucide-react";
 import {
   DndContext,
@@ -77,6 +78,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "/right-to-refuse": ShieldX,
   "/files": Folder,
   "/meeting-transcription": Mic,
+  "/meetings": CalendarDays,
   "/import-minutes": Upload,
   "/minutes-log": BookOpen,
   "/manage-users": Users,

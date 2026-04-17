@@ -50,6 +50,7 @@ import ChangePasswordPage from "@/pages/change-password";
 import RightToRefusePage from "@/pages/right-to-refuse";
 import FilesPage from "@/pages/files";
 import MeetingTranscriptionPage from "@/pages/meeting-transcription";
+import MeetingsPage from "@/pages/meetings";
 import NotFound from "@/pages/not-found";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
@@ -178,6 +179,9 @@ function Router() {
               </Route>
               <Route path="/meeting-transcription">
                 <ProtectedRoute component={MeetingTranscriptionPage} permission="meeting-transcription" />
+              </Route>
+              <Route path="/meetings">
+                <ProtectedRoute component={MeetingsPage} permission="meetings" />
               </Route>
               <Route path="/change-password">
                 <ProtectedRoute component={ChangePasswordPage} />

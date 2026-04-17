@@ -63,6 +63,31 @@ async function ensureFileDataColumns() {
   }
 }
 
+async function ensureMeetingsTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS meetings (
+        id serial PRIMARY KEY,
+        meeting_code text NOT NULL UNIQUE,
+        title text NOT NULL,
+        meeting_type text NOT NULL DEFAULT 'Regular',
+        scheduled_date date NOT NULL,
+        scheduled_time text NOT NULL,
+        location text NOT NULL,
+        status text NOT NULL DEFAULT 'Scheduled',
+        agenda json NOT NULL DEFAULT '[]',
+        post_meeting_notes text,
+        created_by text NOT NULL DEFAULT 'Unknown',
+        created_at timestamp NOT NULL DEFAULT now(),
+        updated_at timestamp NOT NULL DEFAULT now()
+      );
+    `);
+    logger.info("Meetings table verified");
+  } catch (err) {
+    logger.error({ err }, "Failed to ensure meetings table");
+  }
+}
+
 async function scheduleInspectionReminders() {
   try {
     const client = await pool.connect();
@@ -126,6 +151,7 @@ ensureSessionTable()
       await seedAdminIfNeeded();
       await ensureAdminEmail();
       await ensureFileDataColumns();
+      await ensureMeetingsTable();
 
       // Run inspection reminder check every day at 08:00
       cron.schedule("0 8 * * *", () => {
