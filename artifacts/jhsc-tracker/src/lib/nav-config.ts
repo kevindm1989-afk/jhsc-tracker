@@ -26,6 +26,10 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Manage Users", href: "/manage-users", permission: null, adminOnly: true },
   { name: "Meeting Transcription", href: "/meeting-transcription", permission: "meeting-transcription" },
   { name: "Meeting Schedule", href: "/meetings", permission: "meetings" },
+  { name: "Incident / Near-Miss Log", href: "/incidents", permission: "incidents" },
+  { name: "Emergency Contacts", href: "/emergency-contacts", permission: "emergency-contacts" },
+  { name: "Inspection Reminder", href: "/inspection-reminder", permission: null, adminOnly: true },
+  { name: "Notification Settings", href: "/notification-settings", permission: null, adminOnly: true },
 ];
 
 const seen = new Set<string>();

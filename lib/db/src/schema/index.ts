@@ -15,3 +15,5 @@ export * from "./attachments.js";
 export * from "./inspectionChecklists.js";
 export * from "./folderFiles.js";
 export * from "./meetings.js";
+export * from "./incidents.js";
+export * from "./emergencyContacts.js";

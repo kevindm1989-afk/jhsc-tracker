@@ -22,6 +22,9 @@ import transcriptionRouter from "./transcription";
 import inspectionChecklistsRouter from "./inspectionChecklists";
 import inspectionScheduleRouter from "./inspectionSchedule";
 import meetingsRouter from "./meetings";
+import incidentsRouter from "./incidents";
+import emergencyContactsRouter from "./emergencyContacts";
+import notificationSettingsRouter from "./notificationSettings";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
 
 const router: IRouter = Router();
@@ -50,6 +53,9 @@ router.use("/checklists", requireAuth, inspectionChecklistsRouter);
 router.use("/inspection-schedule", requireAuth, inspectionScheduleRouter);
 
 router.use("/meetings", requireAuth, requirePermission("meetings"), meetingsRouter);
+router.use("/incidents", requireAuth, requirePermission("incidents"), incidentsRouter);
+router.use("/emergency-contacts", requireAuth, requirePermission("emergency-contacts"), emergencyContactsRouter);
+router.use("/notification-settings", requireAuth, notificationSettingsRouter);
 
 // Admin-only routes
 router.use("/transcription", requireAuth, transcriptionRouter);

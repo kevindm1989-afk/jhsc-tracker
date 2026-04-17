@@ -63,6 +63,56 @@ async function ensureFileDataColumns() {
   }
 }
 
+async function ensureIncidentsTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS incidents (
+        id serial PRIMARY KEY,
+        incident_code text NOT NULL UNIQUE,
+        incident_type text NOT NULL DEFAULT 'Incident',
+        incident_date date NOT NULL,
+        incident_time text NOT NULL DEFAULT '',
+        location text NOT NULL DEFAULT '',
+        description text NOT NULL DEFAULT '',
+        injured_person text NOT NULL DEFAULT '',
+        body_part_affected text NOT NULL DEFAULT '',
+        witnesses text NOT NULL DEFAULT '',
+        immediate_action text NOT NULL DEFAULT '',
+        reported_to text NOT NULL DEFAULT '',
+        status text NOT NULL DEFAULT 'Open',
+        created_by text NOT NULL DEFAULT 'Unknown',
+        created_at timestamp NOT NULL DEFAULT now(),
+        updated_at timestamp NOT NULL DEFAULT now()
+      );
+    `);
+    logger.info("Incidents table verified");
+  } catch (err) {
+    logger.error({ err }, "Failed to ensure incidents table");
+  }
+}
+
+async function ensureEmergencyContactsTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS emergency_contacts (
+        id serial PRIMARY KEY,
+        name text NOT NULL,
+        role text NOT NULL DEFAULT '',
+        organization text NOT NULL DEFAULT '',
+        phone text NOT NULL DEFAULT '',
+        email text NOT NULL DEFAULT '',
+        notes text NOT NULL DEFAULT '',
+        sort_order integer NOT NULL DEFAULT 0,
+        created_at timestamp NOT NULL DEFAULT now(),
+        updated_at timestamp NOT NULL DEFAULT now()
+      );
+    `);
+    logger.info("Emergency contacts table verified");
+  } catch (err) {
+    logger.error({ err }, "Failed to ensure emergency_contacts table");
+  }
+}
+
 async function ensureMeetingsTable() {
   try {
     await pool.query(`
@@ -152,6 +202,8 @@ ensureSessionTable()
       await ensureAdminEmail();
       await ensureFileDataColumns();
       await ensureMeetingsTable();
+      await ensureIncidentsTable();
+      await ensureEmergencyContactsTable();
 
       // Run inspection reminder check every day at 08:00
       cron.schedule("0 8 * * *", () => {

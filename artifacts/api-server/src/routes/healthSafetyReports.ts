@@ -4,6 +4,7 @@ import { healthSafetyReportsTable } from "@workspace/db/schema";
 import { desc, eq } from "drizzle-orm";
 import path from "path";
 import { createTransporter, getSenderAddress } from "../emailClient";
+import { sendNotification } from "../lib/notifications";
 
 const router = Router();
 
@@ -192,6 +193,13 @@ router.post("/", async (req, res) => {
         console.error("Failed to send H&S report email:", mailErr);
       }
     });
+
+    sendNotification("hsReport", {
+      reportDate: report.dateReported ?? "",
+      location: report.areaLocation ?? "",
+      description: report.whatHappened ?? "",
+      createdBy: submittedByName,
+    }).catch(() => {});
 
     res.status(201).json({ report });
   } catch (err) {

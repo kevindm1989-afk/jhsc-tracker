@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db } from "@workspace/db";
-import { meetingsTable } from "@workspace/db/schema";
+import { db, pool } from "@workspace/db";
+import { incidentsTable } from "@workspace/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { sendNotification } from "../lib/notifications";
 
@@ -17,58 +17,54 @@ function getUsername(req: Request) {
 
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const items = await db
-      .select()
-      .from(meetingsTable)
-      .orderBy(desc(meetingsTable.scheduledDate));
+    const items = await db.select().from(incidentsTable).orderBy(desc(incidentsTable.incidentDate));
     res.json(items);
   } catch (err) {
-    req.log?.error({ err }, "Failed to list meetings");
+    req.log?.error({ err }, "Failed to list incidents");
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  if (!isAdminOrCoChair(req)) {
-    return res.status(403).json({ error: "Access denied" });
-  }
   try {
     const today = new Date();
     const datePart = today.toISOString().slice(0, 10).replace(/-/g, "");
-    const existing = await db
-      .select({ code: meetingsTable.meetingCode })
-      .from(meetingsTable);
+    const existing = await db.select({ code: incidentsTable.incidentCode }).from(incidentsTable);
     const seq = existing.length + 1;
-    const meetingCode = `MTG-${datePart}-${String(seq).padStart(3, "0")}`;
+    const incidentCode = `INC-${datePart}-${String(seq).padStart(3, "0")}`;
 
     const body = req.body;
-    const [meeting] = await db
-      .insert(meetingsTable)
+    const [incident] = await db
+      .insert(incidentsTable)
       .values({
-        meetingCode,
-        title: body.title,
-        meetingType: body.meetingType ?? "Regular",
-        scheduledDate: body.scheduledDate,
-        scheduledTime: body.scheduledTime,
-        location: body.location,
-        status: body.status ?? "Scheduled",
-        agenda: body.agenda ?? [],
-        postMeetingNotes: body.postMeetingNotes ?? null,
+        incidentCode,
+        incidentType: body.incidentType ?? "Incident",
+        incidentDate: body.incidentDate,
+        incidentTime: body.incidentTime ?? "",
+        location: body.location ?? "",
+        description: body.description ?? "",
+        injuredPerson: body.injuredPerson ?? "",
+        bodyPartAffected: body.bodyPartAffected ?? "",
+        witnesses: body.witnesses ?? "",
+        immediateAction: body.immediateAction ?? "",
+        reportedTo: body.reportedTo ?? "",
+        status: body.status ?? "Open",
         createdBy: getUsername(req),
       })
       .returning();
 
-    sendNotification("meeting", {
-      title: meeting.title,
-      meetingType: meeting.meetingType,
-      scheduledDate: meeting.scheduledDate,
-      scheduledTime: meeting.scheduledTime,
-      location: meeting.location,
+    sendNotification("incident", {
+      incidentCode: incident.incidentCode,
+      incidentType: incident.incidentType,
+      incidentDate: incident.incidentDate,
+      location: incident.location,
+      description: incident.description,
+      createdBy: incident.createdBy,
     }).catch(() => {});
 
-    return res.status(201).json(meeting);
+    return res.status(201).json(incident);
   } catch (err) {
-    req.log?.error({ err }, "Failed to create meeting");
+    req.log?.error({ err }, "Failed to create incident");
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -81,25 +77,28 @@ router.put("/:id", async (req: Request, res: Response) => {
     const id = parseInt(req.params.id as string);
     const body = req.body;
     const [updated] = await db
-      .update(meetingsTable)
+      .update(incidentsTable)
       .set({
-        title: body.title,
-        meetingType: body.meetingType,
-        scheduledDate: body.scheduledDate,
-        scheduledTime: body.scheduledTime,
+        incidentType: body.incidentType,
+        incidentDate: body.incidentDate,
+        incidentTime: body.incidentTime,
         location: body.location,
+        description: body.description,
+        injuredPerson: body.injuredPerson,
+        bodyPartAffected: body.bodyPartAffected,
+        witnesses: body.witnesses,
+        immediateAction: body.immediateAction,
+        reportedTo: body.reportedTo,
         status: body.status,
-        agenda: body.agenda,
-        postMeetingNotes: body.postMeetingNotes ?? null,
         updatedAt: new Date(),
       })
-      .where(eq(meetingsTable.id, id))
+      .where(eq(incidentsTable.id, id))
       .returning();
 
     if (!updated) return res.status(404).json({ error: "Not found" });
     return res.json(updated);
   } catch (err) {
-    req.log?.error({ err }, "Failed to update meeting");
+    req.log?.error({ err }, "Failed to update incident");
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -110,10 +109,10 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
   try {
     const id = parseInt(req.params.id as string);
-    await db.delete(meetingsTable).where(eq(meetingsTable.id, id));
+    await db.delete(incidentsTable).where(eq(incidentsTable.id, id));
     return res.json({ success: true });
   } catch (err) {
-    req.log?.error({ err }, "Failed to delete meeting");
+    req.log?.error({ err }, "Failed to delete incident");
     return res.status(500).json({ error: "Internal server error" });
   }
 });
