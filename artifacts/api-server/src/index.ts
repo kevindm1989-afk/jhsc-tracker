@@ -189,30 +189,26 @@ async function scheduleInspectionReminders() {
   }
 }
 
-ensureSessionTable()
-  .then(() => {
-    app.listen(port, "0.0.0.0", async (err) => {
-      if (err) {
-        logger.error({ err }, "Error listening on port");
-        process.exit(1);
-      }
+app.listen(port, "0.0.0.0", () => {
+  logger.info(`Server running on port ${port}`);
+});
 
-      logger.info(`Server running on port ${port}`);
-      await seedAdminIfNeeded();
-      await ensureAdminEmail();
-      await ensureFileDataColumns();
-      await ensureMeetingsTable();
-      await ensureIncidentsTable();
-      await ensureEmergencyContactsTable();
+(async () => {
+  try {
+    await ensureSessionTable();
+    await seedAdminIfNeeded();
+    await ensureAdminEmail();
+    await ensureFileDataColumns();
+    await ensureMeetingsTable();
+    await ensureIncidentsTable();
+    await ensureEmergencyContactsTable();
 
-      // Run inspection reminder check every day at 08:00
-      cron.schedule("0 8 * * *", () => {
-        scheduleInspectionReminders().catch(e => logger.error({ err: e }, "Inspection cron failed"));
-      });
-      logger.info("Inspection reminder cron scheduled (08:00 daily)");
+    cron.schedule("0 8 * * *", () => {
+      scheduleInspectionReminders().catch(e => logger.error({ err: e }, "Inspection cron failed"));
     });
-  })
-  .catch((err) => {
-    logger.error({ err }, "Failed to ensure session table");
+    logger.info("Inspection reminder cron scheduled (08:00 daily)");
+  } catch (err) {
+    logger.error({ err }, "Startup setup failed");
     process.exit(1);
-  });
+  }
+})();
