@@ -1,0 +1,306 @@
+Current runner version: '2.333.1'
+Runner Image Provisioner
+Operating System
+Runner Image
+GITHUB_TOKEN Permissions
+Secret source: Actions
+Prepare workflow directory
+Prepare all required actions
+Getting action download info
+Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Download action repository 'superfly/flyctl-actions@master' (SHA:ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1)
+Complete job name: deploy
+1s
+Run actions/checkout@v4
+Syncing repository: kevindm1989-afk/jhsc-tracker
+Getting Git version info
+Temporarily overriding HOME='/home/runner/work/_temp/8f0b3315-d10c-4fc5-9b91-33021393080c' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+/usr/bin/git config --global --add safe.directory /home/runner/work/jhsc-tracker/jhsc-tracker
+Deleting the contents of '/home/runner/work/jhsc-tracker/jhsc-tracker'
+Initializing the repository
+Disabling automatic garbage collection
+Setting up auth
+Fetching the repository
+Determining the checkout info
+/usr/bin/git sparse-checkout disable
+/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Checking out the ref
+/usr/bin/git log -1 --format=%H
+bf882fb103f053b15bb3663bd5144422d96d7f17
+2s
+Run superfly/flyctl-actions/setup-flyctl@master
+Acquired 0.4.36 from https://github.com/superfly/flyctl/releases/download/v0.4.36/flyctl_0.4.36_Linux_x86_64.tar.gz
+/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/ba85ea14-10cd-4446-ab66-6b65023a96ea -f /home/runner/work/_temp/3ed2cd7f-dccb-4dfe-a766-f7de9c5fde97
+Successfully cached flyctl to /opt/hostedtoolcache/flyctl/0.4.36/x86_64
+Added flyctl to the path
+0s
+Run flyctl auth whoami
+e1acf5cd-d431-5d15-864f-874b1de471fa@tokens.fly.io
+2m 23s
+Run flyctl deploy --remote-only
+==> Verifying app config
+Validating /home/runner/work/jhsc-tracker/jhsc-tracker/fly.toml
+✓ Configuration is valid
+--> Verified app config
+==> Building image
+Waiting for depot builder...
+
+==> Building image with Depot
+--> build:  (​)
+#1 [internal] load build definition from Dockerfile
+#1 DONE 0.0s
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 499B 0.2s
+#1 transferring dockerfile: 499B 0.2s done
+#1 DONE 0.2s
+
+#2 [internal] load metadata for docker.io/library/node:20-alpine
+#2 DONE 0.3s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 155B 0.2s
+#3 transferring context: 155B 0.2s done
+#3 DONE 0.2s
+
+#4 [ 1/13] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#4 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 3.65MB 1.1s done
+#5 DONE 1.1s
+
+#6 [ 2/13] RUN corepack enable
+#6 CACHED
+
+#7 [ 3/13] WORKDIR /app
+#7 CACHED
+
+#8 [ 4/13] COPY . .
+#8 DONE 0.2s
+
+#9 [ 5/13] RUN pnpm install --no-frozen-lockfile
+#9 0.685 ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+#9 2.420 artifacts/api-server                     |  WARN  The field "pnpm.overrides" was found in /app/artifacts/api-server/package.json. This will not take effect. You should configure "pnpm.overrides" at the root of the workspace instead.
+#9 2.444 Scope: all 9 workspace projects
+#9 2.943 Progress: resolved 0, reused 0, downloaded 1, added 0
+#9 3.947 Progress: resolved 86, reused 0, downloaded 86, added 0
+#9 4.958 Progress: resolved 133, reused 0, downloaded 118, added 0
+#9 5.967 Progress: resolved 336, reused 0, downloaded 315, added 0
+#9 6.966 Progress: resolved 640, reused 0, downloaded 577, added 0
+#9 7.966 Progress: resolved 988, reused 0, downloaded 871, added 0
+#9 9.118  WARN  10 deprecated subdependencies found: @esbuild-kit/core-utils@3.3.2, @esbuild-kit/esm-loader@2.6.5, fstream@1.0.12, glob@7.2.3, inflight@1.0.6, lodash.isequal@4.5.0, lodash@4.18.0, rimraf@2.7.1, source-map@0.8.0-beta.0, sourcemap-codec@1.4.8
+#9 9.152 Progress: resolved 1010, reused 0, downloaded 893, added 0
+#9 9.165 Packages: +893
+#9 9.165 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#9 10.15 Progress: resolved 1010, reused 0, downloaded 893, added 864
+#9 10.22 Progress: resolved 1010, reused 0, downloaded 893, added 893, done
+#9 10.58 .../esbuild@0.18.20/node_modules/esbuild postinstall$ node install.js
+#9 10.58 .../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+#9 10.58 .../esbuild@0.27.3/node_modules/esbuild postinstall$ node install.js
+#9 10.69 .../esbuild@0.18.20/node_modules/esbuild postinstall: Done
+#9 10.73 .../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+#9 10.84 .../esbuild@0.27.3/node_modules/esbuild postinstall: Done
+#9 13.07 . preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+#9 13.12 . preinstall: Done
+#9 13.31  WARN  Issues with peer dependencies found
+#9 13.31 artifacts/api-server
+#9 13.31 └─┬ esbuild-plugin-pino 2.3.3
+#9 13.31   └── ✕ unmet peer esbuild@">=0.25.0 <=0.25.8": found 0.25.12
+#9 13.31 
+#9 13.31 artifacts/jhsc-tracker
+#9 13.31 └─┬ @vitejs/plugin-legacy 8.0.1
+#9 13.31   └── ✕ unmet peer vite@^8.0.0: found 7.3.2
+#9 13.31 
+#9 13.31 devDependencies:
+#9 13.31 + prettier 3.8.1 (3.8.3 is available)
+#9 13.31 + typescript 5.9.3 (6.0.3 is available)
+#9 13.31 
+#9 13.32 ╭ Warning ─────────────────────────────────────────────────────────────────────╮
+#9 13.32 │                                                                              │
+#9 13.32 │   Ignored build scripts: core-js@3.49.0.                                     │
+#9 13.32 │   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+#9 13.32 │   to run scripts.                                                            │
+#9 13.32 │                                                                              │
+#9 13.32 ╰──────────────────────────────────────────────────────────────────────────────╯
+#9 13.42 Done in 11.6s using pnpm v10.33.0
+#9 DONE 20.1s
+
+#10 [ 6/13] WORKDIR /app/lib/db
+#10 DONE 1.2s
+
+#11 [ 7/13] RUN pnpm build
+#11 0.682 
+#11 0.682 > @workspace/db@0.0.0 build /app/lib/db
+#11 0.682 > tsc
+#11 0.682 
+#11 DONE 4.3s
+
+#12 [ 8/13] WORKDIR /app/artifacts/jhsc-tracker
+#12 DONE 0.0s
+
+#13 [ 9/13] RUN pnpm run build
+#13 0.627 
+#13 0.627 > @workspace/jhsc-tracker@0.0.0 build /app/artifacts/jhsc-tracker
+#13 0.627 > vite build --config vite.config.ts
+#13 0.627 
+#13 1.217 vite v7.3.2 building client environment for production...
+#13 1.323 transforming...
+#13 2.231 src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#13 3.108 src/components/ui/select.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#13 3.253 src/components/ui/label.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#13 3.268 src/components/ui/sheet.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#13 3.274 src/components/ui/progress.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#13 3.275 src/components/ui/dropdown-menu.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#13 6.849 ✓ 2195 modules transformed.
+#13 6.851 Unknown output options: minify. Allowed options: amd, assetFileNames, banner, chunkFileNames, compact, dir, dynamicImportInCjs, entryFileNames, esModule, experimentalMinChunkSize, exports, extend, externalImportAssertions, externalImportAttributes, externalLiveBindings, file, footer, format, freeze, generatedCode, globals, hashCharacters, hoistTransitiveImports, importAttributesKey, indent, inlineDynamicImports, interop, intro, manualChunks, minifyInternalExports, name, noConflict, onlyExplicitManualChunks, outro, paths, plugins, preserveModules, preserveModulesRoot, reexportProtoFromExternal, sanitizeFileName, sourcemap, sourcemapBaseUrl, sourcemapDebugIds, sourcemapExcludeSources, sourcemapFile, sourcemapFileNames, sourcemapIgnoreList, sourcemapPathTransform, strict, systemNullSetters, validate, virtualDirname
+#13 13.92 rendering chunks...
+#13 15.94 computing gzip size...
+#13 15.98 dist/public/registerSW.js                          0.13 kB
+#13 15.98 dist/public/manifest.webmanifest                   0.58 kB
+#13 15.98 dist/public/assets/polyfills-legacy-BJFVf5Qd.js   57.20 kB │ gzip:  20.91 kB
+#13 15.98 dist/public/assets/index-legacy-COI6XZfN.js      879.18 kB │ gzip: 247.71 kB
+#13 15.98 
+#13 15.98 (!) Some chunks are larger than 500 kB after minification. Consider:
+#13 15.98 - Using dynamic import() to code-split the application
+#13 15.98 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+#13 15.98 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+#13 16.48 dist/public/registerSW.js                0.13 kB
+#13 16.48 dist/public/manifest.webmanifest         0.58 kB
+#13 16.48 dist/public/index.html                   2.83 kB │ gzip:   1.18 kB
+#13 16.48 dist/public/assets/index-CBU7nJow.css  132.52 kB │ gzip:  21.19 kB
+#13 16.48 dist/public/assets/index-CapG0D44.js   873.89 kB │ gzip: 243.92 kB
+#13 16.48 
+#13 16.48 (!) Some chunks are larger than 500 kB after minification. Consider:
+#13 16.48 - Using dynamic import() to code-split the application
+#13 16.48 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+#13 16.48 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+#13 16.48 ✓ built in 15.21s
+#13 18.70 
+#13 18.70 PWA v1.2.0
+#13 18.70 mode      generateSW
+#13 18.70 precache  18 entries (2126.17 KiB)
+#13 18.70 files generated
+#13 18.70   dist/public/sw.js
+#13 18.70   dist/public/workbox-2281e46b.js
+#13 DONE 18.9s
+
+#14 [10/13] WORKDIR /app/artifacts/api-server
+#14 DONE 0.0s
+
+#15 [11/13] RUN rm -rf dist
+#15 DONE 0.1s
+
+#16 [12/13] RUN pnpm run build
+#16 0.626 
+#16 0.626 > @workspace/api-server@0.0.0 build /app/artifacts/api-server
+#16 0.626 > node ./build.mjs
+#16 0.626 
+#16 0.788 
+#16 0.788   dist/index.js                     184.9kb
+#16 0.788   dist/pino-worker.js                58.9kb
+#16 0.788   dist/pino-file.js                  54.8kb
+#16 0.788   dist/pino-pretty.js                43.3kb
+#16 0.788   dist/thread-stream-worker.js        6.9kb
+#16 0.788   dist/index.js.map                 338.2kb
+#16 0.788   dist/pino-worker.js.map           105.0kb
+#16 0.788   dist/pino-file.js.map              89.1kb
+#16 0.788   dist/pino-pretty.js.map            81.3kb
+#16 0.788   dist/thread-stream-worker.js.map   11.8kb
+#16 0.788 
+#16 0.788 ⚡ Done in 40ms
+#16 DONE 0.8s
+
+#17 [13/13] WORKDIR /app
+#17 DONE 0.0s
+
+#18 exporting to image
+#18 exporting layers
+#18 exporting layers 14.3s done
+#18 exporting manifest sha256:a8fe3be3170068331ac201853a79bb59961e22bdd58bf190c51bae7356da701b done
+#18 exporting config sha256:b8b7e046b3c8cd21f51e5f177f27254ff9adfc92a719b40d9c08a00c0e9cbff2 done
+#18 pushing layers for registry.fly.io/jhsctracker-api:deployment-01KPKYXGDPNGHMGF8VJ39Y9PZA@sha256:a8fe3be3170068331ac201853a79bb59961e22bdd58bf190c51bae7356da701b
+#18 pushing layer sha256:b8b7e046b3c8cd21f51e5f177f27254ff9adfc92a719b40d9c08a00c0e9cbff2
+#18 pushing layer sha256:22897e46209a86f482a546c76d606ccad0c0ac200b8eca5c445f3343b2a8b28d
+#18 pushing layer sha256:f1cb19e342daabd8498722815bdae33a2ed8b26ba7cc780c75ac5b83dd8e37b6
+#18 pushing layer sha256:2c6c098cdcb88e279d724800c3a79bcef2cc4941a15c7c8527aff2ae35462c22
+#18 pushing layer sha256:2c1ce468d9f3d941396801f6e3afc8921466650dd05430fe644cd3537713d27f
+#18 pushing layer sha256:4b0509c947003be1323a5a38977845d73b4980e37144df3290035d51059ccb48
+#18 pushing layer sha256:c59f4feb5aa577638f9280b984a9bdd2d8a599eafeb85538ea635e3a54545cdb
+#18 pushing layer sha256:7095848da29f7e14ac2a3ef653212fb77cc10ee61eb385b06a0c6ca54944279b
+#18 pushing layer sha256:2ea843fce1ca75b5babcd8ba9f089613c9b01ed8817cb128a07332aca48253e9
+#18 pushing layer sha256:a8952af40f46b0c1c4bcc62e27060ec4b093b82cb0ee063e4ba0f17d00142fe7
+#18 pushing layer sha256:79162180734b88ff8cc67216853fcd9fe1fc55fc61873d5bfd6e8f93d0897bf4
+#18 pushing layer sha256:1c7f9b6c07a76147766c1efbea9c1fba8d3bc76d8cbece5c13abe8afc1ffc36f 0.1s done
+#18 pushing layer sha256:152a68bfa5b177d1159e9e9ce1551b5d2623b8fb965e96519b351fc091402891
+#18 pushing layer sha256:2c1ce468d9f3d941396801f6e3afc8921466650dd05430fe644cd3537713d27f 0.2s done
+#18 pushing layer sha256:7095848da29f7e14ac2a3ef653212fb77cc10ee61eb385b06a0c6ca54944279b 0.3s done
+#18 pushing layer sha256:22897e46209a86f482a546c76d606ccad0c0ac200b8eca5c445f3343b2a8b28d 0.5s done
+#18 pushing layer sha256:2ea843fce1ca75b5babcd8ba9f089613c9b01ed8817cb128a07332aca48253e9 0.3s done
+#18 pushing layer sha256:4b0509c947003be1323a5a38977845d73b4980e37144df3290035d51059ccb48 0.5s done
+#18 pushing layer sha256:152a68bfa5b177d1159e9e9ce1551b5d2623b8fb965e96519b351fc091402891 0.8s done
+#18 pushing layer sha256:b8b7e046b3c8cd21f51e5f177f27254ff9adfc92a719b40d9c08a00c0e9cbff2 0.9s done
+#18 pushing layer sha256:f1cb19e342daabd8498722815bdae33a2ed8b26ba7cc780c75ac5b83dd8e37b6 0.8s done
+#18 pushing layer sha256:c59f4feb5aa577638f9280b984a9bdd2d8a599eafeb85538ea635e3a54545cdb 0.8s done
+#18 pushing layer sha256:a8952af40f46b0c1c4bcc62e27060ec4b093b82cb0ee063e4ba0f17d00142fe7 0.8s done
+#18 pushing layer sha256:79162180734b88ff8cc67216853fcd9fe1fc55fc61873d5bfd6e8f93d0897bf4 0.8s done
+#18 pushing layers for registry.fly.io/jhsctracker-api:deployment-01KPKYXGDPNGHMGF8VJ39Y9PZA@sha256:a8fe3be3170068331ac201853a79bb59961e22bdd58bf190c51bae7356da701b 2.7s done
+#18 pushing layer sha256:2c6c098cdcb88e279d724800c3a79bcef2cc4941a15c7c8527aff2ae35462c22 2.7s done
+#18 pushing manifest for registry.fly.io/jhsctracker-api:deployment-01KPKYXGDPNGHMGF8VJ39Y9PZA@sha256:a8fe3be3170068331ac201853a79bb59961e22bdd58bf190c51bae7356da701b
+#18 pushing manifest for registry.fly.io/jhsctracker-api:deployment-01KPKYXGDPNGHMGF8VJ39Y9PZA@sha256:a8fe3be3170068331ac201853a79bb59961e22bdd58bf190c51bae7356da701b 0.5s done
+#18 DONE 17.6s
+--> Build Summary:  (​)
+--> Building image done
+image: registry.fly.io/jhsctracker-api:deployment-01KPKYXGDPNGHMGF8VJ39Y9PZA
+image size: 143 MB
+
+Watch your deployment at https://fly.io/apps/jhsctracker-api/monitoring
+
+Updating existing machines in 'jhsctracker-api' with rolling strategy
+> Acquiring lease for 827661f1257508
+> Acquired lease for 827661f1257508
+> Updating machine config for 827661f1257508
+> Updating 827661f1257508 [app]
+> Updated machine config for 827661f1257508
+> Waiting for machine 827661f1257508 to reach a good state
+> Machine 827661f1257508 reached started state
+
+WARNING The app is not listening on the expected address and will not be reachable by fly-proxy.
+You can fix this by configuring your app to listen on the following addresses:
+  - 0.0.0.0:3000
+Found these processes inside the machine with open listening sockets:
+ PROCESS        │ ADDRESSES                             
+────────────────┼───────────────────────────────────────
+ /.fly/hallpass │ [fdaa:5f:4dff:a7b:5f5:77f9:d651:2]:22 
+
+> Running smoke checks on machine 827661f1257508
+> Running machine checks on machine 827661f1257508
+> Checking health of machine 827661f1257508
+✔ Machine 827661f1257508 is now in a good state
+> Clearing lease for 827661f1257508
+✔ Cleared lease for 827661f1257508
+Checking DNS configuration for jhsctracker-api.fly.dev
+✓ DNS configuration verified
+
+Visit your newly deployed app at https://jhsctracker-api.fly.dev/
+
+0s
+Post job cleanup.
+/usr/bin/git version
+git version 2.53.0
+Temporarily overriding HOME='/home/runner/work/_temp/d48d2112-accd-4333-94e0-2fef100a4631' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+/usr/bin/git config --global --add safe.directory /home/runner/work/jhsc-tracker/jhsc-tracker
+/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+http.https://github.com/.extraheader
+/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+0s
+Cleaning up orphan processes
+Warning: Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
