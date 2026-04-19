@@ -1,0 +1,361 @@
+Current runner version: '2.333.1'
+Runner Image Provisioner
+Operating System
+Runner Image
+GITHUB_TOKEN Permissions
+Secret source: Actions
+Prepare workflow directory
+Prepare all required actions
+Getting action download info
+Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Download action repository 'superfly/flyctl-actions@master' (SHA:ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1)
+Complete job name: Deploy
+1s
+Run actions/checkout@v4
+Syncing repository: kevindm1989-afk/jhsc-tracker
+Getting Git version info
+Temporarily overriding HOME='/home/runner/work/_temp/ff121ae0-1a9c-46dc-ad86-d0556bb5c12d' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+/usr/bin/git config --global --add safe.directory /home/runner/work/jhsc-tracker/jhsc-tracker
+Deleting the contents of '/home/runner/work/jhsc-tracker/jhsc-tracker'
+Initializing the repository
+Disabling automatic garbage collection
+Setting up auth
+Fetching the repository
+Determining the checkout info
+/usr/bin/git sparse-checkout disable
+/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Checking out the ref
+/usr/bin/git log -1 --format=%H
+4dc729d64c9444e2ef43590a937f358c4ab36d87
+1s
+Run superfly/flyctl-actions/setup-flyctl@master
+Acquired 0.4.36 from https://github.com/superfly/flyctl/releases/download/v0.4.36/flyctl_0.4.36_Linux_x86_64.tar.gz
+/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/0631f183-bae8-4cef-9d27-9bbdc1017102 -f /home/runner/work/_temp/53997cc5-99ee-4d4b-a933-734e88a0af92
+Successfully cached flyctl to /opt/hostedtoolcache/flyctl/0.4.36/x86_64
+Added flyctl to the path
+2m 15s
+Run flyctl deploy --remote-only
+==> Verifying app config
+Validating /home/runner/work/jhsc-tracker/jhsc-tracker/fly.toml
+✓ Configuration is valid
+--> Verified app config
+==> Building image
+Waiting for depot builder...
+
+==> Building image with Depot
+--> build:  (​)
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 499B 0.1s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/node:24-alpine
+#2 DONE 0.3s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 155B 0.1s done
+#3 DONE 0.1s
+
+#4 [ 1/13] FROM docker.io/library/node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+#4 resolve docker.io/library/node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f done
+#4 sha256:1ba15d4bb83a5da0244b0ca03df5cac1a19a914c5b876543cb1065d7fddbc9d5 446B / 446B 0.1s done
+#4 sha256:3eebacc30b80dca2db4fba20ee2c2562ae69dbbdc307fcee75b49cf859cf63e4 1.26MB / 1.26MB 0.1s done
+#4 sha256:d7319775d025f51b0d7ee7f1224231b07f98b38a21909b5a7e2572e083dcb50a 40.89MB / 51.51MB 0.6s
+#4 sha256:d7319775d025f51b0d7ee7f1224231b07f98b38a21909b5a7e2572e083dcb50a 51.51MB / 51.51MB 0.8s done
+#4 extracting sha256:d7319775d025f51b0d7ee7f1224231b07f98b38a21909b5a7e2572e083dcb50a
+#4 ...
+
+#5 [internal] load build context
+#5 transferring context: 3.65MB 0.6s done
+#5 DONE 0.6s
+
+#4 [ 1/13] FROM docker.io/library/node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+#4 extracting sha256:d7319775d025f51b0d7ee7f1224231b07f98b38a21909b5a7e2572e083dcb50a 1.2s done
+#4 extracting sha256:3eebacc30b80dca2db4fba20ee2c2562ae69dbbdc307fcee75b49cf859cf63e4 0.0s done
+#4 extracting sha256:1ba15d4bb83a5da0244b0ca03df5cac1a19a914c5b876543cb1065d7fddbc9d5 0.0s done
+#4 ...
+
+#6 [ 2/13] RUN corepack enable
+#6 DONE 1.3s
+
+#7 [ 3/13] WORKDIR /app
+#7 DONE 0.0s
+
+#8 [ 4/13] COPY . .
+#8 DONE 0.1s
+
+#9 [ 4/13] COPY . .
+#9 Deduplicating step ID [ 4/13] COPY . ., another build is calculating it done
+#9 ...
+
+#10 [ 5/13] RUN pnpm install --no-frozen-lockfile
+#10 0.457 ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+#10 2.050 artifacts/api-server                     |  WARN  The field "pnpm.overrides" was found in /app/artifacts/api-server/package.json. This will not take effect. You should configure "pnpm.overrides" at the root of the workspace instead.
+#10 2.070 Scope: all 9 workspace projects
+#10 2.649 Progress: resolved 0, reused 0, downloaded 1, added 0
+#10 3.650 Progress: resolved 106, reused 0, downloaded 106, added 0
+#10 4.650 Progress: resolved 217, reused 0, downloaded 196, added 0
+#10 5.652 Progress: resolved 439, reused 0, downloaded 419, added 0
+#10 6.652 Progress: resolved 676, reused 0, downloaded 567, added 0
+#10 7.798 Progress: resolved 1011, reused 0, downloaded 894, added 0
+#10 8.400  WARN  10 deprecated subdependencies found: @esbuild-kit/core-utils@3.3.2, @esbuild-kit/esm-loader@2.6.5, fstream@1.0.12, glob@7.2.3, inflight@1.0.6, lodash.isequal@4.5.0, lodash@4.18.0, rimraf@2.7.1, source-map@0.8.0-beta.0, sourcemap-codec@1.4.8
+#10 8.431 Packages: +894
+#10 8.431 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#10 8.798 Progress: resolved 1011, reused 0, downloaded 894, added 513
+#10 9.427 Progress: resolved 1011, reused 0, downloaded 894, added 894, done
+#10 9.821 .../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+#10 9.823 .../esbuild@0.18.20/node_modules/esbuild postinstall$ node install.js
+#10 9.824 .../esbuild@0.27.3/node_modules/esbuild postinstall$ node install.js
+#10 9.948 .../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+#10 9.954 .../esbuild@0.18.20/node_modules/esbuild postinstall: Done
+#10 9.986 .../esbuild@0.27.3/node_modules/esbuild postinstall: Done
+#10 ...
+
+#11 [ 5/13] RUN pnpm install --no-frozen-lockfile
+#11 Deduplicating step ID [ 5/13] RUN pnpm install --no-frozen-lockfile, another build is calculating it done
+#11 ...
+
+#4 [ 1/13] FROM docker.io/library/node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+#4 ...
+
+#10 [ 5/13] RUN pnpm install --no-frozen-lockfile
+#10 11.68 . preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+#10 11.70 . preinstall: Done
+#10 11.90  WARN  Issues with peer dependencies found
+#10 11.90 artifacts/api-server
+#10 11.90 └─┬ esbuild-plugin-pino 2.3.3
+#10 11.90   └── ✕ unmet peer esbuild@">=0.25.0 <=0.25.8": found 0.25.12
+#10 11.90 
+#10 11.90 devDependencies:
+#10 11.90 + prettier 3.8.1 (3.8.3 is available)
+#10 11.90 + typescript 5.9.3 (6.0.3 is available)
+#10 11.90 
+#10 11.91 ╭ Warning ─────────────────────────────────────────────────────────────────────╮
+#10 11.91 │                                                                              │
+#10 11.91 │   Ignored build scripts: core-js@3.49.0.                                     │
+#10 11.91 │   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+#10 11.91 │   to run scripts.                                                            │
+#10 11.91 │                                                                              │
+#10 11.91 ╰──────────────────────────────────────────────────────────────────────────────╯
+#10 11.96 Done in 10.5s using pnpm v10.33.0
+#10 DONE 19.6s
+
+#4 [ 1/13] FROM docker.io/library/node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+#4 ...
+
+#12 [ 6/13] WORKDIR /app/lib/db
+#12 DONE 1.2s
+
+#13 [ 6/13] WORKDIR /app/lib/db
+#13 Deduplicating step ID [ 6/13] WORKDIR /app/lib/db, another build is calculating it done
+#13 ...
+
+#14 [ 7/13] RUN pnpm build
+#14 0.649 
+#14 0.649 > @workspace/db@0.0.0 build /app/lib/db
+#14 0.649 > tsc
+#14 0.649 
+#14 DONE 4.5s
+
+#15 [ 7/13] RUN pnpm build
+#15 Deduplicating step ID [ 7/13] RUN pnpm build, another build is calculating it done
+#15 ...
+
+#16 [ 8/13] WORKDIR /app/artifacts/jhsc-tracker
+#16 DONE 0.0s
+
+#17 [ 9/13] RUN pnpm run build
+#17 0.703 
+#17 0.703 > @workspace/jhsc-tracker@0.0.0 build /app/artifacts/jhsc-tracker
+#17 0.703 > vite build --config vite.config.ts
+#17 0.703 
+#17 1.327 vite v7.3.2 building client environment for production...
+#17 1.456 transforming...
+#17 2.391 src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#17 2.913 src/components/ui/select.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#17 3.017 src/components/ui/label.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#17 3.734 src/components/ui/sheet.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#17 3.744 src/components/ui/progress.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#17 4.326 src/components/ui/dropdown-menu.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#17 6.009 ✓ 2195 modules transformed.
+#17 ...
+
+#18 [ 9/13] RUN pnpm run build
+#18 Deduplicating step ID [ 9/13] RUN pnpm run build, another build is calculating it done
+#18 ...
+
+#19 [ 8/13] WORKDIR /app/artifacts/jhsc-tracker
+#19 Deduplicating step ID [ 8/13] WORKDIR /app/artifacts/jhsc-tracker, another build is calculating it done
+#19 ...
+
+#4 [ 1/13] FROM docker.io/library/node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+#4 ...
+
+#17 [ 9/13] RUN pnpm run build
+#17 16.71 rendering chunks...
+#17 18.38 computing gzip size...
+#17 18.44 dist/public/registerSW.js                          0.13 kB
+#17 18.44 dist/public/manifest.webmanifest                   0.58 kB
+#17 18.44 dist/public/assets/polyfills-legacy-BJFVf5Qd.js   57.20 kB │ gzip:  20.91 kB
+#17 18.44 dist/public/assets/index-legacy-BDi7XAx2.js      995.72 kB │ gzip: 254.85 kB
+#17 18.44 
+#17 18.44 (!) Some chunks are larger than 500 kB after minification. Consider:
+#17 18.44 - Using dynamic import() to code-split the application
+#17 18.44 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+#17 18.44 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+#17 19.05 dist/public/registerSW.js                0.13 kB
+#17 19.05 dist/public/manifest.webmanifest         0.58 kB
+#17 19.05 dist/public/index.html                   2.73 kB │ gzip:   1.14 kB
+#17 19.05 dist/public/assets/index-CBU7nJow.css  132.52 kB │ gzip:  21.19 kB
+#17 19.05 dist/public/assets/index-B_ARp-sY.js   887.07 kB │ gzip: 246.55 kB
+#17 19.05 
+#17 19.05 (!) Some chunks are larger than 500 kB after minification. Consider:
+#17 19.05 - Using dynamic import() to code-split the application
+#17 19.05 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+#17 19.05 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+#17 19.05 ✓ built in 17.66s
+#17 21.03 
+#17 21.03 PWA v1.2.0
+#17 21.03 mode      generateSW
+#17 21.03 precache  18 entries (2252.75 KiB)
+#17 21.03 files generated
+#17 21.03   dist/public/sw.js
+#17 21.03   dist/public/workbox-2281e46b.js
+#17 DONE 21.4s
+
+#4 [ 1/13] FROM docker.io/library/node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+#4 ...
+
+#20 [10/13] WORKDIR /app/artifacts/api-server
+#20 DONE 0.0s
+
+#21 [11/13] RUN rm -rf dist
+#21 DONE 0.1s
+
+#22 [11/13] RUN rm -rf dist
+#22 Deduplicating step ID [11/13] RUN rm -rf dist, another build is calculating it done
+#22 ...
+
+#23 [12/13] RUN pnpm run build
+#23 0.664 
+#23 0.664 > @workspace/api-server@0.0.0 build /app/artifacts/api-server
+#23 0.664 > node ./build.mjs
+#23 0.664 
+#23 0.819 
+#23 0.819   dist/index.js                     184.8kb
+#23 0.819   dist/pino-worker.js                58.9kb
+#23 0.819   dist/pino-file.js                  54.8kb
+#23 0.819   dist/pino-pretty.js                43.3kb
+#23 0.819   dist/thread-stream-worker.js        6.9kb
+#23 0.819   dist/index.js.map                 338.0kb
+#23 0.819   dist/pino-worker.js.map           105.0kb
+#23 0.819   dist/pino-file.js.map              89.1kb
+#23 0.819   dist/pino-pretty.js.map            81.3kb
+#23 0.819   dist/thread-stream-worker.js.map   11.8kb
+#23 0.819 
+#23 0.819 ⚡ Done in 40ms
+#23 DONE 0.9s
+
+#24 [13/13] WORKDIR /app
+#24 DONE 0.0s
+
+#25 exporting to image
+#25 exporting layers
+#25 ...
+
+#26 [10/13] WORKDIR /app/artifacts/api-server
+#26 Deduplicating step ID [10/13] WORKDIR /app/artifacts/api-server, another build is calculating it done
+#26 ...
+
+#27 [12/13] RUN pnpm run build
+#27 Deduplicating step ID [12/13] RUN pnpm run build, another build is calculating it done
+#27 ...
+
+#28 [13/13] WORKDIR /app
+#28 Deduplicating step ID [13/13] WORKDIR /app, another build is calculating it done
+#28 ...
+
+#4 [ 1/13] FROM docker.io/library/node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+#4 ...
+
+#25 exporting to image
+#25 exporting layers 16.1s done
+#25 exporting manifest sha256:893545581b59739725ac80d718a1ca2e0c484753bbdd0249b58a84a42cb116f0 done
+#25 exporting config sha256:94f3408bcd4a7442f306b96ae89360889f8d0c9d51357c65d52dd75702e945f2 done
+#25 pushing layers for registry.fly.io/jhsctracker-api:deployment-01KPM0T679RRVWWHQD9NH3PNVG@sha256:893545581b59739725ac80d718a1ca2e0c484753bbdd0249b58a84a42cb116f0
+#25 pushing layer sha256:94f3408bcd4a7442f306b96ae89360889f8d0c9d51357c65d52dd75702e945f2
+#25 pushing layer sha256:a49471cb5c12c93d36a3b82701d5c3ddbeead909e24a892e9719b67fe8a3a954 0.1s done
+#25 pushing layer sha256:8373eae506fdabdb7e6edf909aafd44c8dff08e9f5280d983e93aca1abe6236d
+#25 pushing layer sha256:ebabd8ec0e9b7c4c72a8a5b38bed1d0a7c6c1b5f52356569c541d70d20ea6fe0
+#25 pushing layer sha256:e9e4ba633000a729eec0b9f3314c7652468ae75d2ad4bb1ba9b494d4544df47e
+#25 pushing layer sha256:2c1ce468d9f3d941396801f6e3afc8921466650dd05430fe644cd3537713d27f
+#25 pushing layer sha256:bb980e16d1f0a86330934cef5aaf5268394726ac4481e21d5417762059c84e68
+#25 pushing layer sha256:14266ffc60742501ce55ea625e2479d8aeab2ab5ef4497881d0d634e319bff3a
+#25 pushing layer sha256:c0ca91de1ade12626802d78ab14bc25d83762d354a8681214b9797752560d47b
+#25 pushing layer sha256:83cbc890ef6c4055a974b1af1cd895a29527c5b93d6611a69bada1b45b251a5a
+#25 pushing layer sha256:0492044d4d4f71959480ef3f293f52a99c21373c32fb10e053840fe227fda6be
+#25 pushing layer sha256:e59916cf23bde97d90323c89421dc7a9c32db2366e5e9fb46e1aaeb770f88331
+#25 pushing layer sha256:4b0509c947003be1323a5a38977845d73b4980e37144df3290035d51059ccb48
+#25 pushing layer sha256:2c1ce468d9f3d941396801f6e3afc8921466650dd05430fe644cd3537713d27f 0.2s done
+#25 pushing layer sha256:2c1ce468d9f3d941396801f6e3afc8921466650dd05430fe644cd3537713d27f 0.2s done
+#25 pushing layer sha256:c0ca91de1ade12626802d78ab14bc25d83762d354a8681214b9797752560d47b 0.3s done
+#25 pushing layer sha256:ebabd8ec0e9b7c4c72a8a5b38bed1d0a7c6c1b5f52356569c541d70d20ea6fe0 0.7s done
+#25 pushing layer sha256:94f3408bcd4a7442f306b96ae89360889f8d0c9d51357c65d52dd75702e945f2 0.8s done
+#25 pushing layer sha256:83cbc890ef6c4055a974b1af1cd895a29527c5b93d6611a69bada1b45b251a5a 0.9s done
+#25 pushing layer sha256:0492044d4d4f71959480ef3f293f52a99c21373c32fb10e053840fe227fda6be 0.8s done
+#25 pushing layer sha256:4b0509c947003be1323a5a38977845d73b4980e37144df3290035d51059ccb48 0.8s done
+#25 pushing layer sha256:8373eae506fdabdb7e6edf909aafd44c8dff08e9f5280d983e93aca1abe6236d 0.9s done
+#25 pushing layer sha256:e9e4ba633000a729eec0b9f3314c7652468ae75d2ad4bb1ba9b494d4544df47e 0.9s done
+#25 pushing layer sha256:14266ffc60742501ce55ea625e2479d8aeab2ab5ef4497881d0d634e319bff3a 1.0s done
+#25 pushing layer sha256:e59916cf23bde97d90323c89421dc7a9c32db2366e5e9fb46e1aaeb770f88331 1.0s done
+#25 pushing layers for registry.fly.io/jhsctracker-api:deployment-01KPM0T679RRVWWHQD9NH3PNVG@sha256:893545581b59739725ac80d718a1ca2e0c484753bbdd0249b58a84a42cb116f0 2.8s done
+#25 pushing layer sha256:bb980e16d1f0a86330934cef5aaf5268394726ac4481e21d5417762059c84e68 2.8s done
+#25 pushing manifest for registry.fly.io/jhsctracker-api:deployment-01KPM0T679RRVWWHQD9NH3PNVG@sha256:893545581b59739725ac80d718a1ca2e0c484753bbdd0249b58a84a42cb116f0
+#25 pushing manifest for registry.fly.io/jhsctracker-api:deployment-01KPM0T679RRVWWHQD9NH3PNVG@sha256:893545581b59739725ac80d718a1ca2e0c484753bbdd0249b58a84a42cb116f0 0.5s done
+#25 DONE 19.5s
+
+#4 [ 1/13] FROM docker.io/library/node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+--> Build Summary:  (​)
+--> Building image done
+image: registry.fly.io/jhsctracker-api:deployment-01KPM0T679RRVWWHQD9NH3PNVG
+image size: 152 MB
+
+Watch your deployment at https://fly.io/apps/jhsctracker-api/monitoring
+
+Updating existing machines in 'jhsctracker-api' with rolling strategy
+> Acquiring lease for 827661f1257508
+> Acquired lease for 827661f1257508
+> Updating machine config for 827661f1257508
+> Updating 827661f1257508 [app]
+> Updated machine config for 827661f1257508
+> Waiting for machine 827661f1257508 to reach a good state
+> Machine 827661f1257508 reached started state
+> Running smoke checks on machine 827661f1257508
+> Running machine checks on machine 827661f1257508
+> Checking health of machine 827661f1257508
+✔ Machine 827661f1257508 is now in a good state
+> Clearing lease for 827661f1257508
+✔ Cleared lease for 827661f1257508
+Checking DNS configuration for jhsctracker-api.fly.dev
+✓ DNS configuration verified
+
+Visit your newly deployed app at https://jhsctracker-api.fly.dev/
+
+0s
+Post job cleanup.
+/usr/bin/git version
+git version 2.53.0
+Temporarily overriding HOME='/home/runner/work/_temp/804660ec-2e44-439b-ba93-2516827fe4f8' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+/usr/bin/git config --global --add safe.directory /home/runner/work/jhsc-tracker/jhsc-tracker
+/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+http.https://github.com/.extraheader
+/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+0s
+Cleaning up orphan processes
+Warning: Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
