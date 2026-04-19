@@ -91,9 +91,15 @@ export default function HazardFindingsPage() {
 
   const { data: allItems, isLoading } = useListHazardFindings(queryParams);
 
-  const items = allItems?.filter((item: any) =>
+  const filteredItems = allItems?.filter((item: any) =>
     zoneFilter === "all" || item.zone === zoneFilter
   );
+
+  // Sort: overdue first, then due-soon, then rest — OHSA s.9(21) compliance
+  const items = filteredItems?.slice().sort((a: any, b: any) => {
+    const urgency = (x: any) => x.isOverdue ? 0 : x.isDueSoon ? 1 : 2;
+    return urgency(a) - urgency(b);
+  });
 
   const createMutation = useCreateHazardFinding({
     mutation: {
@@ -137,7 +143,7 @@ export default function HazardFindingsPage() {
       riskLikelihood: null,
       riskSeverity: null,
       recommendationDate: new Date().toISOString().split('T')[0],
-      responseDeadline: "",
+      responseDeadline: (() => { const d = new Date(); d.setDate(d.getDate() + 21); return d.toISOString().split('T')[0]; })(),
       status: "Open",
       isAnonymous: false,
       submitterName: "",
@@ -173,6 +179,7 @@ export default function HazardFindingsPage() {
 
   const handleCreate = () => {
     setEditingItem(null);
+    const deadline21 = (() => { const d = new Date(); d.setDate(d.getDate() + 21); return d.toISOString().split('T')[0]; })();
     form.reset({
       date: new Date().toISOString().split('T')[0],
       department: "Production",
@@ -183,7 +190,7 @@ export default function HazardFindingsPage() {
       riskLikelihood: null,
       riskSeverity: null,
       recommendationDate: new Date().toISOString().split('T')[0],
-      responseDeadline: "",
+      responseDeadline: deadline21,
       status: "Open",
       isAnonymous: false,
       submitterName: "",
@@ -293,8 +300,11 @@ export default function HazardFindingsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              items?.map((item) => (
-                <TableRow key={item.id} className="group transition-colors">
+              items?.map((item) => {
+                const isOverdue = (item as any).isOverdue as boolean;
+                const isDueSoon = (item as any).isDueSoon as boolean;
+                return (
+                <TableRow key={item.id} className={`group transition-colors ${isOverdue ? "bg-red-50 dark:bg-red-950/20" : ""}`}>
                   <TableCell className="font-mono text-xs font-semibold hidden sm:table-cell">
                     {item.itemCode}
                     {(item as any).isAnonymous && (
@@ -320,6 +330,17 @@ export default function HazardFindingsPage() {
                         )}
                         <DeptBadge dept={item.department} />
                         <span className="md:hidden text-[10px] font-medium text-muted-foreground">{item.severity}</span>
+                        {/* Urgency badges — always visible including mobile */}
+                        {isOverdue && (
+                          <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-red-600 text-white tracking-wide">
+                            OVERDUE — s.9(21)
+                          </span>
+                        )}
+                        {isDueSoon && (
+                          <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-400 text-amber-900 tracking-wide">
+                            Due Soon
+                          </span>
+                        )}
                       </div>
                       {item.notes && <p className="text-xs text-muted-foreground">{item.notes}</p>}
                     </div>
@@ -336,9 +357,21 @@ export default function HazardFindingsPage() {
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     {item.responseDeadline ? (
-                      <div className="text-sm font-mono flex items-center gap-1 text-muted-foreground">
-                        <CalendarIcon className="w-3 h-3" />
-                        {format(new Date(item.responseDeadline), 'MMM dd')}
+                      <div className="flex flex-col gap-1">
+                        {isOverdue && (
+                          <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-red-600 text-white tracking-wide w-fit">
+                            OVERDUE
+                          </span>
+                        )}
+                        {isDueSoon && (
+                          <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-400 text-amber-900 tracking-wide w-fit">
+                            Due Soon
+                          </span>
+                        )}
+                        <div className={`text-sm font-mono flex items-center gap-1 ${isOverdue ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>
+                          <CalendarIcon className="w-3 h-3" />
+                          {format(new Date(item.responseDeadline), 'MMM dd')}
+                        </div>
                       </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">-</span>
@@ -367,7 +400,8 @@ export default function HazardFindingsPage() {
                     </TableCell>
                   )}
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>
