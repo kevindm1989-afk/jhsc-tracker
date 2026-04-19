@@ -2,7 +2,11 @@
 
 ## Deployment Preference
 
-After every set of code changes, automatically push to GitHub (`git push origin main`). This triggers the Fly.io GitHub Actions deployment pipeline automatically.
+**Production stack: Fly.io (hosting) + Neon (database). Do not suggest or use Replit publishing.**
+
+To publish: `git push github main` from the shell. This triggers the GitHub Actions workflow which auto-deploys to Fly.io (`jhsctracker-api`).
+
+Never suggest `git push origin main` — the only remote in use is `github`.
 
 ## Overview
 
