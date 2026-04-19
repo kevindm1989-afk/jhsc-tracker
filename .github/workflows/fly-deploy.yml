@@ -9,6 +9,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    concurrency: deploy-group
     steps:
       - uses: actions/checkout@v4
 
