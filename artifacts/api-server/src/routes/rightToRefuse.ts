@@ -2,6 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { rightToRefuseTable } from "@workspace/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { executeRulesForEvent } from "../lib/notify";
 
 const router: IRouter = Router();
 
@@ -56,6 +57,7 @@ router.post("/", async (req, res) => {
       .where(eq(rightToRefuseTable.id, created.id))
       .returning();
 
+    void executeRulesForEvent("rtr_filed");
     res.status(201).json(updated);
   } catch (err) {
     req.log.error({ err }, "Failed to create right-to-refuse record");

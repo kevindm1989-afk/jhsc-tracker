@@ -512,6 +512,56 @@ export async function ensureSessionTable(): Promise<void> {
       WHERE NOT EXISTS (SELECT 1 FROM "folders" WHERE "folders"."name" = t.name);
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "chat_messages" (
+        "id" serial PRIMARY KEY,
+        "channel" text NOT NULL,
+        "user_id" integer NOT NULL,
+        "user_name" text NOT NULL,
+        "message" text NOT NULL,
+        "created_at" timestamp DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "push_tokens" (
+        "id" serial PRIMARY KEY,
+        "user_id" integer NOT NULL,
+        "token" text NOT NULL UNIQUE,
+        "platform" text DEFAULT 'web',
+        "created_at" timestamp DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "notification_logs" (
+        "id" serial PRIMARY KEY,
+        "sent_by" integer NOT NULL,
+        "title" text NOT NULL,
+        "body" text NOT NULL,
+        "type" text NOT NULL,
+        "target_type" text NOT NULL,
+        "target_value" text,
+        "recipient_count" integer DEFAULT 0,
+        "created_at" timestamp DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "notification_rules" (
+        "id" serial PRIMARY KEY,
+        "event_type" text NOT NULL,
+        "title" text NOT NULL,
+        "body" text NOT NULL,
+        "target_type" text NOT NULL,
+        "target_value" text NOT NULL,
+        "enabled" boolean DEFAULT true,
+        "created_by" integer NOT NULL,
+        "updated_at" timestamp DEFAULT now(),
+        "created_at" timestamp DEFAULT now()
+      );
+    `);
+
   } finally {
     client.release();
   }

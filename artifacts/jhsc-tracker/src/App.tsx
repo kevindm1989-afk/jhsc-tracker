@@ -55,6 +55,8 @@ import IncidentsPage from "@/pages/incidents";
 import EmergencyContactsPage from "@/pages/emergency-contacts";
 import InspectionReminderPage from "@/pages/inspection-reminder";
 import NotificationSettingsPage from "@/pages/notification-settings";
+import ChatPage from "@/pages/chat";
+import NotificationRulesPage from "@/pages/notification-rules";
 import NotFound from "@/pages/not-found";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
@@ -198,6 +200,12 @@ function Router() {
               </Route>
               <Route path="/notification-settings">
                 <ProtectedRoute component={NotificationSettingsPage} />
+              </Route>
+              <Route path="/chat">
+                <ProtectedRoute component={ChatPage} />
+              </Route>
+              <Route path="/notification-rules">
+                <ProtectedRoute component={NotificationRulesPage} />
               </Route>
               <Route path="/change-password">
                 <ProtectedRoute component={ChangePasswordPage} />

@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { hazardFindingsTable } from "@workspace/db/schema";
 import { eq, desc, and } from "drizzle-orm";
+import { executeRulesForEvent } from "../lib/notify";
 
 const router: IRouter = Router();
 
@@ -84,6 +85,7 @@ router.post("/", async (req, res) => {
       .where(eq(hazardFindingsTable.id, created.id))
       .returning();
 
+    void executeRulesForEvent("hazard_created");
     res.status(201).json(annotate([updated])[0]);
   } catch (err) {
     req.log.error({ err }, "Failed to create hazard finding");

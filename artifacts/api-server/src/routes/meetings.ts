@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { meetingsTable } from "@workspace/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { sendNotification } from "../lib/notifications";
+import { executeRulesForEvent } from "../lib/notify";
 
 const router: IRouter = Router();
 
@@ -66,6 +67,7 @@ router.post("/", async (req: Request, res: Response) => {
       location: meeting.location,
     }).catch(() => {});
 
+    void executeRulesForEvent("meeting_scheduled");
     return res.status(201).json(meeting);
   } catch (err) {
     req.log?.error({ err }, "Failed to create meeting");

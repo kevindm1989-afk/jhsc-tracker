@@ -50,6 +50,9 @@ A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo
 
 ### Features
 
+- **Team Chat** — Real-time chat via Ably with "General" (all members) and "JHSC" (admin/co-chair/worker-rep only) channels; messages persisted in `chat_messages` table; requires `ABLY_API_KEY` env var
+- **Notification Rules** — Admin/co-chair configurable rules that auto-fire FCM push notifications on events (hazard_created, rtr_filed, meeting_scheduled, inspection_completed); targeting by role, individual, or all; managed via `/notification-rules` page
+- **Push Notifications** — FCM web push subscription endpoint (`/api/notifications/subscribe`); manual blast (`/api/notifications/send`); logs persisted in `notification_logs`; requires `FCM_SERVER_KEY` env var
 - **Dashboard** — Stats overview (overdue count, open items, hazard findings, worker statements, closed this month), urgent/overdue alerts, recent activity feed
 - **Action Items** — Full CRUD with status/priority/department tracking, due date overdue highlighting
 - **Closed Items Log** — Dedicated page for items resolved and closed (sourced from "Closed Items" sheet in minutes workbooks); separate `closed_items_log` table with `CI-XXX` codes; imported automatically when minutes are imported
@@ -78,6 +81,22 @@ A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo
 - `users` — username, displayName, passwordHash, role, permissions (JSON array), timestamps
 - `documents` — title, description, category, fileName, fileSize, mimeType, objectPath, uploadedBy, timestamps
 - `session` — auto-created by connect-pg-simple for session storage
+- `chat_messages` — Ably-backed real-time chat; channel, userId, userName, message, createdAt
+- `push_tokens` — FCM push subscription tokens per user
+- `notification_logs` — history of sent notifications (manual or rule-triggered)
+- `notification_rules` — event-based auto-notify rules (eventType, title, body, targetType, targetValue, enabled)
+
+### Required Environment Variables (new)
+
+- `ABLY_API_KEY` — Ably API key for real-time chat (get from ably.com dashboard). Without this, chat token endpoint returns 503 but app still runs.
+- `FCM_SERVER_KEY` — Firebase Cloud Messaging server key for push notifications. Without this, push is silently skipped.
+- `VITE_VAPID_PUBLIC_KEY` — (frontend) VAPID public key for web push subscription in `usePushNotifications` hook.
+
+### Important: Rebuild `@workspace/db` after adding schema files
+
+When new files are added to `lib/db/src/schema/` and exported from `lib/db/src/schema/index.ts`, run:
+`pnpm --filter @workspace/db run build`
+before restarting the API server, otherwise the api-server will crash with a missing export error.
 
 ## TypeScript & Composite Projects
 
