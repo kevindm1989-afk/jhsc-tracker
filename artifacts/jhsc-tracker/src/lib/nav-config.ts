@@ -11,6 +11,8 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Action Items", href: "/action-items", permission: "action-items" },
   { name: "Closed Items Log", href: "/closed-items-log", permission: "closed-items-log" },
   { name: "Member Actions", href: "/member-actions", permission: "member-actions" },
+  { name: "💬 Chat", href: "/chat", permission: null },
+  { name: "🔔 Notification Rules", href: "/notification-rules", permission: null, adminOnly: true },
   { name: "Conduct A H&S Report", href: "/health-safety-report", permission: "health-safety-report" },
   { name: "H&S Reports Log", href: "/hs-reports-log", permission: "hs-reports-log" },
   { name: "Recommendations", href: "/hazard-findings", permission: "hazard-findings" },
@@ -30,8 +32,6 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Emergency Contacts", href: "/emergency-contacts", permission: "emergency-contacts" },
   { name: "Inspection Reminder", href: "/inspection-reminder", permission: null, adminOnly: true },
   { name: "Notification Settings", href: "/notification-settings", permission: null, adminOnly: true },
-  { name: "Team Chat", href: "/chat", permission: null },
-  { name: "Notification Rules", href: "/notification-rules", permission: null, adminOnly: true },
 ];
 
 const seen = new Set<string>();

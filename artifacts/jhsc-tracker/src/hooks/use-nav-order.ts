@@ -7,6 +7,8 @@ export const DEFAULT_NAV_ORDER = [
   "/action-items",
   "/closed-items-log",
   "/member-actions",
+  "/chat",
+  "/notification-rules",
   "/health-safety-report",
   "/hs-reports-log",
   "/hazard-findings",
@@ -19,8 +21,13 @@ export const DEFAULT_NAV_ORDER = [
   "/files",
   "/import-minutes",
   "/minutes-log",
+  "/meetings",
+  "/incidents",
+  "/emergency-contacts",
   "/meeting-transcription",
   "/manage-users",
+  "/inspection-reminder",
+  "/notification-settings",
 ];
 
 export function useNavOrder() {

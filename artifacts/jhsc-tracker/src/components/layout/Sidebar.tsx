@@ -26,6 +26,8 @@ import {
   Mic,
   BookOpen,
   CalendarDays,
+  MessageCircle,
+  Bell,
 } from "lucide-react";
 import {
   DndContext,
@@ -82,6 +84,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "/import-minutes": Upload,
   "/minutes-log": BookOpen,
   "/manage-users": Users,
+  "/chat": MessageCircle,
+  "/notification-rules": Bell,
 };
 
 const ALL_NAV_ITEMS: NavItem[] = NAV_CONFIGS.map((c) => ({
@@ -187,7 +191,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     .map((href) => ALL_NAV_ITEMS.find((item) => item.href === href))
     .filter((item): item is NavItem => {
       if (!item) return false;
-      if (item.adminOnly && !isAdmin) return false;
+      if (item.adminOnly && !isAdmin && !isCoChair) return false;
       if (item.href === "/right-to-refuse" && user?.role === "management") return false;
       if (item.workerRepOnly && !isAdmin && !isCoChair && !isWorkerRep && !hasPermission(item.permission ?? "")) return false;
       if (item.permission === null) return true;
