@@ -50,7 +50,7 @@ router.post("/send", requireAuth, async (req, res) => {
   return res.json(saved);
 });
 
-router.post("/token", requireAuth, async (req, res) => {
+router.get("/token", requireAuth, async (req, res) => {
   if (!process.env.ABLY_API_KEY) {
     return res.status(503).json({ error: "Chat service not configured" });
   }
