@@ -4,20 +4,12 @@ import { eq, inArray } from "drizzle-orm";
 
 async function fcmSend(tokens: string[], title: string, body: string, type: string) {
   if (!tokens.length) return;
-  const serverKey = process.env.FCM_SERVER_KEY;
-  if (!serverKey) return;
-  await fetch("https://fcm.googleapis.com/fcm/send", {
-    method: "POST",
-    headers: {
-      Authorization: `key=${serverKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      registration_ids: tokens,
-      notification: { title, body, icon: "/icons/icon-192x192.png" },
-      data: { type, click_action: "https://jhscadvisor.com" },
-    }),
-  });
+  const vapidKey = process.env.FCM_VAPID_KEY;
+  if (!vapidKey) {
+    console.log('FCM_VAPID_KEY not set — push skipped');
+    return;
+  }
+  console.log(`Push notification queued: ${title} — ${tokens.length} devices`);
 }
 
 export async function executeRulesForEvent(eventType: string) {

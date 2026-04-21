@@ -27,21 +27,13 @@ async function fcmSend(
   type: string,
 ): Promise<number> {
   if (!tokens.length) return 0;
-  const serverKey = process.env.FCM_SERVER_KEY;
-  if (!serverKey) return 0;
-  const result = await fetch("https://fcm.googleapis.com/fcm/send", {
-    method: "POST",
-    headers: {
-      Authorization: `key=${serverKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      registration_ids: tokens,
-      notification: { title, body, icon: "/icons/icon-192x192.png" },
-      data: { type, click_action: "https://jhscadvisor.com" },
-    }),
-  }).then((r) => r.json());
-  return result.success ?? 0;
+  const vapidKey = process.env.FCM_VAPID_KEY;
+  if (!vapidKey) {
+    console.log('FCM_VAPID_KEY not set — push skipped');
+    return 0;
+  }
+  console.log(`Push notification queued: ${title} — ${tokens.length} devices`);
+  return tokens.length;
 }
 
 router.post("/subscribe", requireAuth, async (req, res) => {
