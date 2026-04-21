@@ -46,11 +46,13 @@ const allowedOrigins = [
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS: origin ${origin} not allowed`));
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow any Replit dev/preview domain in non-production environments
+      if (process.env.NODE_ENV !== "production" && origin.endsWith(".replit.dev")) {
+        return callback(null, true);
       }
+      callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
   }),
