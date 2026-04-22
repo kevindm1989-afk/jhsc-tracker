@@ -27,6 +27,7 @@ import notificationSettingsRouter from "./notificationSettings";
 import chatRouter from "./chat";
 import notificationsRouter from "./notifications";
 import accountRouter from "./account";
+import adminRouter from "./admin";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
 
 const router: IRouter = Router();
@@ -65,5 +66,6 @@ router.use("/account", requireAuth, accountRouter);
 router.use("/transcription", requireAuth, transcriptionRouter);
 router.use("/users", usersRouter);
 router.use("/registrations", registrationsRouter);
+router.use("/admin", adminRouter);
 
 export default router;
