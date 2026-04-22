@@ -6,6 +6,17 @@ import { usersTable } from "@workspace/db/schema";
 import { count, eq, or, isNull, and } from "drizzle-orm";
 import cron from "node-cron";
 import { createTransporter, getSenderAddress } from "./emailClient";
+import { runDriveBackup } from "./services/driveBackup";
+
+// ---------------------------------------------------------------------------
+// Required Fly.io secret for the Google Drive backup service:
+//
+//   flyctl secrets set GOOGLE_SERVICE_ACCOUNT_JSON='<paste json here>' \
+//     --app jhsctracker-api
+//
+// Without this secret the daily backup will log a failure and continue;
+// the server itself will keep running normally.
+// ---------------------------------------------------------------------------
 
 const port = Number(process.env["PORT"] || 3000);
 
@@ -207,6 +218,24 @@ app.listen(port, "0.0.0.0", () => {
       scheduleInspectionReminders().catch(e => logger.error({ err: e }, "Inspection cron failed"));
     });
     logger.info("Inspection reminder cron scheduled (08:00 daily)");
+
+    // Automatic Google Drive backup — every 24 hours.
+    // Wait 5 seconds after startup so the rest of the boot sequence
+    // completes and the server is confirmed healthy before we hammer
+    // the database with a full table dump.
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    setTimeout(() => {
+      runDriveBackup().catch((e) =>
+        logger.error({ err: e }, "Initial Drive backup failed"),
+      );
+      const timer = setInterval(() => {
+        runDriveBackup().catch((e) =>
+          logger.error({ err: e }, "Scheduled Drive backup failed"),
+        );
+      }, ONE_DAY_MS);
+      if (typeof timer.unref === "function") timer.unref();
+    }, 5000);
+    logger.info("Drive backup scheduled (every 24h, first run in 5s)");
   } catch (err) {
     logger.error({ err }, "Startup setup failed");
     process.exit(1);
