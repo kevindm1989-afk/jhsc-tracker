@@ -3,7 +3,7 @@ import type Ably from "ably";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-export interface ChatMessage {
+export interface DMMessage {
   id: number;
   channel: string;
   userId: number;
@@ -12,24 +12,26 @@ export interface ChatMessage {
   createdAt: string | null;
 }
 
-export function useChat(channel: "general" | "jhsc") {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export function useDMChat(myId: number | null, otherUserId: number | null) {
+  const [messages, setMessages] = useState<DMMessage[]>([]);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ablyRef = useRef<Ably.Realtime | null>(null);
   const channelRef = useRef<Ably.RealtimeChannel | null>(null);
 
   useEffect(() => {
+    if (!myId || !otherUserId) return;
+
     let cancelled = false;
+    const dmChan = `dm:${Math.min(myId, otherUserId)}-${Math.max(myId, otherUserId)}`;
 
     async function init() {
       try {
-        const histResp = await fetch(`${BASE}/api/chat/history/${channel}`, {
+        const histResp = await fetch(`${BASE}/api/chat/dm/${otherUserId}/history`, {
           credentials: "include",
         });
-        if (histResp.ok) {
-          const hist = await histResp.json();
-          if (!cancelled) setMessages(hist);
+        if (histResp.ok && !cancelled) {
+          setMessages(await histResp.json());
         }
 
         const tokenResp = await fetch(`${BASE}/api/chat/token`, { credentials: "include" });
@@ -44,25 +46,24 @@ export function useChat(channel: "general" | "jhsc") {
 
         client.connection.on("connected", () => {
           if (!cancelled) setConnected(true);
-          // Join global presence so others can detect we are online
           client.channels.get("global:presence").presence.enter().catch(() => {});
         });
         client.connection.on("disconnected", () => {
           if (!cancelled) setConnected(false);
         });
 
-        const ch = client.channels.get(`chat:${channel}`);
+        const ch = client.channels.get(`chat:${dmChan}`);
         channelRef.current = ch;
         await ch.subscribe("message", (msg) => {
           if (!cancelled) {
             setMessages((prev) => {
               const exists = prev.find((m) => m.id === msg.data.id);
-              return exists ? prev : [...prev, msg.data as ChatMessage];
+              return exists ? prev : [...prev, msg.data as DMMessage];
             });
           }
         });
-      } catch (err) {
-        if (!cancelled) setError("Failed to connect to chat");
+      } catch {
+        if (!cancelled) setError("Failed to connect");
       }
     }
 
@@ -73,18 +74,19 @@ export function useChat(channel: "general" | "jhsc") {
       channelRef.current?.unsubscribe();
       ablyRef.current?.close();
     };
-  }, [channel]);
+  }, [myId, otherUserId]);
 
   const send = useCallback(
     async (message: string) => {
-      await fetch(`${BASE}/api/chat/send`, {
+      if (!otherUserId) return;
+      await fetch(`${BASE}/api/chat/dm/${otherUserId}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ channel, message }),
+        body: JSON.stringify({ message }),
       });
     },
-    [channel],
+    [otherUserId],
   );
 
   return { messages, send, connected, error };

@@ -1,15 +1,20 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/requireAuth";
 import { db } from "@workspace/db";
-import { chatMessagesTable } from "@workspace/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { chatMessagesTable, usersTable } from "@workspace/db/schema";
+import { eq, desc, ne, and } from "drizzle-orm";
 import { publishToChannel } from "../lib/ably";
 import Ably from "ably";
+import nodemailer from "nodemailer";
 import "../sessionTypes";
 
 const router = Router();
 
 const JHSC_ROLES = ["co-chair", "admin", "worker-rep"];
+
+function dmChannelName(idA: number, idB: number): string {
+  return `dm:${Math.min(idA, idB)}-${Math.max(idA, idB)}`;
+}
 
 router.get("/history/:channel", requireAuth, async (req, res) => {
   const { channel } = req.params;
@@ -57,6 +62,8 @@ router.get("/token", requireAuth, async (req, res) => {
   const client = new Ably.Rest({ key: process.env.ABLY_API_KEY });
   const capabilities: Record<string, string[]> = {
     "chat:general": ["subscribe", "publish", "presence"],
+    "chat:dm:*": ["subscribe", "publish", "presence"],
+    "global:presence": ["subscribe", "presence"],
   };
   if (JHSC_ROLES.includes(req.session.role ?? "")) {
     capabilities["chat:jhsc"] = ["subscribe", "publish", "presence"];
@@ -66,6 +73,109 @@ router.get("/token", requireAuth, async (req, res) => {
     capability: capabilities,
   });
   return res.json(tokenRequest);
+});
+
+router.get("/members", requireAuth, async (req, res) => {
+  const selfId = req.session.userId!;
+  const users = await db
+    .select({ id: usersTable.id, displayName: usersTable.displayName, role: usersTable.role })
+    .from(usersTable)
+    .where(and(ne(usersTable.id, selfId), ne(usersTable.role, "admin")));
+  return res.json(users);
+});
+
+router.get("/dm/:otherUserId/history", requireAuth, async (req, res) => {
+  const otherUserId = parseInt(req.params.otherUserId, 10);
+  if (isNaN(otherUserId)) return res.status(400).json({ error: "Invalid user id" });
+  const channel = dmChannelName(req.session.userId!, otherUserId);
+  const messages = await db
+    .select()
+    .from(chatMessagesTable)
+    .where(eq(chatMessagesTable.channel, channel))
+    .orderBy(desc(chatMessagesTable.createdAt))
+    .limit(50);
+  return res.json(messages.reverse());
+});
+
+router.post("/dm/:otherUserId/send", requireAuth, async (req, res) => {
+  const otherUserId = parseInt(req.params.otherUserId, 10);
+  if (isNaN(otherUserId)) return res.status(400).json({ error: "Invalid user id" });
+  const { message } = req.body;
+  if (!message?.trim()) return res.status(400).json({ error: "Message required" });
+  const channel = dmChannelName(req.session.userId!, otherUserId);
+  const [saved] = await db
+    .insert(chatMessagesTable)
+    .values({
+      channel,
+      userId: req.session.userId!,
+      userName: req.session.displayName ?? req.session.username ?? "Member",
+      message: message.trim(),
+    })
+    .returning();
+  await publishToChannel(`chat:${channel}`, "message", saved);
+  return res.json(saved);
+});
+
+router.post("/dm/:otherUserId/start", requireAuth, async (req, res) => {
+  const otherUserId = parseInt(req.params.otherUserId, 10);
+  if (isNaN(otherUserId)) return res.status(400).json({ error: "Invalid user id" });
+
+  const apiKey = process.env.ABLY_API_KEY;
+  let isOnline = false;
+
+  if (apiKey) {
+    try {
+      const ablyRest = new Ably.Rest({ key: apiKey });
+      const members = await ablyRest.channels.get("global:presence").presence.get();
+      isOnline = members.some((m: any) => m.clientId === String(otherUserId));
+    } catch (err) {
+      console.error("Presence check failed:", err);
+    }
+  }
+
+  if (!isOnline) {
+    try {
+      const [other] = await db
+        .select({ email: usersTable.email, displayName: usersTable.displayName })
+        .from(usersTable)
+        .where(eq(usersTable.id, otherUserId));
+
+      const senderName = req.session.displayName ?? req.session.username ?? "A team member";
+
+      if (other?.email) {
+        const gmailUser = process.env.GMAIL_USER?.trim();
+        const gmailPass = process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, "");
+        if (gmailUser && gmailPass) {
+          const transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
+            auth: { user: gmailUser, pass: gmailPass },
+            tls: { rejectUnauthorized: false },
+          });
+          await transporter.sendMail({
+            from: gmailUser,
+            to: other.email,
+            subject: `${senderName} sent you a direct message — JHSC Advisor`,
+            html: `
+              <p>Hi ${other.displayName},</p>
+              <p><strong>${senderName}</strong> has sent you a direct message on <strong>JHSC Advisor</strong>.</p>
+              <p>Log in to view and reply.</p>
+              <br/>
+              <p style="font-size:12px;color:#888;">JHSC Advisor — Unifor Local 1285</p>
+            `,
+          });
+          console.log(`DM offline notification sent to ${other.email}`);
+        } else {
+          console.log(`DM started with user ${otherUserId} (offline, no email config)`);
+        }
+      }
+    } catch (err) {
+      console.error("DM offline notification error:", err);
+    }
+  }
+
+  return res.json({ ok: true, online: isOnline });
 });
 
 export default router;
