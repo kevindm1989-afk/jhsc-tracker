@@ -54,6 +54,18 @@ const EMPTY: Omit<Rule, "id" | "createdAt"> = {
   enabled: true,
 };
 
+function selectedRoles(targetValue: string): string[] {
+  return targetValue.split(",").map((r) => r.trim()).filter(Boolean);
+}
+
+function toggleRole(current: string, role: string): string {
+  const roles = selectedRoles(current);
+  const next = roles.includes(role)
+    ? roles.filter((r) => r !== role)
+    : [...roles, role];
+  return next.join(",");
+}
+
 export default function NotificationRulesPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -183,9 +195,17 @@ export default function NotificationRulesPage() {
                 <Badge variant="outline" className="text-xs">
                   {eventLabel(rule.eventType)}
                 </Badge>
-                <Badge variant="secondary" className="text-xs capitalize">
-                  {rule.targetType}: {rule.targetValue}
-                </Badge>
+                {rule.targetType === "role" ? (
+                  selectedRoles(rule.targetValue).map((r) => (
+                    <Badge key={r} variant="secondary" className="text-xs capitalize">
+                      {r}
+                    </Badge>
+                  ))
+                ) : (
+                  <Badge variant="secondary" className="text-xs capitalize">
+                    {rule.targetType === "all" ? "All Members" : rule.targetValue}
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">{rule.body}</p>
             </div>
@@ -252,73 +272,75 @@ export default function NotificationRulesPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Target Type</Label>
-                <Select
-                  value={form.targetType}
-                  onValueChange={(v) =>
-                    setForm((f) => ({ ...f, targetType: v, targetValue: "" }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Members</SelectItem>
-                    <SelectItem value="role">By Role</SelectItem>
-                    <SelectItem value="individual">Individual</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3 items-start">
+                <div>
+                  <Label>Target Type</Label>
+                  <Select
+                    value={form.targetType}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, targetType: v, targetValue: "" }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Members</SelectItem>
+                      <SelectItem value="role">By Role</SelectItem>
+                      <SelectItem value="individual">Individual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {form.targetType === "individual" && (
+                  <div>
+                    <Label>Member</Label>
+                    <Select
+                      value={form.targetValue}
+                      onValueChange={(v) => setForm((f) => ({ ...f, targetValue: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select member..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {members.map((m) => (
+                          <SelectItem key={m.id} value={String(m.id)}>
+                            {m.name} ({m.role})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {form.targetType === "all" && (
+                  <div className="flex items-end">
+                    <span className="text-sm text-muted-foreground pb-2">
+                      Sends to all registered devices
+                    </span>
+                  </div>
+                )}
               </div>
 
               {form.targetType === "role" && (
                 <div>
-                  <Label>Role</Label>
-                  <Select
-                    value={form.targetValue}
-                    onValueChange={(v) => setForm((f) => ({ ...f, targetValue: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROLES.map((r) => (
-                        <SelectItem key={r} value={r}>
-                          {r}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {form.targetType === "individual" && (
-                <div>
-                  <Label>Member</Label>
-                  <Select
-                    value={form.targetValue}
-                    onValueChange={(v) => setForm((f) => ({ ...f, targetValue: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select member..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {members.map((m) => (
-                        <SelectItem key={m.id} value={String(m.id)}>
-                          {m.name} ({m.role})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {form.targetType === "all" && (
-                <div className="flex items-end">
-                  <span className="text-sm text-muted-foreground pb-2">
-                    Sends to all registered devices
-                  </span>
+                  <Label className="mb-2 block">Select Roles</Label>
+                  <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+                    {ROLES.map((r) => (
+                      <label key={r} className="flex items-center gap-2 cursor-pointer text-sm capitalize">
+                        <input
+                          type="checkbox"
+                          className="accent-primary h-4 w-4"
+                          checked={selectedRoles(form.targetValue).includes(r)}
+                          onChange={() =>
+                            setForm((f) => ({ ...f, targetValue: toggleRole(f.targetValue, r) }))
+                          }
+                        />
+                        {r}
+                      </label>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

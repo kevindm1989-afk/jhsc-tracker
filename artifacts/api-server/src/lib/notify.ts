@@ -29,17 +29,23 @@ export async function executeRulesForEvent(eventType: string) {
         const rows = await db.select().from(pushTokensTable);
         tokens = rows.map((r) => r.token);
       } else if (rule.targetType === "role") {
-        const matchingUsers = await db
-          .select({ id: usersTable.id })
-          .from(usersTable)
-          .where(eq(usersTable.role, rule.targetValue));
-        const userIds = matchingUsers.map((u) => u.id);
-        if (userIds.length) {
-          const rows = await db
-            .select()
-            .from(pushTokensTable)
-            .where(inArray(pushTokensTable.userId, userIds));
-          tokens = rows.map((r) => r.token);
+        const roles = rule.targetValue
+          .split(",")
+          .map((r: string) => r.trim())
+          .filter(Boolean);
+        if (roles.length) {
+          const matchingUsers = await db
+            .select({ id: usersTable.id })
+            .from(usersTable)
+            .where(inArray(usersTable.role, roles));
+          const userIds = matchingUsers.map((u) => u.id);
+          if (userIds.length) {
+            const rows = await db
+              .select()
+              .from(pushTokensTable)
+              .where(inArray(pushTokensTable.userId, userIds));
+            tokens = rows.map((r) => r.token);
+          }
         }
       } else if (rule.targetType === "individual") {
         const userIds = rule.targetValue
