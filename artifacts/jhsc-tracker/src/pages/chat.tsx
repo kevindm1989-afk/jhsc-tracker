@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ChevronLeft } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const JHSC_ROLES = ["co-chair", "admin", "worker-rep"];
@@ -42,12 +43,12 @@ function MessageList({
         const isMe = msg.userId === myId;
         return (
           <div key={msg.id} className={`mb-3 flex ${isMe ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-xs lg:max-w-md flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+            <div className={`max-w-[75%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
               {!isMe && (
                 <span className="text-xs text-muted-foreground mb-1">{msg.userName}</span>
               )}
               <div
-                className={`rounded-lg px-3 py-2 text-sm ${
+                className={`rounded-2xl px-3 py-2 text-sm break-words ${
                   isMe ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
                 }`}
               >
@@ -91,14 +92,14 @@ function ChannelPane({ channel }: { channel: "general" | "jhsc" }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-4 py-2 border-b text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 px-4 py-2 border-b text-sm text-muted-foreground shrink-0">
         <span
           className={`inline-block w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-red-400"}`}
         />
         {connected ? "Connected" : "Connecting..."}
       </div>
       <MessageList messages={messages} myId={user?.id} />
-      <div className="flex gap-2 px-4 py-3 border-t">
+      <div className="flex gap-2 px-4 py-3 border-t shrink-0">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -158,14 +159,14 @@ function DMPane({ member }: { member: Member }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-4 py-2 border-b text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 px-4 py-2 border-b text-sm text-muted-foreground shrink-0">
         <span
           className={`inline-block w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-red-400"}`}
         />
         {connected ? "Connected" : "Connecting..."}
       </div>
       <MessageList messages={messages} myId={user?.id} />
-      <div className="flex gap-2 px-4 py-3 border-t">
+      <div className="flex gap-2 px-4 py-3 border-t shrink-0">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -191,6 +192,7 @@ export default function ChatPage() {
   const canJhsc = JHSC_ROLES.includes(user?.role ?? "");
   const [activeView, setActiveView] = useState<ActiveView>({ type: "channel", name: "general" });
   const [members, setMembers] = useState<Member[]>([]);
+  const [showList, setShowList] = useState(true);
 
   useEffect(() => {
     fetch(`${BASE}/api/chat/members`, { credentials: "include" })
@@ -198,6 +200,11 @@ export default function ChatPage() {
       .then((data) => setMembers(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
+
+  function selectView(view: ActiveView) {
+    setActiveView(view);
+    setShowList(false);
+  }
 
   function isActiveChannel(name: "general" | "jhsc") {
     return activeView.type === "channel" && activeView.name === name;
@@ -207,16 +214,29 @@ export default function ChatPage() {
     return activeView.type === "dm" && activeView.member.id === id;
   }
 
+  const chatTitle =
+    activeView.type === "channel"
+      ? `# ${activeView.name === "general" ? "General" : "JHSC"}`
+      : activeView.member.displayName;
+
   return (
-    <div className="flex h-[calc(100vh-8rem)]">
-      <div className="w-52 shrink-0 border-r flex flex-col">
-        <div className="px-3 pt-4 pb-2">
+    <div className="flex h-[calc(100vh-4rem)] md:h-[calc(100vh-8rem)] overflow-hidden">
+
+      {/* Sidebar — full screen on mobile when showList=true, fixed column on desktop */}
+      <div
+        className={`
+          flex-col border-r bg-background
+          w-full md:w-52 md:shrink-0
+          ${showList ? "flex" : "hidden"} md:flex
+        `}
+      >
+        <div className="px-3 pt-4 pb-2 shrink-0">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Channels
           </p>
           <button
-            onClick={() => setActiveView({ type: "channel", name: "general" })}
-            className={`w-full text-left px-2 py-1.5 rounded text-sm flex items-center gap-2 transition-colors ${
+            onClick={() => selectView({ type: "channel", name: "general" })}
+            className={`w-full text-left px-2 py-2 rounded text-sm flex items-center gap-2 transition-colors ${
               isActiveChannel("general")
                 ? "bg-primary/10 text-primary font-medium"
                 : "hover:bg-muted text-foreground"
@@ -226,8 +246,8 @@ export default function ChatPage() {
           </button>
           {canJhsc && (
             <button
-              onClick={() => setActiveView({ type: "channel", name: "jhsc" })}
-              className={`w-full text-left px-2 py-1.5 rounded text-sm flex items-center gap-2 transition-colors ${
+              onClick={() => selectView({ type: "channel", name: "jhsc" })}
+              className={`w-full text-left px-2 py-2 rounded text-sm flex items-center gap-2 transition-colors ${
                 isActiveChannel("jhsc")
                   ? "bg-primary/10 text-primary font-medium"
                   : "hover:bg-muted text-foreground"
@@ -249,14 +269,14 @@ export default function ChatPage() {
           {members.map((m) => (
             <button
               key={m.id}
-              onClick={() => setActiveView({ type: "dm", member: m })}
-              className={`w-full text-left px-2 py-1.5 rounded text-sm flex items-center gap-2 transition-colors ${
+              onClick={() => selectView({ type: "dm", member: m })}
+              className={`w-full text-left px-2 py-2 rounded text-sm flex items-center gap-2 transition-colors ${
                 isActiveDM(m.id)
                   ? "bg-primary/10 text-primary font-medium"
                   : "hover:bg-muted text-foreground"
               }`}
             >
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted text-muted-foreground text-xs shrink-0 font-medium">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted text-muted-foreground text-xs shrink-0 font-medium">
                 {m.displayName.charAt(0).toUpperCase()}
               </span>
               <span className="truncate">{m.displayName}</span>
@@ -265,18 +285,30 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b">
+      {/* Chat panel — full screen on mobile when showList=false, fills remaining space on desktop */}
+      <div
+        className={`
+          flex-col flex-1 overflow-hidden
+          ${!showList ? "flex" : "hidden"} md:flex
+        `}
+      >
+        {/* Header with back button on mobile */}
+        <div className="flex items-center gap-2 px-3 py-3 border-b shrink-0">
+          <button
+            onClick={() => setShowList(true)}
+            className="md:hidden flex items-center gap-1 text-sm text-primary font-medium mr-1 shrink-0"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Channels
+          </button>
           {activeView.type === "channel" ? (
-            <h1 className="text-base font-semibold">
-              # {activeView.name === "general" ? "General" : "JHSC"}
-            </h1>
+            <h1 className="text-base font-semibold truncate">{chatTitle}</h1>
           ) : (
-            <h1 className="text-base font-semibold flex items-center gap-2">
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-sm font-medium">
+            <h1 className="text-base font-semibold flex items-center gap-2 truncate">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted text-sm font-medium shrink-0">
                 {activeView.member.displayName.charAt(0).toUpperCase()}
               </span>
-              {activeView.member.displayName}
+              <span className="truncate">{activeView.member.displayName}</span>
             </h1>
           )}
         </div>
