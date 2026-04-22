@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import pinoHttp from "pino-http";
@@ -9,6 +10,7 @@ import { fileURLToPath } from "url";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
+import { securityLogger } from "./middleware/securityLogger";
 import "./sessionTypes";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -89,6 +91,17 @@ app.use(
     },
   }),
 );
+
+app.use(
+  helmet({
+    hsts: true,
+    noSniff: true,
+    frameguard: { action: "deny" },
+    contentSecurityPolicy: true,
+  }),
+);
+
+app.use(securityLogger);
 
 app.use("/api", router);
 

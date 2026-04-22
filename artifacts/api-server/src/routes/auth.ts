@@ -7,11 +7,17 @@ import { eq, and, gt, isNull, or } from "drizzle-orm";
 import { createTransporter, getSenderAddress } from "../emailClient";
 import "../sessionTypes";
 import { PRIVACY_POLICY_VERSION } from "../lib/privacy";
+import {
+  getClientIp,
+  recordFailedLogin,
+  recordSuccessfulLogin,
+} from "../middleware/securityLogger";
 
 const router: IRouter = Router();
 
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
+  const ip = getClientIp(req);
   try {
     const { username, password } = req.body as { username: string; password: string };
 
@@ -26,14 +32,17 @@ router.post("/login", async (req, res) => {
       .where(or(eq(usersTable.username, identifier), eq(usersTable.email, identifier)));
 
     if (!user) {
+      recordFailedLogin(ip, identifier);
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
+      recordFailedLogin(ip, identifier);
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
+    recordSuccessfulLogin(ip);
     const displayName = user.role === "admin" ? "admin" : user.displayName;
 
     req.session.userId = user.id;
