@@ -241,6 +241,16 @@ export default function LoginPage() {
         <p className="text-center text-xs text-muted-foreground font-mono uppercase tracking-wider">
           OHSA S.9 | Reg. 851 | CSA B335-15
         </p>
+        <p className="text-center text-xs text-muted-foreground mt-1">
+          <a
+            href="/privacy.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:no-underline"
+          >
+            Privacy Policy
+          </a>
+        </p>
       </div>
 
       {/* Registration Dialog */}

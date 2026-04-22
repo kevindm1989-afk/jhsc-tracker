@@ -315,6 +315,14 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         <p className="mt-2 text-[10px] text-sidebar-foreground/40 font-mono uppercase tracking-wider px-1">
           OHSA S.9 | Reg. 851 | CSA B335-15
         </p>
+        <a
+          href="/privacy.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1 block text-[10px] text-sidebar-foreground/40 hover:text-sidebar-foreground/60 underline px-1"
+        >
+          Privacy Policy
+        </a>
       </div>
     </div>
   );

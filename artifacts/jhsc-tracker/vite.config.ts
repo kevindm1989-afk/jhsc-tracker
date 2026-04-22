@@ -22,7 +22,7 @@ export default defineConfig({
       useCredentials: true,
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/^\/api\//, /^\/privacy\.html$/],
         runtimeCaching: [
           {
             urlPattern: /^\/api\/(dashboard|action-items|hazard-findings|inspection-log|closed-items-log)/,
