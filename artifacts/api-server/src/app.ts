@@ -17,6 +17,17 @@ const app: Express = express();
 
 app.set("trust proxy", 1);
 
+// Redirect plain HTTP → HTTPS in production only
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === "production") {
+    const proto = (req.headers["x-forwarded-proto"] as string) || req.protocol;
+    if (proto !== "https") {
+      return res.redirect(301, `https://${req.hostname}${req.originalUrl}`);
+    }
+  }
+  next();
+});
+
 app.use(
   pinoHttp({
     logger,

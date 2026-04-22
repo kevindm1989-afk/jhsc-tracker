@@ -26,6 +26,7 @@ import emergencyContactsRouter from "./emergencyContacts";
 import notificationSettingsRouter from "./notificationSettings";
 import chatRouter from "./chat";
 import notificationsRouter from "./notifications";
+import accountRouter from "./account";
 import { requireAuth, requirePermission } from "../middleware/requireAuth";
 
 const router: IRouter = Router();
@@ -58,6 +59,7 @@ router.use("/emergency-contacts", requireAuth, requirePermission("emergency-cont
 router.use("/notification-settings", requireAuth, notificationSettingsRouter);
 router.use("/chat", chatRouter);
 router.use("/notifications", requireAuth, notificationsRouter);
+router.use("/account", requireAuth, accountRouter);
 
 // Admin-only routes
 router.use("/transcription", requireAuth, transcriptionRouter);
