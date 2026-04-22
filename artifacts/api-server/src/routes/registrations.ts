@@ -87,6 +87,9 @@ router.patch("/:id", requireAdmin, async (req, res) => {
         email: reg.email ?? "",
         role: "member",
         permissions: grantedPermissions,
+        // Carry the consent the user gave at registration through to the user record
+        consentAcceptedAt: reg.consentAcceptedAt,
+        consentVersion: reg.consentVersion,
       });
     }
 

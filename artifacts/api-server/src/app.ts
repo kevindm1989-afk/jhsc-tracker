@@ -478,6 +478,10 @@ export async function ensureSessionTable(): Promise<void> {
 
     await client.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email" text NOT NULL DEFAULT '';`);
     await client.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" timestamp NOT NULL DEFAULT now();`);
+    await client.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "consent_accepted_at" timestamp;`);
+    await client.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "consent_version" text;`);
+    await client.query(`ALTER TABLE "registrations" ADD COLUMN IF NOT EXISTS "consent_accepted_at" timestamp;`);
+    await client.query(`ALTER TABLE "registrations" ADD COLUMN IF NOT EXISTS "consent_version" text;`);
 
     await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "zone" text;`);
     await client.query(`ALTER TABLE "hazard_findings" ADD COLUMN IF NOT EXISTS "risk_likelihood" integer;`);

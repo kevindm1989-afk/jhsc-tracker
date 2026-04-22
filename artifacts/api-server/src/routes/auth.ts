@@ -6,6 +6,7 @@ import { usersTable, registrationsTable, passwordResetTokensTable } from "@works
 import { eq, and, gt, isNull, or } from "drizzle-orm";
 import { createTransporter, getSenderAddress } from "../emailClient";
 import "../sessionTypes";
+import { PRIVACY_POLICY_VERSION } from "../lib/privacy";
 
 const router: IRouter = Router();
 
@@ -63,16 +64,24 @@ router.post("/login", async (req, res) => {
 // POST /api/auth/register — public, creates a pending registration
 router.post("/register", async (req, res) => {
   try {
-    const { name, password, department, shift, email } = req.body as {
+    const { name, password, department, shift, email, consent } = req.body as {
       name: string;
       password: string;
       department: string;
       shift: string;
       email: string;
+      consent?: boolean;
     };
 
     if (!name?.trim() || !password || !department?.trim() || !shift?.trim() || !email?.trim()) {
       return res.status(400).json({ error: "All fields are required" });
+    }
+
+    // PIPEDA: explicit, recorded consent is required before collecting personal information.
+    if (consent !== true) {
+      return res.status(400).json({
+        error: "You must read and accept the Privacy Policy to request access.",
+      });
     }
 
     const emailTrimmed = email.trim().toLowerCase();
@@ -116,6 +125,8 @@ router.post("/register", async (req, res) => {
       shift: shift.trim(),
       email: emailTrimmed,
       status: "pending",
+      consentAcceptedAt: new Date(),
+      consentVersion: PRIVACY_POLICY_VERSION,
     });
 
     // Notify admin of new access request (non-fatal)
@@ -316,6 +327,8 @@ router.get("/me", async (req, res) => {
         displayName: usersTable.displayName,
         role: usersTable.role,
         permissions: usersTable.permissions,
+        consentAcceptedAt: usersTable.consentAcceptedAt,
+        consentVersion: usersTable.consentVersion,
       })
       .from(usersTable)
       .where(eq(usersTable.id, req.session.userId));
@@ -335,6 +348,9 @@ router.get("/me", async (req, res) => {
       displayName: user.displayName,
       role: user.role,
       permissions: user.permissions,
+      consentAcceptedAt: user.consentAcceptedAt,
+      consentVersion: user.consentVersion,
+      currentPolicyVersion: PRIVACY_POLICY_VERSION,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch current user");

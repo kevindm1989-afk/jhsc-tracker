@@ -8,6 +8,8 @@ export const usersTable = pgTable("users", {
   email: text("email").notNull().default(""),
   role: text("role").notNull().default("member"),
   permissions: json("permissions").$type<string[]>().notNull().default([]),
+  consentAcceptedAt: timestamp("consent_accepted_at"),
+  consentVersion: text("consent_version"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

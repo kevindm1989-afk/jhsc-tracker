@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Eye, EyeOff, KeyRound, Trash2 } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Trash2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -166,6 +166,33 @@ export default function ChangePasswordPage() {
               {isLoading ? "Updating…" : "Change Password"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm mt-6">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl flex items-center gap-2">
+            <Download className="w-5 h-5 text-primary" />
+            Download My Data
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Under PIPEDA you have the right to access the personal information we
+            hold about you. Download a JSON copy of your account, your suggestions,
+            health &amp; safety reports, chat messages, and member actions.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              window.location.href = `${BASE}/api/account/export`;
+            }}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download my data (JSON)
+          </Button>
         </CardContent>
       </Card>
 

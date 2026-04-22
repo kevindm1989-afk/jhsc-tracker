@@ -8,6 +8,9 @@ export interface AuthUser {
   displayName: string;
   role: "admin" | "co-chair" | "member" | "worker-rep" | "management";
   permissions: string[];
+  consentAcceptedAt: string | null;
+  consentVersion: string | null;
+  currentPolicyVersion: string;
 }
 
 interface AuthContextValue {
@@ -16,6 +19,7 @@ interface AuthContextValue {
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -24,13 +28,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetch(`${BASE}/api/auth/me`, { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setUser(data))
-      .catch(() => setUser(null))
-      .finally(() => setIsLoading(false));
+  const refreshUser = useCallback(async () => {
+    try {
+      const r = await fetch(`${BASE}/api/auth/me`, { credentials: "include" });
+      const data = r.ok ? await r.json() : null;
+      setUser(data);
+    } catch {
+      setUser(null);
+    }
   }, []);
+
+  useEffect(() => {
+    refreshUser().finally(() => setIsLoading(false));
+  }, [refreshUser]);
 
   const login = useCallback(async (username: string, password: string) => {
     const resp = await fetch(`${BASE}/api/auth/login`, {
@@ -62,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, hasPermission }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, hasPermission, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

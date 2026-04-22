@@ -10,6 +10,8 @@ export const registrationsTable = pgTable("registrations", {
   email: text("email").notNull().default(""),
   status: text("status").notNull().default("pending"),
   reviewNote: text("review_note"),
+  consentAcceptedAt: timestamp("consent_accepted_at"),
+  consentVersion: text("consent_version"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ShieldCheck, Eye, EyeOff, UserPlus, CheckCircle2, KeyRound } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -54,6 +55,7 @@ export default function LoginPage() {
   const [regError, setRegError] = useState("");
   const [regLoading, setRegLoading] = useState(false);
   const [regSuccess, setRegSuccess] = useState(false);
+  const [regConsent, setRegConsent] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -111,6 +113,9 @@ export default function LoginPage() {
     if (regForm.password !== regForm.confirmPassword) {
       return setRegError("Passwords do not match.");
     }
+    if (!regConsent) {
+      return setRegError("You must read and accept the Privacy Policy to request access.");
+    }
 
     setRegLoading(true);
     try {
@@ -124,6 +129,7 @@ export default function LoginPage() {
           password: regForm.password,
           department: regForm.department,
           shift: regForm.shift,
+          consent: true,
         }),
       });
       const data = await resp.json();
@@ -142,6 +148,7 @@ export default function LoginPage() {
       setRegForm(emptyReg());
       setRegError("");
       setRegSuccess(false);
+      setRegConsent(false);
     }, 300);
   }
 
@@ -237,6 +244,11 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
+
+        <p className="text-center text-[11px] text-muted-foreground leading-relaxed px-2">
+          Operated independently by the Worker Co-Chair of the JHSC. Not affiliated with
+          any employer or union. Use is voluntary.
+        </p>
 
         <p className="text-center text-xs text-muted-foreground font-mono uppercase tracking-wider">
           OHSA S.9 | Reg. 851 | CSA B335-15
@@ -361,6 +373,38 @@ export default function LoginPage() {
                   placeholder="Re-enter password"
                   autoComplete="new-password"
                 />
+              </div>
+
+              <div className="rounded-md border bg-muted/40 p-3 space-y-2 text-xs leading-relaxed">
+                <p className="font-medium text-foreground">Voluntary &amp; independent</p>
+                <p className="text-muted-foreground">
+                  This app is operated independently by the Worker Co-Chair of the
+                  Joint Health &amp; Safety Committee. It is <strong>not</strong> run
+                  by your employer or any union. Use is voluntary — you will not be
+                  disciplined for choosing not to use it. Data is collected only to
+                  support the JHSC's statutory functions under the Occupational
+                  Health and Safety Act.
+                </p>
+                <label className="flex items-start gap-2 pt-1 cursor-pointer">
+                  <Checkbox
+                    id="reg-consent"
+                    checked={regConsent}
+                    onCheckedChange={(v) => setRegConsent(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-foreground">
+                    I have read and accept the{" "}
+                    <a
+                      href="/privacy.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline"
+                    >
+                      Privacy Policy
+                    </a>
+                    , and I consent to the collection of my information as described.
+                  </span>
+                </label>
               </div>
 
               {regError && (
