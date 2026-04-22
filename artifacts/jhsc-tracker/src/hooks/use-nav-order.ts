@@ -22,7 +22,6 @@ export const DEFAULT_NAV_ORDER = [
   "/import-minutes",
   "/minutes-log",
   "/meetings",
-  "/incidents",
   "/emergency-contacts",
   "/meeting-transcription",
   "/manage-users",

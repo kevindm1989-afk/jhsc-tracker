@@ -51,7 +51,6 @@ import RightToRefusePage from "@/pages/right-to-refuse";
 import FilesPage from "@/pages/files";
 import MeetingTranscriptionPage from "@/pages/meeting-transcription";
 import MeetingsPage from "@/pages/meetings";
-import IncidentsPage from "@/pages/incidents";
 import EmergencyContactsPage from "@/pages/emergency-contacts";
 import InspectionReminderPage from "@/pages/inspection-reminder";
 import NotificationSettingsPage from "@/pages/notification-settings";
@@ -188,9 +187,6 @@ function Router() {
               </Route>
               <Route path="/meetings">
                 <ProtectedRoute component={MeetingsPage} permission="meetings" />
-              </Route>
-              <Route path="/incidents">
-                <ProtectedRoute component={IncidentsPage} permission="incidents" />
               </Route>
               <Route path="/emergency-contacts">
                 <ProtectedRoute component={EmergencyContactsPage} permission="emergency-contacts" />
