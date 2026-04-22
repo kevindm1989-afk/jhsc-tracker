@@ -74,9 +74,13 @@ router.post("/", async (req, res) => {
         ? body.responseDeadline
         : add21Days(baseDate);
 
+    // Privacy policy §5: enforce anonymity server-side — never store
+    // a submitter name when the user opted to submit anonymously.
+    const safeSubmitterName = body.isAnonymous ? null : (body.submitterName ?? null);
+
     const [created] = await db
       .insert(hazardFindingsTable)
-      .values({ ...body, responseDeadline, itemCode: "HF-000" })
+      .values({ ...body, submitterName: safeSubmitterName, responseDeadline, itemCode: "HF-000" })
       .returning();
 
     const [updated] = await db
@@ -114,9 +118,15 @@ router.put("/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const body = req.body;
 
+    // Privacy policy §5: enforce anonymity server-side on edits too —
+    // an anonymous finding must never carry a submitter name.
+    const safeBody = body.isAnonymous
+      ? { ...body, submitterName: null }
+      : body;
+
     const [updated] = await db
       .update(hazardFindingsTable)
-      .set({ ...body, updatedAt: new Date() })
+      .set({ ...safeBody, updatedAt: new Date() })
       .where(eq(hazardFindingsTable.id, id))
       .returning();
 

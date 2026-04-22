@@ -3,7 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, KeyRound } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Eye, EyeOff, KeyRound, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -16,6 +27,34 @@ export default function ChangePasswordPage() {
   const [showPasswords, setShowPasswords] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleDeleteAccount() {
+    setIsDeleting(true);
+    try {
+      const resp = await fetch(`${BASE}/api/account`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data.error || "Failed to delete account");
+      }
+      toast({
+        title: "Account deleted",
+        description: "Your account and personal records have been removed.",
+      });
+      window.location.href = `${BASE}/login`;
+    } catch (err: any) {
+      toast({
+        title: "Could not delete account",
+        description: err.message || "Something went wrong.",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -127,6 +166,67 @@ export default function ChangePasswordPage() {
               {isLoading ? "Updating…" : "Change Password"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm mt-6 border-destructive/40">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl flex items-center gap-2 text-destructive">
+            <Trash2 className="w-5 h-5" />
+            Delete My Account
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Permanently remove your account and the personal information linked to it.
+            JHSC committee records (suggestions, reports, member actions) will be kept
+            for statutory compliance but your name will be removed from them. Anonymous
+            submissions are not affected.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog
+            onOpenChange={(open) => {
+              if (!open) setConfirmText("");
+            }}
+          >
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="w-full">
+                Delete my account
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This cannot be undone. Your login, chat messages, and push
+                  notification subscriptions will be deleted. Your name will be
+                  removed from any suggestions, safety reports, and member
+                  actions you submitted, but the records themselves will be
+                  retained for OHSA compliance.
+                  <br /><br />
+                  Type <strong>DELETE</strong> below to confirm.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <Input
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder="Type DELETE to confirm"
+                autoComplete="off"
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={confirmText !== "DELETE" || isDeleting}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDeleteAccount();
+                  }}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? "Deleting…" : "Permanently delete"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>
