@@ -9,9 +9,9 @@ const AKEY = process.env.ASSEMBLYAI_API_KEY;
 const AAPI = "https://api.assemblyai.com/v2";
 
 const WORD_BOOST = [
-  "Unifor", "JHSC", "steward", "grievance", "arbitration",
+  "JHSC", "steward", "grievance", "arbitration",
   "just cause", "collective agreement", "bargaining unit",
-  "Local 1285", "OHSA", "ESA", "Saputo", "Georgetown",
+  "OHSA", "ESA",
   "hazard identification", "root cause analysis",
   "right to refuse", "duty to accommodate",
   "modified work", "modified duties", "ergonomics",

@@ -46,7 +46,7 @@ artifacts-monorepo/
 
 ## Application: JHSC Tracker
 
-A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo Georgetown. Built for the JHSC (Joint Health & Safety Committee) Worker Co-Chair.
+A workplace health and safety compliance tracker for a Joint Health & Safety Committee (JHSC). Built for the JHSC Worker Co-Chair.
 
 ### Features
 
@@ -60,7 +60,7 @@ A workplace health and safety compliance tracker for Unifor Local 1285 at Saputo
 - **Inspection Log** — Zone-by-zone inspections (11 zones matching actual facility), finding tracking with follow-up dates
 - **Conduct Inspection** — Digital checklist for the 10-section / 50-item JHSC inspection form; rate each item A/B/C/X, add corrective actions + responsible parties, then export a fully filled Excel form (.xlsx) or save findings directly to the Inspection Log
 - **Worker Statements** — Confidential statements tracked by code only (W-001), no worker names stored
-- **Authentication** — Session-based login (bcrypt + express-session + PostgreSQL session store); admin auto-seeded on first run (username: admin, password: Unifor1285!)
+- **Authentication** — Session-based login (bcrypt + express-session + PostgreSQL session store); admin auto-seeded on first run (username: admin)
 - **Manage Users** — Admin-only page to create/edit/delete member accounts and assign per-module permissions
 - **Documents** — Upload, browse, and download safety documents; category-based organisation (Meeting Minutes, Inspection Reports, Hazard Reports, OHSA References, Policies & Procedures, Worker Statements, Other); presigned GCS upload via Replit Object Storage; metadata stored in DB; per-user delete permission
 
@@ -130,7 +130,7 @@ Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` 
 
 ### `artifacts/jhsc-tracker` (`@workspace/jhsc-tracker`)
 
-React + Vite frontend for the JHSC Tracker. Uses IBM Plex Sans/Mono fonts, Unifor red (#E33225), and navy (#1a2744) sidebar branding.
+React + Vite frontend for the JHSC Tracker. Uses IBM Plex Sans/Mono fonts, primary red (#E33225), and navy (#1a2744) sidebar branding.
 
 - Entry: `src/App.tsx` — wouter router, pages by section
 - Components: `src/components/ui/status-badges.tsx` — StatusBadge, PriorityBadge, DeptBadge

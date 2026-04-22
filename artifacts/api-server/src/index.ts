@@ -13,7 +13,7 @@ async function seedAdminIfNeeded() {
   try {
     const [{ value }] = await db.select({ value: count() }).from(usersTable);
     if (Number(value) === 0) {
-      const passwordHash = await bcrypt.hash("Unifor1285!", 12);
+      const passwordHash = await bcrypt.hash("JHSCAdmin1!", 12);
       await db.insert(usersTable).values({
         username: "admin",
         displayName: "Worker Co-Chair",
@@ -22,7 +22,7 @@ async function seedAdminIfNeeded() {
         role: "admin",
         permissions: [],
       });
-      logger.info("Default admin account created — username: admin, password: Unifor1285!");
+      logger.info("Default admin account created — username: admin");
     }
   } catch (err) {
     logger.error({ err }, "Failed to seed admin account");

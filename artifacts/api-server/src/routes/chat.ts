@@ -162,7 +162,7 @@ router.post("/dm/:otherUserId/start", requireAuth, async (req, res) => {
               <p><strong>${senderName}</strong> has sent you a direct message on <strong>JHSC Advisor</strong>.</p>
               <p>Log in to view and reply.</p>
               <br/>
-              <p style="font-size:12px;color:#888;">JHSC Advisor — Unifor Local 1285</p>
+              <p style="font-size:12px;color:#888;">JHSC Advisor</p>
             `,
           });
           console.log(`DM offline notification sent to ${other.email}`);

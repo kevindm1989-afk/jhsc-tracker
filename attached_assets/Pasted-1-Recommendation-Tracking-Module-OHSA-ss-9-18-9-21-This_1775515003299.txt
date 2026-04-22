@@ -34,7 +34,7 @@ Agenda template auto-populated from: open action items, overdue recommendations,
 Attendance capture with role tags (worker member, management member, observer)
 Motion/vote recording with outcome (consensus, split, deferred)
 Auto-number minutes and action items sequentially (AI-2026-001, etc.)
-One-click export to PDF with institutional header (Unifor Local 1285 / Saputo Georgetown)
+One-click export to PDF with institutional header (the committee / the workplace)
 
 6. Right to Refuse Log (OHSA ss.43–44)
 

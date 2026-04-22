@@ -41,7 +41,7 @@ function msToHMS(ms: number): string {
 
 function buildPlainText(utterances?: Utterance[], fallback?: string, names?: Record<string,string>): string {
   const date = new Date().toLocaleDateString("en-CA", { dateStyle: "full" });
-  const header = ["MEETING MINUTES - Unifor Local 1285", "Date: " + date, "-".repeat(50), ""].join("\n");
+  const header = ["MEETING MINUTES", "Date: " + date, "-".repeat(50), ""].join("\n");
   if (utterances?.length) {
     const body = utterances.map(u => {
       const idx = u.speaker.charCodeAt(0) - 65;
@@ -234,7 +234,7 @@ export default function MeetingTranscription() {
     <div style={{ padding: "24px", maxWidth: "760px", margin: "0 auto", fontFamily: "IBM Plex Sans, sans-serif" }}>
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ fontSize: "22px", fontWeight: 600, color: "#1a2744", margin: 0 }}>Meeting Transcription</h1>
-        <p style={{ fontSize: "14px", color: "#666", marginTop: "4px" }}>Unifor Local 1285 — AssemblyAI Universal-2 with speaker identification</p>
+        <p style={{ fontSize: "14px", color: "#666", marginTop: "4px" }}>AssemblyAI Universal-2 with speaker identification</p>
       </div>
 
       {(appState === "idle" || isRecording || isPaused || appState === "preview") && (
