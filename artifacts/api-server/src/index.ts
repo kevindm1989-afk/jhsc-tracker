@@ -219,23 +219,15 @@ app.listen(port, "0.0.0.0", () => {
     });
     logger.info("Inspection reminder cron scheduled (08:00 daily)");
 
-    // Automatic Google Drive backup — every 24 hours.
-    // Wait 5 seconds after startup so the rest of the boot sequence
-    // completes and the server is confirmed healthy before we hammer
-    // the database with a full table dump.
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-    setTimeout(() => {
+    // Automatic Google Drive backup — runs daily at 03:00 (server local time).
+    // Using a cron schedule (not setTimeout) so the backup never fires on
+    // startup and cannot OOM the process during boot on low-memory machines.
+    cron.schedule("0 3 * * *", () => {
       runDriveBackup().catch((e) =>
-        logger.error({ err: e }, "Initial Drive backup failed"),
+        logger.error({ err: e }, "Scheduled Drive backup failed"),
       );
-      const timer = setInterval(() => {
-        runDriveBackup().catch((e) =>
-          logger.error({ err: e }, "Scheduled Drive backup failed"),
-        );
-      }, ONE_DAY_MS);
-      if (typeof timer.unref === "function") timer.unref();
-    }, 5000);
-    logger.info("Drive backup scheduled (every 24h, first run in 5s)");
+    });
+    logger.info("Drive backup scheduled (cron: 03:00 daily — no startup run)");
   } catch (err) {
     logger.error({ err }, "Startup setup failed");
     process.exit(1);

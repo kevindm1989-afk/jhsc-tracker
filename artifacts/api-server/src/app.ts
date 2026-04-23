@@ -97,7 +97,14 @@ app.use(
     hsts: true,
     noSniff: true,
     frameguard: { action: "deny" },
-    contentSecurityPolicy: true,
+    // contentSecurityPolicy is intentionally disabled.
+    // The default helmet CSP blocks SPA module scripts and causes the React
+    // app to get stuck on "Loading...". A properly-scoped CSP for this SPA
+    // (which uses Vite module bundles, Ably WebSockets, and Google APIs)
+    // requires a nonce or hash strategy that must be wired into the Vite
+    // build pipeline first. Until that work is done, disabling CSP here is
+    // safer than silently breaking the app in production.
+    contentSecurityPolicy: false,
   }),
 );
 
