@@ -21,7 +21,7 @@ async function seedAdminIfNeeded() {
         username: "admin",
         displayName: "Worker Co-Chair",
         passwordHash,
-        email: "",
+        email: "jhsc1285app@gmail.com",
         role: "admin",
         permissions: [],
       });
@@ -32,6 +32,25 @@ async function seedAdminIfNeeded() {
   }
 }
 
+async function ensureAdminEmail() {
+  try {
+    await db
+      .update(usersTable)
+      .set({ email: "jhsc1285app@gmail.com" })
+      .where(
+        and(
+          eq(usersTable.username, "admin"),
+          or(
+            isNull(usersTable.email),
+            eq(usersTable.email, ""),
+            eq(usersTable.email, "kevindm1989@gmail.com")
+          )
+        )
+      );
+  } catch (err) {
+    logger.error({ err }, "Failed to ensure admin email");
+  }
+}
 
 async function ensureFileDataColumns() {
   try {
@@ -185,6 +204,7 @@ app.listen(port, "0.0.0.0", () => {
   try {
     await ensureSessionTable();
     await seedAdminIfNeeded();
+    await ensureAdminEmail();
     await ensureFileDataColumns();
     await ensureMeetingsTable();
     await ensureIncidentsTable();
