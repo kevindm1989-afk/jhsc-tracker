@@ -48,7 +48,6 @@ import SuggestionsLogPage from "@/pages/suggestions-log";
 import ResetPasswordPage from "@/pages/reset-password";
 import ChangePasswordPage from "@/pages/change-password";
 import FilesPage from "@/pages/files";
-import MeetingTranscriptionPage from "@/pages/meeting-transcription";
 import MeetingsPage from "@/pages/meetings";
 import EmergencyContactsPage from "@/pages/emergency-contacts";
 import InspectionReminderPage from "@/pages/inspection-reminder";
@@ -177,9 +176,6 @@ function Router() {
               </Route>
               <Route path="/manage-users">
                 <ProtectedRoute component={ManageUsersPage} />
-              </Route>
-              <Route path="/meeting-transcription">
-                <ProtectedRoute component={MeetingTranscriptionPage} permission="meeting-transcription" />
               </Route>
               <Route path="/meetings">
                 <ProtectedRoute component={MeetingsPage} permission="meetings" />

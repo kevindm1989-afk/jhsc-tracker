@@ -17,7 +17,6 @@ import registrationsRouter from "./registrations";
 import settingsRouter from "./settings";
 import attachmentsRouter from "./attachments";
 import folderFilesRouter from "./folderFiles";
-import transcriptionRouter from "./transcription";
 import inspectionChecklistsRouter from "./inspectionChecklists";
 import inspectionScheduleRouter from "./inspectionSchedule";
 import meetingsRouter from "./meetings";
@@ -67,7 +66,6 @@ router.use("/notifications", requireAuth, notificationsRouter);
 router.use("/account", requireAuth, accountRouter);
 
 // Admin-only routes
-router.use("/transcription", requireAuth, transcriptionRouter);
 router.use("/users", usersRouter);
 router.use("/registrations", registrationsRouter);
 router.use("/admin", adminRouter);

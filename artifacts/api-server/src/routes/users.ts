@@ -26,7 +26,6 @@ const ALL_PERMISSIONS = [
   "files",
   "import-data",
   "minutes-log",
-  "meeting-transcription",
   "meetings",
 ];
 

@@ -24,7 +24,6 @@ const DEFAULT_MEMBER_PERMISSIONS = [
   "suggestions-log",
   "files",
   "import-data",
-  "meeting-transcription",
 ];
 
 // GET /api/registrations — admin only, list all registrations
