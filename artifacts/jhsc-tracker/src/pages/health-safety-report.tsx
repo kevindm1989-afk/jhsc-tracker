@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldAlert, Send, Loader2, CheckCircle2, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { ShieldAlert, ShieldCheck, Send, Loader2, CheckCircle2, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -95,6 +95,7 @@ export default function HealthSafetyReportPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [form, setForm] = useState({ ...emptyForm });
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [lastCode, setLastCode] = useState("");
@@ -119,7 +120,7 @@ export default function HealthSafetyReportPage() {
 
   const validate = () => {
     const required: Array<[keyof typeof emptyForm, string]> = [
-      ["employeeName", "Employee Name"],
+      ...(!isAnonymous ? [["employeeName", "Employee Name"] as [keyof typeof emptyForm, string]] : []),
       ["department", "Department"],
       ["jobTitle", "Job Title"],
       ["shift", "Shift"],
@@ -129,7 +130,7 @@ export default function HealthSafetyReportPage() {
       ["incidentDate", "Incident Date"],
       ["incidentTime", "Time"],
       ["whatHappened", "What Happened / Concern"],
-      ["employeeSignature", "Employee Signature"],
+      ...(!isAnonymous ? [["employeeSignature", "Employee Signature"] as [keyof typeof emptyForm, string]] : []),
       ["signatureDate", "Signature Date"],
     ];
     for (const [field, label] of required) {
@@ -153,7 +154,7 @@ export default function HealthSafetyReportPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, isAnonymous }),
       });
       if (!res.ok) throw new Error("Server error");
       const data = await res.json();
@@ -270,9 +271,33 @@ export default function HealthSafetyReportPage() {
       <div className="space-y-3">
         <SectionHeader number={1} title="Employee / Report Details" />
         <div className="space-y-3 pl-1">
-          <FieldRow label="Name" required>
-            <Input value={form.employeeName} onChange={(e) => set("employeeName", e.target.value)} placeholder="Full name" />
-          </FieldRow>
+          {/* Anonymous toggle */}
+          <label className="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 rounded border-border accent-primary cursor-pointer"
+              checked={isAnonymous}
+              onChange={(e) => {
+                setIsAnonymous(e.target.checked);
+                if (e.target.checked) {
+                  set("employeeName", "");
+                  set("employeeSignature", "");
+                }
+              }}
+            />
+            <span className="text-sm text-foreground font-medium">Submit anonymously</span>
+          </label>
+          {isAnonymous && (
+            <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30 px-3 py-2 text-xs text-blue-800 dark:text-blue-300">
+              <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>Your name will not be stored or visible to anyone if you choose anonymous. No identifying information is recorded.</span>
+            </div>
+          )}
+          {!isAnonymous && (
+            <FieldRow label="Name" required>
+              <Input value={form.employeeName} onChange={(e) => set("employeeName", e.target.value)} placeholder="Full name" />
+            </FieldRow>
+          )}
           <FieldRow label="Department" required>
             <Input value={form.department} onChange={(e) => set("department", e.target.value)} placeholder="e.g. Packaging" />
           </FieldRow>
@@ -396,13 +421,18 @@ export default function HealthSafetyReportPage() {
       <div className="space-y-3">
         <SectionHeader number={7} title="Employee Signature" />
         <div className="space-y-3 pl-1">
-          <FieldRow label="Signature" required>
-            <Input
-              value={form.employeeSignature}
-              onChange={(e) => set("employeeSignature", e.target.value)}
-              placeholder="Type your full name as your signature"
-            />
-          </FieldRow>
+          {!isAnonymous && (
+            <FieldRow label="Signature" required>
+              <Input
+                value={form.employeeSignature}
+                onChange={(e) => set("employeeSignature", e.target.value)}
+                placeholder="Type your full name as your signature"
+              />
+            </FieldRow>
+          )}
+          {isAnonymous && (
+            <p className="text-xs text-muted-foreground pl-1">Signature not required for anonymous submissions.</p>
+          )}
           <FieldRow label="Date" required>
             <Input type="date" value={form.signatureDate} onChange={(e) => set("signatureDate", e.target.value)} />
           </FieldRow>

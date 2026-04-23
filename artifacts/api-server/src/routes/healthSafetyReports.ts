@@ -106,9 +106,13 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const session = req.session as any;
-    const submittedByUserId: number = session?.userId ?? null;
-    const submittedByName: string =
-      session?.displayName ?? session?.username ?? "Unknown";
+    const body = req.body;
+    const isAnonymous = body.isAnonymous === true;
+
+    const submittedByUserId: number | null = isAnonymous ? null : (session?.userId ?? null);
+    const submittedByName: string = isAnonymous ? "Anonymous" : (session?.displayName ?? session?.username ?? "Unknown");
+    const employeeName: string = isAnonymous ? "Anonymous" : (body.employeeName ?? "Unknown");
+    const employeeSignature: string = isAnonymous ? "Anonymous" : (body.employeeSignature ?? "");
 
     // Generate report code: HS-YYYYMMDD-XXX
     const today = new Date();
@@ -119,12 +123,11 @@ router.post("/", async (req, res) => {
     const seq = existing.length + 1;
     const reportCode = `HS-${datePart}-${String(seq).padStart(3, "0")}`;
 
-    const body = req.body;
     const [report] = await db
       .insert(healthSafetyReportsTable)
       .values({
         reportCode,
-        employeeName: body.employeeName,
+        employeeName,
         department: body.department,
         jobTitle: body.jobTitle,
         shift: body.shift,
@@ -142,7 +145,7 @@ router.post("/", async (req, res) => {
         immediateActionTaken: body.immediateActionTaken ?? null,
         witnesses: body.witnesses ?? null,
         suggestedCorrection: body.suggestedCorrection ?? null,
-        employeeSignature: body.employeeSignature,
+        employeeSignature,
         signatureDate: body.signatureDate,
         submittedByUserId,
         submittedByName,
@@ -162,12 +165,14 @@ router.post("/", async (req, res) => {
         await transporter.sendMail({
           from: `"JHSC Tracker" <${sender}>`,
           to: sender,
-          subject: `H&S Concern Report – ${reportCode} – ${report.employeeName}`,
+          subject: `H&S Concern Report – ${reportCode} – ${isAnonymous ? "Anonymous" : report.employeeName}`,
           html: `
             <h2>JHSC Health &amp; Safety Concern Report</h2>
             <p><strong>Report #:</strong> ${reportCode}</p>
-            <p><strong>Submitted by:</strong> ${submittedByName}</p>
-            <p><strong>Employee:</strong> ${report.employeeName}</p>
+            ${isAnonymous
+              ? "<p><strong>Submitted by:</strong> Anonymous (identity not stored)</p>"
+              : `<p><strong>Submitted by:</strong> ${submittedByName}</p><p><strong>Employee:</strong> ${report.employeeName}</p>`
+            }
             <p><strong>Department:</strong> ${report.department} | <strong>Shift:</strong> ${report.shift}</p>
             <p><strong>Date Reported:</strong> ${report.dateReported}</p>
             <p><strong>Concern Types:</strong> ${selectedLabels || "None selected"}${report.otherConcernType ? ` / Other: ${report.otherConcernType}` : ""}</p>
