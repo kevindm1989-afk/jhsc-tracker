@@ -4,6 +4,7 @@
  */
 
 import pg from "pg";
+import { sanitizeDeep } from "../lib/sanitize";
 
 const { Client } = pg;
 
@@ -40,7 +41,7 @@ export async function dumpDatabase(): Promise<DumpResult> {
     for (const { table_name } of tablesRes.rows) {
       const safe = `"${table_name.replace(/"/g, '""')}"`;
       const res = await client.query(`SELECT * FROM ${safe}`);
-      data[table_name] = res.rows;
+      data[table_name] = sanitizeDeep(res.rows) as unknown[];
       totalRows += res.rows.length;
     }
 
