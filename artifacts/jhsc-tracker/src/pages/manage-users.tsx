@@ -84,7 +84,7 @@ export default function ManageUsersPage() {
   // Backup state
   const [backupLoading, setBackupLoading] = useState(false);
   type BackupResult =
-    | { success: true; filename: string; rowCount?: number; tableCount?: number }
+    | { accepted: true; filename: string }
     | { success: false; error: string };
   const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
 
@@ -94,10 +94,10 @@ export default function ManageUsersPage() {
     try {
       const resp = await fetch(`${BASE}/api/admin/backup`, { credentials: "include" });
       const data = await resp.json();
-      if (resp.ok && data.success) {
-        setBackupResult({ success: true, filename: data.filename, rowCount: data.rowCount, tableCount: data.tableCount });
+      if (resp.status === 202 && data.accepted) {
+        setBackupResult({ accepted: true, filename: data.filename });
       } else {
-        setBackupResult({ success: false, error: data.error || data.message || "Unknown error" });
+        setBackupResult({ success: false, error: data.error || data.message || `HTTP ${resp.status}` });
       }
     } catch (e: any) {
       setBackupResult({ success: false, error: e.message || "Network error" });
@@ -540,15 +540,14 @@ export default function ManageUsersPage() {
           </div>
 
           {backupResult && (
-            backupResult.success ? (
+            "accepted" in backupResult ? (
               <div className="flex items-start gap-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-3 py-2.5 text-sm text-green-800 dark:text-green-300">
                 <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
                 <div className="space-y-0.5">
-                  <p className="font-medium">Backup complete</p>
+                  <p className="font-medium">Backup started</p>
                   <p className="text-xs opacity-80">
+                    Running in the background — check Google Drive in a few minutes.
                     File: <span className="font-mono">{backupResult.filename}</span>
-                    {backupResult.tableCount !== undefined && ` · ${backupResult.tableCount} tables`}
-                    {backupResult.rowCount !== undefined && ` · ${backupResult.rowCount.toLocaleString()} rows`}
                   </p>
                 </div>
               </div>

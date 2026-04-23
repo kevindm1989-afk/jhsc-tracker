@@ -9,42 +9,37 @@ const router: IRouter = Router();
  *
  * Admin-only on-demand database backup.
  *
- * Triggers the Google Drive backup service which dumps every table in
- * the Neon database to JSON and uploads it to the "JHSC Advisor
- * Backups" folder in Drive (created on first run). Old backups beyond
- * the most recent 30 are pruned automatically.
+ * Returns HTTP 202 immediately so the request never times out in the browser
+ * or at the Fly.io proxy layer (default idle timeout is 60 s, backup can take
+ * several minutes on larger datasets). The actual dump + Drive upload runs in
+ * the background; results are logged to the server console.
  *
  * Requires the GOOGLE_SERVICE_ACCOUNT_JSON Fly.io secret to be set:
- *   flyctl secrets set GOOGLE_SERVICE_ACCOUNT_JSON='<paste json here>' --app jhsctracker-api
+ *   flyctl secrets set GOOGLE_SERVICE_ACCOUNT_JSON='<paste json here>' \
+ *     --app jhsctracker-api
  */
-router.get("/backup", requireAdmin, async (_req, res) => {
-  res.setTimeout(300000); // 5-minute timeout — Drive upload can be slow on large datasets
+router.get("/backup", requireAdmin, (_req, res) => {
+  const dateStamp = new Date().toISOString().slice(0, 10);
+  const filename = `jhsc_backup_${dateStamp}.json`;
   const startedAt = new Date().toISOString();
-  const result = await runDriveBackup();
-  const finishedAt = new Date().toISOString();
 
-  if (result.success) {
-    return res.json({
-      success: true,
-      startedAt,
-      finishedAt,
-      filename: result.filename,
-      fileId: result.fileId,
-      folderId: result.folderId,
-      tableCount: result.tableCount,
-      rowCount: result.rowCount,
-      byteSize: result.byteSize,
-      message: "Database backup uploaded to Google Drive.",
-    });
-  }
-
-  return res.status(500).json({
-    success: false,
+  // Respond immediately — do NOT await the backup. This avoids:
+  //   • Fly.io's 60-second idle timeout terminating the connection
+  //   • Mobile browsers showing "Failed to fetch" on slow uploads
+  res.status(202).json({
+    accepted: true,
     startedAt,
-    finishedAt,
-    filename: result.filename,
-    error: result.error,
-    message: "Database backup failed. See server logs for details.",
+    filename,
+    message:
+      "Backup started in the background. Check Google Drive in a few minutes, or view the server logs for the result.",
+  });
+
+  // Fire-and-forget — errors are caught inside runDriveBackup() and logged.
+  runDriveBackup().catch((err) => {
+    console.error(
+      `[${new Date().toISOString()}] [BACKUP] Unhandled error in background backup:`,
+      err,
+    );
   });
 });
 
