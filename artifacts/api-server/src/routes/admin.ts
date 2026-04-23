@@ -18,6 +18,7 @@ const router: IRouter = Router();
  *   flyctl secrets set GOOGLE_SERVICE_ACCOUNT_JSON='<paste json here>' --app jhsctracker-api
  */
 router.get("/backup", requireAdmin, async (_req, res) => {
+  res.setTimeout(300000); // 5-minute timeout — Drive upload can be slow on large datasets
   const startedAt = new Date().toISOString();
   const result = await runDriveBackup();
   const finishedAt = new Date().toISOString();
