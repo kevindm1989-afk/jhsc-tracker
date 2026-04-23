@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import session from "express-session";
@@ -10,7 +10,7 @@ import { fileURLToPath } from "url";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
-import { securityLogger } from "./middleware/securityLogger";
+import { securityLogger, getClientIp } from "./middleware/securityLogger";
 import "./sessionTypes";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -70,8 +70,8 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50kb" }));
+app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 
 const PgSession = connectPg(session);
 
@@ -112,8 +112,15 @@ app.use(securityLogger);
 
 app.use("/api", router);
 
-app.get("/health", (_req, res) => {
-  res.status(200).send("OK");
+app.get("/health", async (_req, res) => {
+  const timestamp = new Date().toISOString();
+  try {
+    await pool.query("SELECT 1");
+    return res.status(200).json({ status: "ok", database: "connected", timestamp });
+  } catch {
+    logger.error("[HEALTH] Database connectivity check failed");
+    return res.status(503).json({ status: "error", database: "disconnected", timestamp });
+  }
 });
 
 // Serve all files from the public folder (privacy policy, assetlinks, etc.)
@@ -148,6 +155,21 @@ if (existsSync(staticDir)) {
 } else {
   logger.warn({ staticDir }, "Static dir not found — frontend will not be served");
 }
+
+// ── 413 oversized-body handler ────────────────────────────────────────────
+// Must be a 4-argument Express error handler so it receives errors thrown
+// by express.json / express.urlencoded when the 50 kb limit is exceeded.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  if (err.status === 413 || err.type === "entity.too.large") {
+    const ip = getClientIp(req);
+    logger.warn(`[SECURITY] Oversized request rejected from IP: ${ip}`);
+    return res.status(413).json({ error: "Request body too large" });
+  }
+  // Pass any other errors along unchanged so existing error handling is unaffected.
+  logger.error({ err }, "Unhandled application error");
+  return res.status(err.status ?? 500).json({ error: err.message ?? "Internal server error" });
+});
 
 export async function ensureSessionTable(): Promise<void> {
   const client = await pool.connect();
