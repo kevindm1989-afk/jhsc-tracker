@@ -135,30 +135,7 @@ function getDriveClient() {
 async function ensureBackupFolder(
   drive: ReturnType<typeof getDriveClient>,
 ): Promise<string> {
-  const escaped = FOLDER_NAME.replace(/'/g, "\\'");
-  const q = `mimeType='application/vnd.google-apps.folder' and name='${escaped}' and trashed=false`;
-  const list = await drive.files.list({
-    q,
-    fields: "files(id, name)",
-    pageSize: 10,
-    spaces: "drive",
-  });
-
-  const found = list.data.files?.[0];
-  if (found?.id) {
-    return found.id;
-  }
-
-  logInfo(`Creating Drive folder "${FOLDER_NAME}"`);
-  const created = await drive.files.create({
-    requestBody: {
-      name: FOLDER_NAME,
-      mimeType: "application/vnd.google-apps.folder",
-    },
-    fields: "id",
-  });
-  if (!created.data.id) throw new Error("Failed to create Drive backup folder");
-  return created.data.id;
+  return "19bNrxC5ZNhKrDOa7xk8m4e79HozjtqIN";
 }
 
 async function uploadBackup(
