@@ -37,7 +37,6 @@ interface Rule {
 
 const EVENT_TYPES = [
   { value: "hazard_created", label: "Hazard / Recommendation Created" },
-  { value: "rtr_filed", label: "Right-to-Refuse Filed" },
   { value: "meeting_scheduled", label: "Meeting Scheduled" },
   { value: "inspection_completed", label: "Inspection Completed" },
   { value: "action_item_overdue", label: "Action Item Overdue" },

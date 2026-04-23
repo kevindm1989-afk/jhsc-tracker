@@ -21,7 +21,6 @@ import {
   KeyRound,
   GripVertical,
   ArrowUpDown,
-  ShieldX,
   Folder,
   Mic,
   BookOpen,
@@ -77,7 +76,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "/worker-statements": MessageSquareWarning,
   "/suggestions": Lightbulb,
   "/suggestions-log": ScrollText,
-  "/right-to-refuse": ShieldX,
   "/files": Folder,
   "/meeting-transcription": Mic,
   "/meetings": CalendarDays,
@@ -192,7 +190,6 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     .filter((item): item is NavItem => {
       if (!item) return false;
       if (item.adminOnly && !isAdmin && !isCoChair) return false;
-      if (item.href === "/right-to-refuse" && user?.role === "management") return false;
       if (item.workerRepOnly && !isAdmin && !isCoChair && !isWorkerRep && !hasPermission(item.permission ?? "")) return false;
       if (item.permission === null) return true;
       return hasPermission(item.permission);

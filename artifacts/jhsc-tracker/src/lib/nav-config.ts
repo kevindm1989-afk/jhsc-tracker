@@ -21,7 +21,6 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Worker Statements", href: "/worker-statements", permission: "worker-statements" },
   { name: "Submit a Suggestion", href: "/suggestions", permission: "suggestions" },
   { name: "Suggestions Log", href: "/suggestions-log", permission: "suggestions-log" },
-  { name: "Right to Refuse", href: "/right-to-refuse", permission: "right-to-refuse", workerRepOnly: true },
   { name: "Files", href: "/files", permission: "files" },
   { name: "Import Data", href: "/import-minutes", permission: "import-data" },
   { name: "Minutes Log", href: "/minutes-log", permission: "minutes-log" },

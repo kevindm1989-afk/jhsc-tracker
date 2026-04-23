@@ -23,7 +23,6 @@ const ALL_PERMISSIONS = [
   "worker-statements",
   "suggestions",
   "suggestions-log",
-  "right-to-refuse",
   "files",
   "import-data",
   "minutes-log",

@@ -22,7 +22,6 @@ const DEFAULT_MEMBER_PERMISSIONS = [
   "worker-statements",
   "suggestions",
   "suggestions-log",
-  "right-to-refuse",
   "files",
   "import-data",
   "meeting-transcription",
