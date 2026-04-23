@@ -2,7 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/requireAuth";
 import { db } from "@workspace/db";
 import { chatMessagesTable, usersTable } from "@workspace/db/schema";
-import { eq, desc, ne, and } from "drizzle-orm";
+import { eq, desc, ne, and, inArray } from "drizzle-orm";
 import { publishToChannel } from "../lib/ably";
 import Ably from "ably";
 import nodemailer from "nodemailer";
@@ -11,6 +11,25 @@ import "../sessionTypes";
 const router = Router();
 
 const JHSC_ROLES = ["co-chair", "admin", "worker-rep"];
+
+/**
+ * Returns the set of roles a user is allowed to DM based on their own role.
+ * Null means no restriction (can DM anyone).
+ */
+function getAllowedDMRoles(myRole: string): string[] | null {
+  if (myRole === "member") return ["admin"];
+  if (myRole === "worker-rep") return ["worker-rep", "admin"];
+  return null; // admin, co-chair, management — unrestricted
+}
+
+/**
+ * Check whether myRole is allowed to DM a user with targetRole.
+ */
+function canDM(myRole: string, targetRole: string): boolean {
+  const allowed = getAllowedDMRoles(myRole);
+  if (allowed === null) return true;
+  return allowed.includes(targetRole);
+}
 
 function dmChannelName(idA: number, idB: number): string {
   return `dm:${Math.min(idA, idB)}-${Math.max(idA, idB)}`;
@@ -77,16 +96,36 @@ router.get("/token", requireAuth, async (req, res) => {
 
 router.get("/members", requireAuth, async (req, res) => {
   const selfId = req.session.userId!;
-  const users = await db
-    .select({ id: usersTable.id, displayName: usersTable.displayName, role: usersTable.role })
-    .from(usersTable)
-    .where(and(ne(usersTable.id, selfId), ne(usersTable.role, "admin")));
+  const myRole = req.session.role ?? "member";
+  const allowedRoles = getAllowedDMRoles(myRole);
+
+  let users;
+  if (allowedRoles === null) {
+    users = await db
+      .select({ id: usersTable.id, displayName: usersTable.displayName, role: usersTable.role })
+      .from(usersTable)
+      .where(ne(usersTable.id, selfId));
+  } else {
+    users = await db
+      .select({ id: usersTable.id, displayName: usersTable.displayName, role: usersTable.role })
+      .from(usersTable)
+      .where(and(ne(usersTable.id, selfId), inArray(usersTable.role, allowedRoles)));
+  }
   return res.json(users);
 });
 
 router.get("/dm/:otherUserId/history", requireAuth, async (req, res) => {
   const otherUserId = parseInt(req.params.otherUserId, 10);
   if (isNaN(otherUserId)) return res.status(400).json({ error: "Invalid user id" });
+
+  const [other] = await db
+    .select({ role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, otherUserId));
+  if (!other || !canDM(req.session.role ?? "member", other.role)) {
+    return res.status(403).json({ error: "You are not allowed to message this user." });
+  }
+
   const channel = dmChannelName(req.session.userId!, otherUserId);
   const messages = await db
     .select()
@@ -102,6 +141,15 @@ router.post("/dm/:otherUserId/send", requireAuth, async (req, res) => {
   if (isNaN(otherUserId)) return res.status(400).json({ error: "Invalid user id" });
   const { message } = req.body;
   if (!message?.trim()) return res.status(400).json({ error: "Message required" });
+
+  const [other] = await db
+    .select({ role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, otherUserId));
+  if (!other || !canDM(req.session.role ?? "member", other.role)) {
+    return res.status(403).json({ error: "You are not allowed to message this user." });
+  }
+
   const channel = dmChannelName(req.session.userId!, otherUserId);
   const [saved] = await db
     .insert(chatMessagesTable)
@@ -119,6 +167,14 @@ router.post("/dm/:otherUserId/send", requireAuth, async (req, res) => {
 router.post("/dm/:otherUserId/start", requireAuth, async (req, res) => {
   const otherUserId = parseInt(req.params.otherUserId, 10);
   if (isNaN(otherUserId)) return res.status(400).json({ error: "Invalid user id" });
+
+  const [otherCheck] = await db
+    .select({ role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, otherUserId));
+  if (!otherCheck || !canDM(req.session.role ?? "member", otherCheck.role)) {
+    return res.status(403).json({ error: "You are not allowed to message this user." });
+  }
 
   const apiKey = process.env.ABLY_API_KEY;
   let isOnline = false;
