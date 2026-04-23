@@ -88,10 +88,11 @@ app.use(
     secret: process.env.SESSION_SECRET || "jhsc-tracker-secret",
     resave: false,
     saveUninitialized: false,
+    rolling: true,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 60 * 1000, // 30 minutes — resets on every request
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   }),
@@ -454,27 +455,6 @@ export async function ensureSessionTable(): Promise<void> {
       );
     `);
 
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS "right_to_refuse" (
-        "id" serial PRIMARY KEY,
-        "refuse_code" text NOT NULL UNIQUE,
-        "worker_name" text NOT NULL,
-        "refusal_date" date NOT NULL,
-        "refusal_time" text NOT NULL,
-        "zone" text NOT NULL,
-        "hazard_description" text NOT NULL,
-        "supervisor_notified" boolean NOT NULL DEFAULT false,
-        "supervisor_name" text,
-        "jhsc_rep_notified" boolean NOT NULL DEFAULT false,
-        "inspector_called" boolean NOT NULL DEFAULT false,
-        "mol_file_number" text,
-        "outcome" text NOT NULL DEFAULT 'Ongoing',
-        "notes" text,
-        "locked_at" timestamp,
-        "created_at" timestamp NOT NULL DEFAULT now(),
-        "updated_at" timestamp NOT NULL DEFAULT now()
-      );
-    `);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS "attachments" (

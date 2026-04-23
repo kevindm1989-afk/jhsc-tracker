@@ -11,7 +11,16 @@ import {
   getClientIp,
   recordFailedLogin,
   recordSuccessfulLogin,
+  getAccountLockout,
 } from "../middleware/securityLogger";
+
+function validatePasswordStrength(password: string): string | null {
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter.";
+  if (!/[0-9]/.test(password)) return "Password must contain at least one number.";
+  if (!/[^A-Za-z0-9]/.test(password)) return "Password must contain at least one special character (e.g. !, @, #).";
+  return null;
+}
 
 const router: IRouter = Router();
 
@@ -36,6 +45,16 @@ router.post("/login", async (req, res) => {
     }
 
     const identifier = rawIdentifier.trim().toLowerCase();
+
+    // Check account lockout before hitting the DB
+    const lockedUntil = getAccountLockout(identifier);
+    if (lockedUntil) {
+      const minutesLeft = Math.ceil((lockedUntil - Date.now()) / 60000);
+      return res.status(429).json({
+        error: `This account has been temporarily locked due to too many failed attempts. Try again in ${minutesLeft} minute${minutesLeft !== 1 ? "s" : ""}.`,
+      });
+    }
+
     const [user] = await db
       .select()
       .from(usersTable)
@@ -52,7 +71,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    recordSuccessfulLogin(ip);
+    recordSuccessfulLogin(ip, identifier);
     const displayName = user.role === "admin" ? "admin" : user.displayName;
 
     req.session.userId = user.id;
@@ -110,9 +129,8 @@ router.post("/register", async (req, res) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
       return res.status(400).json({ error: "Please enter a valid email address" });
     }
-    if (password.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters" });
-    }
+    const pwError = validatePasswordStrength(password);
+    if (pwError) return res.status(400).json({ error: pwError });
 
     // Auto-generate username: firstName + firstLetterOfLastName (lowercase, letters only)
     const nameParts = name.trim().toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter(Boolean);
@@ -250,9 +268,8 @@ router.post("/reset-password", async (req, res) => {
     if (!token?.trim() || !newPassword) {
       return res.status(400).json({ error: "Token and new password are required" });
     }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters" });
-    }
+    const resetPwError = validatePasswordStrength(newPassword);
+    if (resetPwError) return res.status(400).json({ error: resetPwError });
 
     const now = new Date();
     const [resetToken] = await db
@@ -300,9 +317,8 @@ router.post("/change-password", async (req, res) => {
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: "Current and new password are required" });
     }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: "New password must be at least 6 characters" });
-    }
+    const changePwError = validatePasswordStrength(newPassword);
+    if (changePwError) return res.status(400).json({ error: changePwError });
 
     const [user] = await db
       .select({ id: usersTable.id, passwordHash: usersTable.passwordHash })
