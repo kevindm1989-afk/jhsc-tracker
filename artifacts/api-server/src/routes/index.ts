@@ -36,6 +36,12 @@ const router: IRouter = Router();
 router.use(healthRouter);
 router.use("/auth", authRouter);
 
+// Lightweight unauthenticated probe for verifying the /api router is reachable
+// (useful when debugging whether the SPA catch-all is shadowing API routes).
+router.get("/ping", (_req, res) => {
+  res.json({ pong: true });
+});
+
 // Protected routes — require login
 router.use("/dashboard", requireAuth, requirePermission("dashboard"), dashboardRouter);
 router.use("/action-items", requireAuth, requirePermission("action-items"), actionItemsRouter);

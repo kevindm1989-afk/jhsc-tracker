@@ -19,13 +19,23 @@ const router: IRouter = Router();
 router.post("/login", async (req, res) => {
   const ip = getClientIp(req);
   try {
-    const { username, password } = req.body as { username: string; password: string };
+    // Accept either { username } or { email } as the login identifier so
+    // both legacy clients and email-first clients work against the same route.
+    const body = (req.body || {}) as {
+      username?: string;
+      email?: string;
+      password?: string;
+    };
+    const rawIdentifier = body.username ?? body.email ?? "";
+    const password = body.password ?? "";
 
-    if (!username || !password) {
-      return res.status(400).json({ error: "Username and password are required" });
+    if (!rawIdentifier || !password) {
+      return res
+        .status(400)
+        .json({ error: "Username (or email) and password are required" });
     }
 
-    const identifier = username.trim().toLowerCase();
+    const identifier = rawIdentifier.trim().toLowerCase();
     const [user] = await db
       .select()
       .from(usersTable)
