@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Pencil, Trash2, ShieldCheck, User, Clock, CheckCircle2, XCircle, Inbox, Mail } from "lucide-react";
+import { UserPlus, Pencil, Trash2, ShieldCheck, User, Clock, CheckCircle2, XCircle, Inbox, Mail, HardDriveUpload, Loader2, AlertCircle } from "lucide-react";
 import { PERMISSION_LABELS, ALL_PERMISSIONS } from "@/lib/nav-config";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -80,6 +80,31 @@ export default function ManageUsersPage() {
   const [decliningReg, setDecliningReg] = useState<Registration | null>(null);
   const [declineNote, setDeclineNote] = useState("");
   const [reviewingId, setReviewingId] = useState<number | null>(null);
+
+  // Backup state
+  const [backupLoading, setBackupLoading] = useState(false);
+  type BackupResult =
+    | { success: true; filename: string; rowCount?: number; tableCount?: number }
+    | { success: false; error: string };
+  const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
+
+  async function handleRunBackup() {
+    setBackupLoading(true);
+    setBackupResult(null);
+    try {
+      const resp = await fetch(`${BASE}/api/admin/backup`, { credentials: "include" });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        setBackupResult({ success: true, filename: data.filename, rowCount: data.rowCount, tableCount: data.tableCount });
+      } else {
+        setBackupResult({ success: false, error: data.error || data.message || "Unknown error" });
+      }
+    } catch (e: any) {
+      setBackupResult({ success: false, error: e.message || "Network error" });
+    } finally {
+      setBackupLoading(false);
+    }
+  }
 
   async function loadUsers() {
     setIsLoading(true);
@@ -480,6 +505,62 @@ export default function ManageUsersPage() {
                 </div>
               ))}
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Database Backup */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <HardDriveUpload className="w-4 h-4" />
+            Database Backup
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Exports all database tables to JSON and uploads to Google Drive.
+            Retains the most recent 30 backups automatically.
+          </p>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <Button
+              onClick={handleRunBackup}
+              disabled={backupLoading}
+              className="sm:w-auto"
+            >
+              {backupLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <HardDriveUpload className="w-4 h-4 mr-2" />
+              )}
+              {backupLoading ? "Running backup…" : "Run Database Backup"}
+            </Button>
+            <span className="text-xs text-muted-foreground">Uploads to Google Drive</span>
+          </div>
+
+          {backupResult && (
+            backupResult.success ? (
+              <div className="flex items-start gap-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-3 py-2.5 text-sm text-green-800 dark:text-green-300">
+                <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
+                <div className="space-y-0.5">
+                  <p className="font-medium">Backup complete</p>
+                  <p className="text-xs opacity-80">
+                    File: <span className="font-mono">{backupResult.filename}</span>
+                    {backupResult.tableCount !== undefined && ` · ${backupResult.tableCount} tables`}
+                    {backupResult.rowCount !== undefined && ` · ${backupResult.rowCount.toLocaleString()} rows`}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-3 py-2.5 text-sm text-red-800 dark:text-red-300">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <div className="space-y-0.5">
+                  <p className="font-medium">Backup failed</p>
+                  <p className="text-xs opacity-80">{backupResult.error}</p>
+                </div>
+              </div>
+            )
           )}
         </CardContent>
       </Card>
