@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Pencil, Trash2, ShieldCheck, User, Clock, CheckCircle2, XCircle, Inbox, Mail, HardDriveUpload, Loader2, AlertCircle } from "lucide-react";
+import { UserPlus, Pencil, Trash2, ShieldCheck, User, Clock, CheckCircle2, XCircle, Inbox, Mail, HardDriveUpload } from "lucide-react";
 import { PERMISSION_LABELS, ALL_PERMISSIONS } from "@/lib/nav-config";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -81,41 +81,14 @@ export default function ManageUsersPage() {
   const [declineNote, setDeclineNote] = useState("");
   const [reviewingId, setReviewingId] = useState<number | null>(null);
 
-  // ── Backup state ──────────────────────────────────────────────────────────
-  const [backupLoading, setBackupLoading] = useState(false);
-  const [backupOk, setBackupOk] = useState<string | null>(null); // filename on success
-  const [backupErr, setBackupErr] = useState<string | null>(null);
-
-  async function handleDownloadBackup() {
-    setBackupLoading(true);
-    setBackupOk(null);
-    setBackupErr(null);
-    try {
-      const resp = await fetch(`${BASE}/api/admin/backup/download`, { credentials: "include" });
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({}));
-        throw new Error(data.error ?? `HTTP ${resp.status}`);
-      }
-      // Extract filename from Content-Disposition header
-      const cd = resp.headers.get("Content-Disposition") ?? "";
-      const match = cd.match(/filename="([^"]+)"/);
-      const filename = match?.[1] ?? `jhsc_backup_${new Date().toISOString().slice(0, 10)}.json`;
-
-      const blob = await resp.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      setBackupOk(filename);
-    } catch (e: any) {
-      setBackupErr(e.message ?? "Download failed");
-    } finally {
-      setBackupLoading(false);
-    }
+  // ── Backup ────────────────────────────────────────────────────────────────
+  function handleDownloadBackup() {
+    const a = document.createElement("a");
+    a.href = `${BASE}/api/admin/backup/download`;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   async function loadUsers() {
@@ -531,40 +504,12 @@ export default function ManageUsersPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Exports all database tables to a JSON file and downloads it directly
-            to your device. Save it to Google Drive, a USB drive, or anywhere
-            you keep important records. A scheduled backup also runs automatically
-            at 3 AM daily.
+            Downloads a full JSON backup of all database tables directly to your device.
           </p>
-
-          <Button onClick={handleDownloadBackup} disabled={backupLoading} className="sm:w-auto">
-            {backupLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <HardDriveUpload className="w-4 h-4 mr-2" />
-            )}
-            {backupLoading ? "Generating backup…" : "Download Backup"}
+          <Button onClick={handleDownloadBackup} className="sm:w-auto">
+            <HardDriveUpload className="w-4 h-4 mr-2" />
+            Download Backup
           </Button>
-
-          {backupOk && (
-            <div className="flex items-start gap-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-3 py-2.5 text-sm text-green-800 dark:text-green-300">
-              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
-              <div className="space-y-0.5">
-                <p className="font-medium">Backup downloaded</p>
-                <p className="text-xs opacity-80 font-mono">{backupOk}</p>
-              </div>
-            </div>
-          )}
-
-          {backupErr && (
-            <div className="flex items-start gap-2 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-3 py-2.5 text-sm text-red-800 dark:text-red-300">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-              <div className="space-y-0.5">
-                <p className="font-medium">Download failed</p>
-                <p className="text-xs opacity-80">{backupErr}</p>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
