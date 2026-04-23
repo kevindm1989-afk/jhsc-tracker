@@ -133,7 +133,7 @@ async function buildAll() {
     ],
 
     plugins: [
-      esbuildPluginPino({ transports: ["pino-pretty"] }),
+      esbuildPluginPino({ transports: ["pino-pretty", "@logtail/pino"] }),
     ],
 
     // Make sure packages that are cjs only but are bundled continue to work in ESM output

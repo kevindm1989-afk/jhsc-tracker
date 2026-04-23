@@ -36,6 +36,8 @@
     }
   },
   "dependencies": {
+    "@logtail/node": "^0.5.8",
+    "@logtail/pino": "^0.5.8",
     "@types/node-cron": "^3.0.11",
     "@workspace/db": "workspace:*",
     "ably": "^2.21.0",
