@@ -72,6 +72,9 @@ router.post("/login", async (req, res) => {
         displayName,
         role: user.role,
         permissions: user.permissions,
+        consentAcceptedAt: user.consentAcceptedAt,
+        consentVersion: user.consentVersion,
+        currentPolicyVersion: PRIVACY_POLICY_VERSION,
       });
     });
   } catch (err) {
