@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { requireAdmin } from "../middleware/requireAuth";
-import { runDriveBackup, getServiceAccountEmail, type BackupResult } from "../services/driveBackup";
+import { runDriveBackup, getServiceAccountEmail, BACKUP_FOLDER_ID, type BackupResult } from "../services/driveBackup";
 
 const router: IRouter = Router();
 
@@ -41,7 +41,7 @@ router.get("/backup", requireAdmin, (_req, res) => {
 
   const serviceAccountEmail = getServiceAccountEmail();
   console.info(
-    `[BACKUP] Triggered by admin. Service account: ${serviceAccountEmail ?? "unknown (check GOOGLE_SERVICE_ACCOUNT_JSON)"}. Folder: 19bNrxC5ZNhKrDOa7xk8m4e79HozjtqIN`,
+    `[BACKUP] Triggered by admin. Service account: ${serviceAccountEmail ?? "unknown (check GOOGLE_SERVICE_ACCOUNT_JSON)"}. Folder: ${BACKUP_FOLDER_ID}`,
   );
 
   res.status(202).json({
@@ -83,7 +83,7 @@ router.get("/backup/status", requireAdmin, (_req, res) => {
     // Expose the SA email so the UI can tell the admin exactly which account
     // needs Editor access on the backup Drive folder.
     serviceAccountEmail: getServiceAccountEmail(),
-    folderId: "19bNrxC5ZNhKrDOa7xk8m4e79HozjtqIN",
+    folderId: BACKUP_FOLDER_ID,
   });
 });
 

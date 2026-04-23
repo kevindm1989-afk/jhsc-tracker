@@ -149,10 +149,37 @@ function getDriveClient() {
   return google.drive({ version: "v3", auth });
 }
 
+export const BACKUP_FOLDER_ID = "19bNrxC5ZNhKrDOa7xk8m4e79HozjtqIN";
+
 async function ensureBackupFolder(
   drive: ReturnType<typeof getDriveClient>,
 ): Promise<string> {
-  return "19bNrxC5ZNhKrDOa7xk8m4e79HozjtqIN";
+  // Verify the service account can actually see and write to the folder before
+  // we attempt the upload. A 404 / 403 here means the folder either does not
+  // exist or has not been shared with the service account as Editor.
+  try {
+    await drive.files.get({
+      fileId: BACKUP_FOLDER_ID,
+      supportsAllDrives: true,
+      fields: "id, name, capabilities",
+    });
+  } catch (err: any) {
+    const status = err?.response?.status ?? err?.code;
+    if (status === 404) {
+      throw new Error(
+        `Backup folder ${BACKUP_FOLDER_ID} does not exist or the service account cannot see it. ` +
+          `Share that Google Drive folder with ${getServiceAccountEmail() ?? "the service account"} as Editor.`,
+      );
+    }
+    if (status === 403) {
+      throw new Error(
+        `Service account does not have access to folder ${BACKUP_FOLDER_ID}. ` +
+          `Open the folder in Google Drive → Share → add ${getServiceAccountEmail() ?? "the service account email"} as Editor.`,
+      );
+    }
+    throw new Error(`Could not verify backup folder (${status ?? "unknown error"}): ${err?.message ?? err}`);
+  }
+  return BACKUP_FOLDER_ID;
 }
 
 async function uploadBackup(
