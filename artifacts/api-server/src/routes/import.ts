@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { db, pool } from "@workspace/db";
+import { db } from "@workspace/db";
 import { actionItemsTable, hazardFindingsTable, inspectionLogTable, closedItemsLogTable } from "@workspace/db/schema";
-import { eq, and, like, or, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, like, isNull, isNotNull } from "drizzle-orm";
 import { parseMinutesFile } from "../minutesParser";
 import { parseInspectionFile } from "../inspectionParser";
 import "../sessionTypes";
@@ -10,23 +10,7 @@ import "../sessionTypes";
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-function meetingDateToFolderName(meetingDate: string): string {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(meetingDate)) {
-    const [year, month, day] = meetingDate.split("-").map(Number);
-    return new Date(year, month - 1, day).toLocaleDateString("en-CA", {
-      year: "numeric", month: "long", day: "numeric",
-    });
-  }
-  return meetingDate || new Date().toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" });
-}
 
-function genActionCode(id: number) {
-  return "AI-" + String(id).padStart(3, "0");
-}
-
-function genHazardCode(id: number) {
-  return "HF-" + String(id).padStart(3, "0");
-}
 
 router.post("/minutes", upload.single("file"), async (req, res) => {
   try {
@@ -173,61 +157,6 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
       importedHazardFindings++;
     }
 
-    // ── Save uploaded file to Files → Minutes → [meeting date] subfolder ───────
-    let fileSaved = false;
-    let savedToFolder = "";
-    try {
-      const mimeType = req.file!.mimetype ||
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-      // Find or create top-level "Minutes" folder
-      let minsRes = await pool.query(
-        `SELECT id FROM folders WHERE name = 'Minutes' AND parent_id IS NULL LIMIT 1`
-      );
-      let minsFolderId: number;
-      if (minsRes.rows.length > 0) {
-        minsFolderId = minsRes.rows[0].id;
-      } else {
-        const r = await pool.query(
-          `INSERT INTO folders (name, created_by) VALUES ('Minutes', 'system') RETURNING id`
-        );
-        minsFolderId = r.rows[0].id;
-      }
-
-      // Format meeting date into a folder name (e.g. "April 7, 2026")
-      const subfolderName = meetingDateToFolderName(parsed.meetingDate || "");
-
-      // Find or create date subfolder
-      let subRes = await pool.query(
-        `SELECT id FROM folders WHERE name = $1 AND parent_id = $2 LIMIT 1`,
-        [subfolderName, minsFolderId]
-      );
-      let subFolderId: number;
-      if (subRes.rows.length > 0) {
-        subFolderId = subRes.rows[0].id;
-      } else {
-        const r = await pool.query(
-          `INSERT INTO folders (name, parent_id, created_by) VALUES ($1, $2, 'system') RETURNING id`,
-          [subfolderName, minsFolderId]
-        );
-        subFolderId = r.rows[0].id;
-      }
-
-      // Insert file record — store bytes directly in DB so they survive deploys
-      const uploadedBy = (req as any).session?.displayName || "System";
-      const storedName = req.file!.originalname;
-      await pool.query(
-        `INSERT INTO folder_files (folder_id, original_name, stored_name, mime_type, size_bytes, uploaded_by, file_data)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [subFolderId, req.file!.originalname, storedName, mimeType, req.file!.size, uploadedBy, req.file!.buffer]
-      );
-
-      fileSaved = true;
-      savedToFolder = `Minutes › ${subfolderName}`;
-    } catch (saveErr: any) {
-      req.log.error({ err: saveErr }, "Minutes file save error");
-    }
-
     return res.json({
       success: true,
       meetingDate: parsed.meetingDate,
@@ -241,8 +170,6 @@ router.post("/minutes", upload.single("file"), async (req, res) => {
         actionItems: 0,
         hazardFindings: 0,
       },
-      fileSaved,
-      savedToFolder,
     });
   } catch (err) {
     console.error("Import error:", err);
