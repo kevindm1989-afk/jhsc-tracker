@@ -89,6 +89,7 @@ export default function ManageUsersPage() {
 
   const [backupPhase, setBackupPhase] = useState<BackupPhase>("idle");
   const [backupResult, setBackupResult] = useState<FinalResult | null>(null);
+  const [serviceAccountEmail, setServiceAccountEmail] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollCountRef = useRef(0);
   // Max polls: 70 × 6 s = 7 minutes (backend times out at 4 min, then state settles)
@@ -121,6 +122,9 @@ export default function ManageUsersPage() {
       const resp = await fetch(`${BASE}/api/admin/backup/status`, { credentials: "include" });
       if (!resp.ok) return; // transient error — keep polling
       const data = await resp.json();
+
+      // Track service account email whenever the server tells us
+      if (data.serviceAccountEmail) setServiceAccountEmail(data.serviceAccountEmail);
 
       // Secret not configured — fail immediately with a helpful message
       if (!data.configured && pollCountRef.current === 1) {
@@ -646,9 +650,16 @@ export default function ManageUsersPage() {
             ) : (
               <div className="flex items-start gap-2 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-3 py-2.5 text-sm text-red-800 dark:text-red-300">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   <p className="font-medium">Backup failed</p>
                   <p className="text-xs opacity-80">{backupResult.error}</p>
+                  {serviceAccountEmail && (backupResult.error?.toLowerCase().includes("quota") || backupResult.error?.toLowerCase().includes("storage") || backupResult.error?.toLowerCase().includes("permission") || backupResult.error?.toLowerCase().includes("403")) && (
+                    <p className="text-xs mt-1 font-medium opacity-90">
+                      Fix: In Google Drive, open the backup folder → Share → add{" "}
+                      <span className="font-mono break-all">{serviceAccountEmail}</span>{" "}
+                      as <strong>Editor</strong>.
+                    </p>
+                  )}
                 </div>
               </div>
             )

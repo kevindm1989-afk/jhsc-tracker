@@ -108,7 +108,12 @@ async function dumpDatabaseToObject(): Promise<{
   }
 }
 
-function getServiceAccountCredentials() {
+interface ServiceAccountCreds {
+  client_email: string;
+  [key: string]: unknown;
+}
+
+function getServiceAccountCredentials(): ServiceAccountCreds {
   const raw = process.env["GOOGLE_SERVICE_ACCOUNT_JSON"];
   if (!raw) {
     throw new Error(
@@ -117,9 +122,21 @@ function getServiceAccountCredentials() {
     );
   }
   try {
-    return JSON.parse(raw);
-  } catch (err) {
+    return JSON.parse(raw) as ServiceAccountCreds;
+  } catch {
     throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON");
+  }
+}
+
+/** Returns the service account email without throwing (used for status display). */
+export function getServiceAccountEmail(): string | null {
+  try {
+    const raw = process.env["GOOGLE_SERVICE_ACCOUNT_JSON"];
+    if (!raw) return null;
+    const creds = JSON.parse(raw) as ServiceAccountCreds;
+    return creds.client_email ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -151,6 +168,9 @@ async function uploadBackup(
   body.end(Buffer.from(jsonString, "utf8"));
 
   const created = await drive.files.create({
+    // supportsAllDrives is required to write into Shared Drives (Team Drives).
+    // It is harmless for regular My-Drive folders that are shared with the SA.
+    supportsAllDrives: true,
     requestBody: {
       name: filename,
       parents: [folderId],
@@ -172,6 +192,8 @@ async function pruneOldBackups(
   folderId: string,
 ): Promise<number> {
   const list = await drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
     q: `'${folderId}' in parents and trashed=false and mimeType='application/json'`,
     orderBy: "createdTime desc",
     fields: "files(id, name, createdTime)",
@@ -186,7 +208,7 @@ async function pruneOldBackups(
   for (const f of toDelete) {
     if (!f.id) continue;
     try {
-      await drive.files.delete({ fileId: f.id });
+      await drive.files.delete({ fileId: f.id, supportsAllDrives: true });
       deleted++;
       logInfo(`Pruned old backup: ${f.name} (${f.id})`);
     } catch (err) {
