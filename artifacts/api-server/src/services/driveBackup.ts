@@ -22,7 +22,7 @@
  */
 
 import pg from "pg";
-import { Readable } from "stream";
+import { PassThrough } from "stream";
 import { google } from "googleapis";
 
 const { Client } = pg;
@@ -144,8 +144,11 @@ async function uploadBackup(
   filename: string,
   jsonString: string,
 ): Promise<string> {
-  const buffer = Buffer.from(jsonString, "utf8");
-  const stream = Readable.from(buffer);
+  // PassThrough is a proper byte-mode Node.js duplex stream.
+  // Readable.from() produces an object-mode stream that googleapis/gaxios
+  // cannot reliably pipe, causing EPIPE errors mid-upload.
+  const body = new PassThrough();
+  body.end(Buffer.from(jsonString, "utf8"));
 
   const created = await drive.files.create({
     requestBody: {
@@ -155,7 +158,7 @@ async function uploadBackup(
     },
     media: {
       mimeType: "application/json",
-      body: stream,
+      body,
     },
     fields: "id, name, size",
   });
