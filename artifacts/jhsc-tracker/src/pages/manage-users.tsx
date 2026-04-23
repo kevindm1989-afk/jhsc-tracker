@@ -90,6 +90,7 @@ export default function ManageUsersPage() {
   const [backupPhase, setBackupPhase] = useState<BackupPhase>("idle");
   const [backupResult, setBackupResult] = useState<FinalResult | null>(null);
   const [serviceAccountEmail, setServiceAccountEmail] = useState<string | null>(null);
+  const [backupFolderId, setBackupFolderId] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollCountRef = useRef(0);
   // Max polls: 70 × 6 s = 7 minutes (backend times out at 4 min, then state settles)
@@ -191,6 +192,19 @@ export default function ManageUsersPage() {
 
   // Clean up poll on unmount
   useEffect(() => () => stopPolling(), []);
+
+  // Pre-fetch backup config on mount so the service account email is visible
+  // before the user triggers a backup (needed to share the Drive folder first).
+  useEffect(() => {
+    fetch(`${BASE}/api/admin/backup/status`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!data) return;
+        if (data.serviceAccountEmail) setServiceAccountEmail(data.serviceAccountEmail);
+        if (data.folderId) setBackupFolderId(data.folderId);
+      })
+      .catch(() => {});
+  }, []);
 
   async function loadUsers() {
     setIsLoading(true);
@@ -608,6 +622,30 @@ export default function ManageUsersPage() {
             Exports all database tables to JSON and uploads to Google Drive.
             Retains the most recent 30 backups automatically.
           </p>
+
+          {/* Show sharing instructions before the user even runs a backup */}
+          {serviceAccountEmail && (
+            <div className="rounded-md bg-muted/60 border px-3 py-2.5 text-xs space-y-1">
+              <p className="font-medium text-foreground">Drive folder access required</p>
+              <p className="text-muted-foreground">
+                The backup folder must be shared with this service account as <strong>Editor</strong>:
+              </p>
+              <p className="font-mono text-foreground break-all select-all">{serviceAccountEmail}</p>
+              {backupFolderId && (
+                <p className="text-muted-foreground">
+                  Folder:{" "}
+                  <a
+                    href={`https://drive.google.com/drive/folders/${backupFolderId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-foreground"
+                  >
+                    Open in Google Drive
+                  </a>
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <Button
