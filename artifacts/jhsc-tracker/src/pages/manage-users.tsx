@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,129 +82,41 @@ export default function ManageUsersPage() {
   const [reviewingId, setReviewingId] = useState<number | null>(null);
 
   // ── Backup state ──────────────────────────────────────────────────────────
-  type BackupPhase = "idle" | "starting" | "running" | "done";
-  type FinalResult =
-    | { success: true; filename: string; tableCount?: number; rowCount?: number; byteSize?: number }
-    | { success: false; error: string; filename?: string };
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupOk, setBackupOk] = useState<string | null>(null); // filename on success
+  const [backupErr, setBackupErr] = useState<string | null>(null);
 
-  const [backupPhase, setBackupPhase] = useState<BackupPhase>("idle");
-  const [backupResult, setBackupResult] = useState<FinalResult | null>(null);
-  const [serviceAccountEmail, setServiceAccountEmail] = useState<string | null>(null);
-  const [backupFolderId, setBackupFolderId] = useState<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollCountRef = useRef(0);
-  // Max polls: 70 × 6 s = 7 minutes (backend times out at 4 min, then state settles)
-  const MAX_POLLS = 70;
-
-  function stopPolling() {
-    if (pollRef.current !== null) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-    pollCountRef.current = 0;
-  }
-
-  function failPolling(msg: string) {
-    stopPolling();
-    setBackupPhase("done");
-    setBackupResult({ success: false, error: msg });
-  }
-
-  async function pollBackupStatus() {
-    pollCountRef.current += 1;
-
-    // Hard timeout — should not be reached if backend timeout is working
-    if (pollCountRef.current > MAX_POLLS) {
-      failPolling("Backup timed out after 7 minutes. Check Google Drive and server logs.");
-      return;
-    }
-
+  async function handleDownloadBackup() {
+    setBackupLoading(true);
+    setBackupOk(null);
+    setBackupErr(null);
     try {
-      const resp = await fetch(`${BASE}/api/admin/backup/status`, { credentials: "include" });
-      if (!resp.ok) return; // transient error — keep polling
-      const data = await resp.json();
-
-      // Track service account email whenever the server tells us
-      if (data.serviceAccountEmail) setServiceAccountEmail(data.serviceAccountEmail);
-
-      // Secret not configured — fail immediately with a helpful message
-      if (!data.configured && pollCountRef.current === 1) {
-        failPolling("GOOGLE_SERVICE_ACCOUNT_JSON secret is not set on the server. Run: flyctl secrets set GOOGLE_SERVICE_ACCOUNT_JSON='...' --app jhsctracker-api");
-        return;
+      const resp = await fetch(`${BASE}/api/admin/backup/download`, { credentials: "include" });
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.error ?? `HTTP ${resp.status}`);
       }
+      // Extract filename from Content-Disposition header
+      const cd = resp.headers.get("Content-Disposition") ?? "";
+      const match = cd.match(/filename="([^"]+)"/);
+      const filename = match?.[1] ?? `jhsc_backup_${new Date().toISOString().slice(0, 10)}.json`;
 
-      if (data.result !== null && !data.running) {
-        // Backup finished (success or failure)
-        stopPolling();
-        setBackupPhase("done");
-        if (data.result.success) {
-          setBackupResult({
-            success: true,
-            filename: data.result.filename,
-            tableCount: data.result.tableCount,
-            rowCount: data.result.rowCount,
-            byteSize: data.result.byteSize,
-          });
-        } else {
-          setBackupResult({
-            success: false,
-            error: data.result.error || "Unknown error — check server logs.",
-            filename: data.result.filename,
-          });
-        }
-        return;
-      }
-
-      // Server restarted mid-backup: state reset to { running:false, result:null }
-      // Wait a couple polls before calling it a crash (give server time to settle)
-      if (!data.running && data.result === null && pollCountRef.current >= 3) {
-        failPolling("Server restarted during backup. The backup did not complete — check Google Drive to see if a partial file was saved, then try again.");
-        return;
-      }
-    } catch {
-      // Network blip — keep polling
-    }
-  }
-
-  async function handleRunBackup() {
-    stopPolling();
-    setBackupPhase("starting");
-    setBackupResult(null);
-    try {
-      const resp = await fetch(`${BASE}/api/admin/backup`, { credentials: "include" });
-      const data = await resp.json();
-      if (resp.status === 202 && data.accepted) {
-        setBackupPhase("running");
-        pollRef.current = setInterval(pollBackupStatus, 6000);
-      } else if (resp.status === 409 && data.running) {
-        // Already running — attach to the in-progress backup
-        setBackupPhase("running");
-        pollRef.current = setInterval(pollBackupStatus, 6000);
-      } else {
-        setBackupPhase("done");
-        setBackupResult({ success: false, error: data.error || data.message || `HTTP ${resp.status}` });
-      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setBackupOk(filename);
     } catch (e: any) {
-      setBackupPhase("done");
-      setBackupResult({ success: false, error: e.message || "Network error — could not reach server." });
+      setBackupErr(e.message ?? "Download failed");
+    } finally {
+      setBackupLoading(false);
     }
   }
-
-  // Clean up poll on unmount
-  useEffect(() => () => stopPolling(), []);
-
-  // Pre-fetch backup config on mount so the service account email is visible
-  // before the user triggers a backup (needed to share the Drive folder first).
-  useEffect(() => {
-    fetch(`${BASE}/api/admin/backup/status`, { credentials: "include" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (!data) return;
-        if (data.serviceAccountEmail) setServiceAccountEmail(data.serviceAccountEmail);
-        if (data.folderId) setBackupFolderId(data.folderId);
-      })
-      .catch(() => {});
-  }, []);
 
   async function loadUsers() {
     setIsLoading(true);
@@ -619,88 +531,39 @@ export default function ManageUsersPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Exports all database tables to JSON and uploads to Google Drive.
-            Retains the most recent 30 backups automatically.
+            Exports all database tables to a JSON file and downloads it directly
+            to your device. Save it to Google Drive, a USB drive, or anywhere
+            you keep important records. A scheduled backup also runs automatically
+            at 3 AM daily.
           </p>
 
-          {/* Show sharing instructions before the user even runs a backup */}
-          {serviceAccountEmail && (
-            <div className="rounded-md bg-muted/60 border px-3 py-2.5 text-xs space-y-1">
-              <p className="font-medium text-foreground">Drive folder access required</p>
-              <p className="text-muted-foreground">
-                The backup folder must be shared with this service account as <strong>Editor</strong>:
-              </p>
-              <p className="font-mono text-foreground break-all select-all">{serviceAccountEmail}</p>
-              {backupFolderId && (
-                <p className="text-muted-foreground">
-                  Folder:{" "}
-                  <a
-                    href={`https://drive.google.com/drive/folders/${backupFolderId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-foreground"
-                  >
-                    Open in Google Drive
-                  </a>
-                </p>
-              )}
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <Button
-              onClick={handleRunBackup}
-              disabled={backupPhase === "starting" || backupPhase === "running"}
-              className="sm:w-auto"
-            >
-              {(backupPhase === "starting" || backupPhase === "running") ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <HardDriveUpload className="w-4 h-4 mr-2" />
-              )}
-              {backupPhase === "starting" ? "Starting…" : backupPhase === "running" ? "Backup running…" : "Run Database Backup"}
-            </Button>
-            <span className="text-xs text-muted-foreground">Uploads to Google Drive</span>
-          </div>
-
-          {/* Backup status */}
-          {backupPhase === "running" && (
-            <div className="flex items-center gap-2 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-3 py-2.5 text-sm text-blue-800 dark:text-blue-300">
-              <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-              <span>Backup running — dumping database and uploading to Google Drive…</span>
-            </div>
-          )}
-
-          {backupPhase === "done" && backupResult && (
-            backupResult.success ? (
-              <div className="flex items-start gap-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-3 py-2.5 text-sm text-green-800 dark:text-green-300">
-                <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
-                <div className="space-y-0.5">
-                  <p className="font-medium">Backup complete</p>
-                  <p className="text-xs opacity-80">
-                    <span className="font-mono">{backupResult.filename}</span>
-                    {backupResult.tableCount !== undefined && ` · ${backupResult.tableCount} tables`}
-                    {backupResult.rowCount !== undefined && ` · ${backupResult.rowCount.toLocaleString()} rows`}
-                    {backupResult.byteSize !== undefined && ` · ${(backupResult.byteSize / 1024).toFixed(1)} KB`}
-                  </p>
-                </div>
-              </div>
+          <Button onClick={handleDownloadBackup} disabled={backupLoading} className="sm:w-auto">
+            {backupLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              <div className="flex items-start gap-2 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-3 py-2.5 text-sm text-red-800 dark:text-red-300">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <div className="space-y-1">
-                  <p className="font-medium">Backup failed</p>
-                  <p className="text-xs opacity-80">{backupResult.error}</p>
-                  {serviceAccountEmail && (backupResult.error?.toLowerCase().includes("quota") || backupResult.error?.toLowerCase().includes("storage") || backupResult.error?.toLowerCase().includes("permission") || backupResult.error?.toLowerCase().includes("403")) && (
-                    <p className="text-xs mt-1 font-medium opacity-90">
-                      Fix: In Google Drive, open the backup folder → Share → add{" "}
-                      <span className="font-mono break-all">{serviceAccountEmail}</span>{" "}
-                      as <strong>Editor</strong>.
-                    </p>
-                  )}
-                </div>
+              <HardDriveUpload className="w-4 h-4 mr-2" />
+            )}
+            {backupLoading ? "Generating backup…" : "Download Backup"}
+          </Button>
+
+          {backupOk && (
+            <div className="flex items-start gap-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-3 py-2.5 text-sm text-green-800 dark:text-green-300">
+              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
+              <div className="space-y-0.5">
+                <p className="font-medium">Backup downloaded</p>
+                <p className="text-xs opacity-80 font-mono">{backupOk}</p>
               </div>
-            )
+            </div>
+          )}
+
+          {backupErr && (
+            <div className="flex items-start gap-2 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-3 py-2.5 text-sm text-red-800 dark:text-red-300">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <div className="space-y-0.5">
+                <p className="font-medium">Download failed</p>
+                <p className="text-xs opacity-80">{backupErr}</p>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

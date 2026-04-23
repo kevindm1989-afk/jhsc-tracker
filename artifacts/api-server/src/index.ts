@@ -6,17 +6,9 @@ import { usersTable } from "@workspace/db/schema";
 import { count, eq, or, isNull, and } from "drizzle-orm";
 import cron from "node-cron";
 import { createTransporter, getSenderAddress } from "./emailClient";
-import { runDriveBackup } from "./services/driveBackup";
+import { dumpDatabase } from "./services/dbDump";
+import { writeFile } from "fs/promises";
 
-// ---------------------------------------------------------------------------
-// Required Fly.io secret for the Google Drive backup service:
-//
-//   flyctl secrets set GOOGLE_SERVICE_ACCOUNT_JSON='<paste json here>' \
-//     --app jhsctracker-api
-//
-// Without this secret the daily backup will log a failure and continue;
-// the server itself will keep running normally.
-// ---------------------------------------------------------------------------
 
 const port = Number(process.env["PORT"] || 3000);
 
@@ -219,15 +211,23 @@ app.listen(port, "0.0.0.0", () => {
     });
     logger.info("Inspection reminder cron scheduled (08:00 daily)");
 
-    // Automatic Google Drive backup — runs daily at 03:00 (server local time).
-    // Using a cron schedule (not setTimeout) so the backup never fires on
-    // startup and cannot OOM the process during boot on low-memory machines.
-    cron.schedule("0 3 * * *", () => {
-      runDriveBackup().catch((e) =>
-        logger.error({ err: e }, "Scheduled Drive backup failed"),
-      );
+    // Automatic local backup — runs daily at 03:00 (server local time).
+    // Writes the latest dump to /tmp/jhsc_latest_backup.json on the Fly.io VM.
+    // Admins can download a backup on-demand via Manage Users → Database Backup.
+    cron.schedule("0 3 * * *", async () => {
+      try {
+        const dump = await dumpDatabase();
+        const json = JSON.stringify(dump);
+        await writeFile("/tmp/jhsc_latest_backup.json", json, "utf8");
+        logger.info(
+          { tableCount: dump.tableCount, rowCount: dump.rowCount, bytes: Buffer.byteLength(json) },
+          "Scheduled backup written to /tmp/jhsc_latest_backup.json",
+        );
+      } catch (e) {
+        logger.error({ err: e }, "Scheduled backup failed");
+      }
     });
-    logger.info("Drive backup scheduled (cron: 03:00 daily — no startup run)");
+    logger.info("DB backup scheduled (cron: 03:00 daily — writes to /tmp, no startup run)");
   } catch (err) {
     logger.error({ err }, "Startup setup failed");
     process.exit(1);
