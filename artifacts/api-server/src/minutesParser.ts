@@ -1,5 +1,4 @@
 import ExcelJS from "exceljs";
-import { sanitizeText } from "./lib/sanitize";
 
 function excelDateToISO(value: unknown): string | null {
   if (value instanceof Date) {
@@ -93,7 +92,7 @@ function mapStatus(raw: string): string {
 
 function str(v: unknown): string {
   if (v == null || v === "") return "";
-  return sanitizeText(String(v).trim());
+  return String(v).trim();
 }
 
 export interface ParsedActionItem {

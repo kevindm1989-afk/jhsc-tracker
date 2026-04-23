@@ -1,5 +1,4 @@
 import ExcelJS from "exceljs";
-import { sanitizeText } from "./lib/sanitize";
 
 function excelDateToISO(value: unknown): string | null {
   if (value instanceof Date) {
@@ -49,7 +48,7 @@ function sheetToRows(worksheet: ExcelJS.Worksheet): unknown[][] {
 
 function str(v: unknown): string {
   if (v == null || v === "") return "";
-  return sanitizeText(String(v).trim());
+  return String(v).trim();
 }
 
 const ZONE_NAMES: Record<string, string> = {
