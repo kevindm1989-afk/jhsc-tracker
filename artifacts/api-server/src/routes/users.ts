@@ -25,7 +25,6 @@ const ALL_PERMISSIONS = [
   "suggestions-log",
   "files",
   "import-data",
-  "minutes-log",
   "meetings",
 ];
 

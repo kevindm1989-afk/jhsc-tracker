@@ -23,7 +23,6 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Suggestions Log", href: "/suggestions-log", permission: "suggestions-log" },
   { name: "Files", href: "/files", permission: "files" },
   { name: "Import Data", href: "/import-minutes", permission: "import-data" },
-  { name: "Minutes Log", href: "/minutes-log", permission: "minutes-log" },
   { name: "Manage Users", href: "/manage-users", permission: null, adminOnly: true },
   { name: "Meeting Schedule", href: "/meetings", permission: "meetings" },
   { name: "Emergency Contacts", href: "/emergency-contacts", permission: "emergency-contacts" },
