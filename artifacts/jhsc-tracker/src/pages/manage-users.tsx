@@ -90,21 +90,46 @@ export default function ManageUsersPage() {
   const [backupPhase, setBackupPhase] = useState<BackupPhase>("idle");
   const [backupResult, setBackupResult] = useState<FinalResult | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollCountRef = useRef(0);
+  // Max polls: 70 × 6 s = 7 minutes (backend times out at 4 min, then state settles)
+  const MAX_POLLS = 70;
 
   function stopPolling() {
     if (pollRef.current !== null) {
       clearInterval(pollRef.current);
       pollRef.current = null;
     }
+    pollCountRef.current = 0;
+  }
+
+  function failPolling(msg: string) {
+    stopPolling();
+    setBackupPhase("done");
+    setBackupResult({ success: false, error: msg });
   }
 
   async function pollBackupStatus() {
+    pollCountRef.current += 1;
+
+    // Hard timeout — should not be reached if backend timeout is working
+    if (pollCountRef.current > MAX_POLLS) {
+      failPolling("Backup timed out after 7 minutes. Check Google Drive and server logs.");
+      return;
+    }
+
     try {
       const resp = await fetch(`${BASE}/api/admin/backup/status`, { credentials: "include" });
-      if (!resp.ok) return; // wait for next poll
+      if (!resp.ok) return; // transient error — keep polling
       const data = await resp.json();
 
-      if (!data.running && data.result !== null) {
+      // Secret not configured — fail immediately with a helpful message
+      if (!data.configured && pollCountRef.current === 1) {
+        failPolling("GOOGLE_SERVICE_ACCOUNT_JSON secret is not set on the server. Run: flyctl secrets set GOOGLE_SERVICE_ACCOUNT_JSON='...' --app jhsctracker-api");
+        return;
+      }
+
+      if (data.result !== null && !data.running) {
+        // Backup finished (success or failure)
         stopPolling();
         setBackupPhase("done");
         if (data.result.success) {
@@ -122,9 +147,17 @@ export default function ManageUsersPage() {
             filename: data.result.filename,
           });
         }
+        return;
+      }
+
+      // Server restarted mid-backup: state reset to { running:false, result:null }
+      // Wait a couple polls before calling it a crash (give server time to settle)
+      if (!data.running && data.result === null && pollCountRef.current >= 3) {
+        failPolling("Server restarted during backup. The backup did not complete — check Google Drive to see if a partial file was saved, then try again.");
+        return;
       }
     } catch {
-      // network blip — keep polling
+      // Network blip — keep polling
     }
   }
 
@@ -137,10 +170,9 @@ export default function ManageUsersPage() {
       const data = await resp.json();
       if (resp.status === 202 && data.accepted) {
         setBackupPhase("running");
-        // Poll every 6 seconds until the background job finishes
         pollRef.current = setInterval(pollBackupStatus, 6000);
       } else if (resp.status === 409 && data.running) {
-        // Already running — just start polling
+        // Already running — attach to the in-progress backup
         setBackupPhase("running");
         pollRef.current = setInterval(pollBackupStatus, 6000);
       } else {

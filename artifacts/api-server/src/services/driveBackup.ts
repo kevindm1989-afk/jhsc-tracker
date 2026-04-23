@@ -196,6 +196,22 @@ async function pruneOldBackups(
   return deleted;
 }
 
+// Hard upper limit: if the whole operation takes longer than this, abort.
+const BACKUP_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${ms / 1000}s`)),
+      ms,
+    );
+    promise.then(
+      (val) => { clearTimeout(timer); resolve(val); },
+      (err) => { clearTimeout(timer); reject(err); },
+    );
+  });
+}
+
 /**
  * Run a complete backup: dump → upload → prune. Always resolves.
  */
@@ -203,7 +219,7 @@ export async function runDriveBackup(): Promise<BackupResult> {
   const dateStamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   const filename = `jhsc_backup_${dateStamp}.json`;
 
-  try {
+  const work = async (): Promise<BackupResult> => {
     logInfo(`Starting backup → ${filename}`);
 
     const { data, tableCount, rowCount } = await dumpDatabaseToObject();
@@ -220,7 +236,8 @@ export async function runDriveBackup(): Promise<BackupResult> {
       rowCount,
       data,
     };
-    const jsonString = JSON.stringify(payload, null, 2);
+    // Compact JSON (no pretty-print) halves memory usage on a 256MB VM.
+    const jsonString = JSON.stringify(payload);
     const byteSize = Buffer.byteLength(jsonString, "utf8");
 
     logInfo(
@@ -246,6 +263,10 @@ export async function runDriveBackup(): Promise<BackupResult> {
       rowCount,
       byteSize,
     };
+  };
+
+  try {
+    return await withTimeout(work(), BACKUP_TIMEOUT_MS, "backup");
   } catch (err: any) {
     const message = err?.message || String(err);
     logError(`FAILURE: ${filename} — ${message}`, err);
