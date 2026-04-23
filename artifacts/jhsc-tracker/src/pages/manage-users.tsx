@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,30 +81,80 @@ export default function ManageUsersPage() {
   const [declineNote, setDeclineNote] = useState("");
   const [reviewingId, setReviewingId] = useState<number | null>(null);
 
-  // Backup state
-  const [backupLoading, setBackupLoading] = useState(false);
-  type BackupResult =
-    | { accepted: true; filename: string }
-    | { success: false; error: string };
-  const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
+  // ── Backup state ──────────────────────────────────────────────────────────
+  type BackupPhase = "idle" | "starting" | "running" | "done";
+  type FinalResult =
+    | { success: true; filename: string; tableCount?: number; rowCount?: number; byteSize?: number }
+    | { success: false; error: string; filename?: string };
+
+  const [backupPhase, setBackupPhase] = useState<BackupPhase>("idle");
+  const [backupResult, setBackupResult] = useState<FinalResult | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function stopPolling() {
+    if (pollRef.current !== null) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }
+
+  async function pollBackupStatus() {
+    try {
+      const resp = await fetch(`${BASE}/api/admin/backup/status`, { credentials: "include" });
+      if (!resp.ok) return; // wait for next poll
+      const data = await resp.json();
+
+      if (!data.running && data.result !== null) {
+        stopPolling();
+        setBackupPhase("done");
+        if (data.result.success) {
+          setBackupResult({
+            success: true,
+            filename: data.result.filename,
+            tableCount: data.result.tableCount,
+            rowCount: data.result.rowCount,
+            byteSize: data.result.byteSize,
+          });
+        } else {
+          setBackupResult({
+            success: false,
+            error: data.result.error || "Unknown error — check server logs.",
+            filename: data.result.filename,
+          });
+        }
+      }
+    } catch {
+      // network blip — keep polling
+    }
+  }
 
   async function handleRunBackup() {
-    setBackupLoading(true);
+    stopPolling();
+    setBackupPhase("starting");
     setBackupResult(null);
     try {
       const resp = await fetch(`${BASE}/api/admin/backup`, { credentials: "include" });
       const data = await resp.json();
       if (resp.status === 202 && data.accepted) {
-        setBackupResult({ accepted: true, filename: data.filename });
+        setBackupPhase("running");
+        // Poll every 6 seconds until the background job finishes
+        pollRef.current = setInterval(pollBackupStatus, 6000);
+      } else if (resp.status === 409 && data.running) {
+        // Already running — just start polling
+        setBackupPhase("running");
+        pollRef.current = setInterval(pollBackupStatus, 6000);
       } else {
+        setBackupPhase("done");
         setBackupResult({ success: false, error: data.error || data.message || `HTTP ${resp.status}` });
       }
     } catch (e: any) {
-      setBackupResult({ success: false, error: e.message || "Network error" });
-    } finally {
-      setBackupLoading(false);
+      setBackupPhase("done");
+      setBackupResult({ success: false, error: e.message || "Network error — could not reach server." });
     }
   }
+
+  // Clean up poll on unmount
+  useEffect(() => () => stopPolling(), []);
 
   async function loadUsers() {
     setIsLoading(true);
@@ -526,28 +576,38 @@ export default function ManageUsersPage() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <Button
               onClick={handleRunBackup}
-              disabled={backupLoading}
+              disabled={backupPhase === "starting" || backupPhase === "running"}
               className="sm:w-auto"
             >
-              {backupLoading ? (
+              {(backupPhase === "starting" || backupPhase === "running") ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <HardDriveUpload className="w-4 h-4 mr-2" />
               )}
-              {backupLoading ? "Running backup…" : "Run Database Backup"}
+              {backupPhase === "starting" ? "Starting…" : backupPhase === "running" ? "Backup running…" : "Run Database Backup"}
             </Button>
             <span className="text-xs text-muted-foreground">Uploads to Google Drive</span>
           </div>
 
-          {backupResult && (
-            "accepted" in backupResult ? (
+          {/* Backup status */}
+          {backupPhase === "running" && (
+            <div className="flex items-center gap-2 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-3 py-2.5 text-sm text-blue-800 dark:text-blue-300">
+              <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+              <span>Backup running — dumping database and uploading to Google Drive…</span>
+            </div>
+          )}
+
+          {backupPhase === "done" && backupResult && (
+            backupResult.success ? (
               <div className="flex items-start gap-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-3 py-2.5 text-sm text-green-800 dark:text-green-300">
                 <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
                 <div className="space-y-0.5">
-                  <p className="font-medium">Backup started</p>
+                  <p className="font-medium">Backup complete</p>
                   <p className="text-xs opacity-80">
-                    Running in the background — check Google Drive in a few minutes.
-                    File: <span className="font-mono">{backupResult.filename}</span>
+                    <span className="font-mono">{backupResult.filename}</span>
+                    {backupResult.tableCount !== undefined && ` · ${backupResult.tableCount} tables`}
+                    {backupResult.rowCount !== undefined && ` · ${backupResult.rowCount.toLocaleString()} rows`}
+                    {backupResult.byteSize !== undefined && ` · ${(backupResult.byteSize / 1024).toFixed(1)} KB`}
                   </p>
                 </div>
               </div>
