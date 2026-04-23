@@ -192,6 +192,10 @@ async function scheduleInspectionReminders() {
   }
 }
 
+if (!process.env.FCM_VAPID_KEY) {
+  console.warn("[CONFIG] FCM_VAPID_KEY is not set — push notifications will not be delivered.");
+}
+
 app.listen(port, "0.0.0.0", () => {
   logger.info(`Server running on port ${port}`);
 });

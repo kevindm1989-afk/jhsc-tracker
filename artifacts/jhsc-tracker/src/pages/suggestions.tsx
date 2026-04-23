@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Lightbulb, Send, Loader2, CheckCircle2, Plus, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Lightbulb, Send, Loader2, CheckCircle2, Plus, ChevronDown, ChevronUp, Trash2, ShieldCheck } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -71,6 +71,7 @@ export default function SuggestionsPage() {
   const canSeeIdentity = user?.role === "admin" || user?.role === "co-chair" || user?.role === "worker-rep";
   const { toast } = useToast();
   const [form, setForm] = useState({ ...emptyForm });
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [lastCode, setLastCode] = useState("");
@@ -83,7 +84,7 @@ export default function SuggestionsPage() {
 
   const validate = () => {
     const required: Array<[keyof typeof emptyForm, string]> = [
-      ["employeeName", "Employee Name"],
+      ...(!isAnonymous ? [["employeeName", "Employee Name"] as [keyof typeof emptyForm, string]] : []),
       ["department", "Department"],
       ["shift", "Scheduled Shift"],
       ["dateSubmitted", "Date Submitted"],
@@ -109,7 +110,7 @@ export default function SuggestionsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, isAnonymous }),
       });
       if (!res.ok) throw new Error("Server error");
       const data = await res.json();
@@ -221,9 +222,30 @@ export default function SuggestionsPage() {
       <div className="space-y-3">
         <SectionHeader number={1} title="Employee Information" />
         <div className="space-y-3 pl-1">
-          <FieldRow label="Employee Name" required>
-            <Input value={form.employeeName} onChange={(e) => set("employeeName", e.target.value)} placeholder="Full name" />
-          </FieldRow>
+          {/* Anonymous toggle */}
+          <label className="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 rounded border-border accent-primary cursor-pointer"
+              checked={isAnonymous}
+              onChange={(e) => {
+                setIsAnonymous(e.target.checked);
+                if (e.target.checked) set("employeeName", "");
+              }}
+            />
+            <span className="text-sm text-foreground font-medium">Submit anonymously</span>
+          </label>
+          {isAnonymous && (
+            <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30 px-3 py-2 text-xs text-blue-800 dark:text-blue-300">
+              <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>Your name will not be stored or visible to anyone if you choose anonymous. No identifying information is recorded.</span>
+            </div>
+          )}
+          {!isAnonymous && (
+            <FieldRow label="Employee Name" required>
+              <Input value={form.employeeName} onChange={(e) => set("employeeName", e.target.value)} placeholder="Full name" />
+            </FieldRow>
+          )}
           <FieldRow label="Date Submitted" required>
             <Input type="date" value={form.dateSubmitted} onChange={(e) => set("dateSubmitted", e.target.value)} />
           </FieldRow>

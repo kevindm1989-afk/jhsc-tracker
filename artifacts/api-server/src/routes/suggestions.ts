@@ -53,8 +53,12 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const session = req.session as any;
-    const submittedByUserId: number = session?.userId ?? null;
-    const submittedByName: string = session?.displayName ?? session?.username ?? "Unknown";
+    const body = req.body;
+    const isAnonymous = body.isAnonymous === true;
+
+    const submittedByUserId: number | null = isAnonymous ? null : (session?.userId ?? null);
+    const submittedByName: string = isAnonymous ? "Anonymous" : (session?.displayName ?? session?.username ?? "Unknown");
+    const employeeName: string = isAnonymous ? "Anonymous" : (body.employeeName ?? "Unknown");
 
     const today = new Date();
     const datePart = today.toISOString().slice(0, 10).replace(/-/g, "");
@@ -62,12 +66,11 @@ router.post("/", async (req, res) => {
     const seq = existing.length + 1;
     const suggestionCode = `SUG-${datePart}-${String(seq).padStart(3, "0")}`;
 
-    const body = req.body;
     const [suggestion] = await db
       .insert(suggestionsTable)
       .values({
         suggestionCode,
-        employeeName: body.employeeName,
+        employeeName,
         department: body.department,
         shift: body.shift,
         dateSubmitted: body.dateSubmitted,
@@ -89,12 +92,11 @@ router.post("/", async (req, res) => {
         await transporter.sendMail({
           from: `"JHSC Tracker" <${sender}>`,
           to: sender,
-          subject: `Employee Suggestion – ${suggestionCode} – ${suggestion.employeeName}`,
+          subject: `Employee Suggestion – ${suggestionCode} – ${isAnonymous ? "Anonymous" : suggestion.employeeName}`,
           html: `
             <h2>JHSC Employee Suggestion</h2>
             <p><strong>Reference #:</strong> ${suggestionCode}</p>
-            <p><strong>Submitted by:</strong> ${submittedByName}</p>
-            <p><strong>Employee:</strong> ${suggestion.employeeName}</p>
+            ${isAnonymous ? "<p><strong>Submitted by:</strong> Anonymous (identity not stored)</p>" : `<p><strong>Submitted by:</strong> ${submittedByName}</p><p><strong>Employee:</strong> ${suggestion.employeeName}</p>`}
             <p><strong>Department:</strong> ${suggestion.department} | <strong>Shift:</strong> ${suggestion.shift}</p>
             <p><strong>Date Submitted:</strong> ${suggestion.dateSubmitted} | <strong>Date Observed:</strong> ${suggestion.dateObserved}</p>
             <p><strong>Priority:</strong> ${suggestion.priorityLevel.charAt(0).toUpperCase() + suggestion.priorityLevel.slice(1)}</p>
