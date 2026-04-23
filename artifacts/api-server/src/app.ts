@@ -11,6 +11,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { securityLogger, getClientIp } from "./middleware/securityLogger";
+import { blockedTerms } from "./middleware/blockedTerms";
 import "./sessionTypes";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -72,6 +73,10 @@ app.use(
 );
 app.use(express.json({ limit: "50kb" }));
 app.use(express.urlencoded({ extended: true, limit: "50kb" }));
+app.use((req, _res, next) => {
+  if (["POST", "PUT", "PATCH"].includes(req.method)) return blockedTerms(req, _res, next);
+  next();
+});
 
 const PgSession = connectPg(session);
 
