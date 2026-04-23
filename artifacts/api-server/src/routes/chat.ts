@@ -11,6 +11,7 @@ import "../sessionTypes";
 const router = Router();
 
 const JHSC_ROLES = ["co-chair", "admin", "worker-rep"];
+const CHAT_EXCLUDED_ROLES = ["management"];
 
 /**
  * Returns the set of roles a user is allowed to DM based on their own role.
@@ -35,7 +36,14 @@ function dmChannelName(idA: number, idB: number): string {
   return `dm:${Math.min(idA, idB)}-${Math.max(idA, idB)}`;
 }
 
-router.get("/history/:channel", requireAuth, async (req, res) => {
+router.use(requireAuth, (req, res, next) => {
+  if (CHAT_EXCLUDED_ROLES.includes(req.session.role ?? "")) {
+    return res.status(403).json({ error: "Chat is not available for your role." });
+  }
+  next();
+});
+
+router.get("/history/:channel", async (req, res) => {
   const { channel } = req.params;
   if (!["general", "jhsc"].includes(channel)) {
     return res.status(400).json({ error: "Invalid channel" });

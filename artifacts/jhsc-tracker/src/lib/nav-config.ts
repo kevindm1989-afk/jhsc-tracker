@@ -4,6 +4,7 @@ export interface NavConfig {
   permission: string | null;
   adminOnly?: boolean;
   workerRepOnly?: boolean;
+  excludedRoles?: string[];
 }
 
 export const NAV_CONFIGS: NavConfig[] = [
@@ -11,7 +12,7 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Action Items", href: "/action-items", permission: "action-items" },
   { name: "Closed Items Log", href: "/closed-items-log", permission: "closed-items-log" },
   { name: "Member Actions", href: "/member-actions", permission: "member-actions" },
-  { name: "💬 Chat", href: "/chat", permission: null },
+  { name: "💬 Chat", href: "/chat", permission: null, excludedRoles: ["management"] },
   { name: "🔔 Notification Rules", href: "/notification-rules", permission: null, adminOnly: true },
   { name: "Conduct A H&S Report", href: "/health-safety-report", permission: "health-safety-report" },
   { name: "H&S Reports Log", href: "/hs-reports-log", permission: "hs-reports-log" },

@@ -187,6 +187,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       if (!item) return false;
       if (item.adminOnly && !isAdmin && !isCoChair) return false;
       if (item.workerRepOnly && !isAdmin && !isCoChair && !isWorkerRep && !hasPermission(item.permission ?? "")) return false;
+      if (item.excludedRoles && user?.role && item.excludedRoles.includes(user.role)) return false;
       if (item.permission === null) return true;
       return hasPermission(item.permission);
     });
