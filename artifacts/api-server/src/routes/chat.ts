@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { requireAuth } from "../middleware/requireAuth";
 import { db } from "@workspace/db";
 import { chatMessagesTable, usersTable } from "@workspace/db/schema";
@@ -13,19 +13,12 @@ const router = Router();
 const JHSC_ROLES = ["co-chair", "admin", "worker-rep"];
 const CHAT_EXCLUDED_ROLES = ["management"];
 
-/**
- * Returns the set of roles a user is allowed to DM based on their own role.
- * Null means no restriction (can DM anyone).
- */
 function getAllowedDMRoles(myRole: string): string[] | null {
   if (myRole === "member") return ["admin"];
   if (myRole === "worker-rep") return ["worker-rep", "admin"];
-  return null; // admin, co-chair, management — unrestricted
+  return null;
 }
 
-/**
- * Check whether myRole is allowed to DM a user with targetRole.
- */
 function canDM(myRole: string, targetRole: string): boolean {
   const allowed = getAllowedDMRoles(myRole);
   if (allowed === null) return true;
@@ -36,14 +29,14 @@ function dmChannelName(idA: number, idB: number): string {
   return `dm:${Math.min(idA, idB)}-${Math.max(idA, idB)}`;
 }
 
-router.use(requireAuth, (req, res, next) => {
+function blockManagement(req: Request, res: Response, next: NextFunction) {
   if (CHAT_EXCLUDED_ROLES.includes(req.session.role ?? "")) {
     return res.status(403).json({ error: "Chat is not available for your role." });
   }
   next();
-});
+}
 
-router.get("/history/:channel", async (req, res) => {
+router.get("/history/:channel", requireAuth, blockManagement, async (req, res) => {
   const { channel } = req.params;
   if (!["general", "jhsc"].includes(channel)) {
     return res.status(400).json({ error: "Invalid channel" });
@@ -60,7 +53,7 @@ router.get("/history/:channel", async (req, res) => {
   return res.json(messages.reverse());
 });
 
-router.post("/send", requireAuth, async (req, res) => {
+router.post("/send", requireAuth, blockManagement, async (req, res) => {
   const { channel, message } = req.body;
   if (!["general", "jhsc"].includes(channel)) {
     return res.status(400).json({ error: "Invalid channel" });
@@ -82,27 +75,32 @@ router.post("/send", requireAuth, async (req, res) => {
   return res.json(saved);
 });
 
-router.get("/token", requireAuth, async (req, res) => {
+router.get("/token", requireAuth, blockManagement, async (req, res) => {
   if (!process.env.ABLY_API_KEY) {
     return res.status(503).json({ error: "Chat service not configured" });
   }
-  const client = new Ably.Rest({ key: process.env.ABLY_API_KEY });
-  const capabilities: Record<string, string[]> = {
-    "chat:general": ["subscribe", "publish", "presence"],
-    "chat:dm:*": ["subscribe", "publish", "presence"],
-    "global:presence": ["subscribe", "presence"],
-  };
-  if (JHSC_ROLES.includes(req.session.role ?? "")) {
-    capabilities["chat:jhsc"] = ["subscribe", "publish", "presence"];
+  try {
+    const client = new Ably.Rest({ key: process.env.ABLY_API_KEY });
+    const capabilities: Record<string, string[]> = {
+      "chat:general": ["subscribe", "publish", "presence"],
+      "chat:dm:*": ["subscribe", "publish", "presence"],
+      "global:presence": ["subscribe", "presence"],
+    };
+    if (JHSC_ROLES.includes(req.session.role ?? "")) {
+      capabilities["chat:jhsc"] = ["subscribe", "publish", "presence"];
+    }
+    const tokenRequest = await client.auth.createTokenRequest({
+      clientId: String(req.session.userId),
+      capability: capabilities,
+    });
+    return res.json(tokenRequest);
+  } catch (err: any) {
+    console.error("[CHAT] Token generation error:", err?.message ?? err);
+    return res.status(500).json({ error: "Failed to generate chat token" });
   }
-  const tokenRequest = await client.auth.createTokenRequest({
-    clientId: String(req.session.userId),
-    capability: capabilities,
-  });
-  return res.json(tokenRequest);
 });
 
-router.get("/members", requireAuth, async (req, res) => {
+router.get("/members", requireAuth, blockManagement, async (req, res) => {
   const selfId = req.session.userId!;
   const myRole = req.session.role ?? "member";
   const allowedRoles = getAllowedDMRoles(myRole);
@@ -122,7 +120,7 @@ router.get("/members", requireAuth, async (req, res) => {
   return res.json(users);
 });
 
-router.get("/dm/:otherUserId/history", requireAuth, async (req, res) => {
+router.get("/dm/:otherUserId/history", requireAuth, blockManagement, async (req, res) => {
   const otherUserId = parseInt(req.params.otherUserId, 10);
   if (isNaN(otherUserId)) return res.status(400).json({ error: "Invalid user id" });
 
@@ -144,7 +142,7 @@ router.get("/dm/:otherUserId/history", requireAuth, async (req, res) => {
   return res.json(messages.reverse());
 });
 
-router.post("/dm/:otherUserId/send", requireAuth, async (req, res) => {
+router.post("/dm/:otherUserId/send", requireAuth, blockManagement, async (req, res) => {
   const otherUserId = parseInt(req.params.otherUserId, 10);
   if (isNaN(otherUserId)) return res.status(400).json({ error: "Invalid user id" });
   const { message } = req.body;
@@ -172,7 +170,7 @@ router.post("/dm/:otherUserId/send", requireAuth, async (req, res) => {
   return res.json(saved);
 });
 
-router.post("/dm/:otherUserId/start", requireAuth, async (req, res) => {
+router.post("/dm/:otherUserId/start", requireAuth, blockManagement, async (req, res) => {
   const otherUserId = parseInt(req.params.otherUserId, 10);
   if (isNaN(otherUserId)) return res.status(400).json({ error: "Invalid user id" });
 
@@ -229,9 +227,6 @@ router.post("/dm/:otherUserId/start", requireAuth, async (req, res) => {
               <p style="font-size:12px;color:#888;">JHSC Advisor</p>
             `,
           });
-          console.log(`DM offline notification sent to ${other.email}`);
-        } else {
-          console.log(`DM started with user ${otherUserId} (offline, no email config)`);
         }
       }
     } catch (err) {

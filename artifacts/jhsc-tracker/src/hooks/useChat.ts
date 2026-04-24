@@ -33,7 +33,12 @@ export function useChat(channel: "general" | "jhsc") {
         }
 
         const tokenResp = await fetch(`${BASE}/api/chat/token`, { credentials: "include" });
-        if (!tokenResp.ok) throw new Error("Auth failed");
+        if (tokenResp.status === 401) throw new Error("Session expired — please log in again");
+        if (tokenResp.status === 403) throw new Error("Chat is not available for your role");
+        if (!tokenResp.ok) {
+          const body = await tokenResp.json().catch(() => ({}));
+          throw new Error(body?.error ?? `Server error (${tokenResp.status})`);
+        }
         const tokenRequest = await tokenResp.json();
 
         const { default: Ably } = await import("ably");
@@ -44,11 +49,13 @@ export function useChat(channel: "general" | "jhsc") {
 
         client.connection.on("connected", () => {
           if (!cancelled) setConnected(true);
-          // Join global presence so others can detect we are online
           client.channels.get("global:presence").presence.enter().catch(() => {});
         });
         client.connection.on("disconnected", () => {
           if (!cancelled) setConnected(false);
+        });
+        client.connection.on("failed", (stateChange) => {
+          if (!cancelled) setError(`Connection failed: ${stateChange.reason?.message ?? "unknown"}`);
         });
 
         const ch = client.channels.get(`chat:${channel}`);
@@ -61,8 +68,8 @@ export function useChat(channel: "general" | "jhsc") {
             });
           }
         });
-      } catch (err) {
-        if (!cancelled) setError("Failed to connect to chat");
+      } catch (err: any) {
+        if (!cancelled) setError(err?.message ?? "Failed to connect to chat");
       }
     }
 
