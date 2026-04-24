@@ -195,7 +195,7 @@ export default function HSReportsLogPage() {
           <ShieldAlert className="w-5 h-5 text-orange-600 dark:text-orange-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-foreground">H&amp;S Concern Reports Log</h1>
+          <h1 className="text-xl font-bold text-foreground">H&amp;S Concern Log</h1>
           <p className="text-sm text-muted-foreground">
             {loading ? "Loading…" : `${reports.length} report${reports.length !== 1 ? "s" : ""} submitted`}
           </p>

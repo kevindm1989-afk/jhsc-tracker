@@ -59,7 +59,7 @@ export default function DashboardPage() {
           onClick={() => navigate("/worker-statements")}
         />
         <StatCard
-          title="H&S Reports"
+          title="H&S Concerns"
           value={(summary as any)?.totalHSReports}
           icon={ShieldAlert}
           isLoading={isLoadingSummary}

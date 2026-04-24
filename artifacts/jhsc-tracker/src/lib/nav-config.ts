@@ -15,7 +15,7 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "💬 Chat", href: "/chat", permission: null, excludedRoles: ["management"] },
   { name: "🔔 Notification Rules", href: "/notification-rules", permission: null, adminOnly: true },
   { name: "Conduct A H&S Concern", href: "/health-safety-report", permission: "health-safety-report" },
-  { name: "H&S Reports Log", href: "/hs-reports-log", permission: "hs-reports-log" },
+  { name: "H&S Concern Log", href: "/hs-reports-log", permission: "hs-reports-log" },
   { name: "Recommendations", href: "/hazard-findings", permission: "hazard-findings" },
   { name: "Inspection Log", href: "/inspection-log", permission: "inspection-log" },
   { name: "Conduct Inspection", href: "/conduct-inspection", permission: "conduct-inspection" },
