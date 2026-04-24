@@ -266,22 +266,42 @@ export default function ChatPage() {
           {members.length === 0 && (
             <p className="text-xs text-muted-foreground px-2">No members found</p>
           )}
-          {members.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => selectView({ type: "dm", member: m })}
-              className={`w-full text-left px-2 py-2 rounded text-sm flex items-center gap-2 transition-colors ${
-                isActiveDM(m.id)
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "hover:bg-muted text-foreground"
-              }`}
-            >
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted text-muted-foreground text-xs shrink-0 font-medium">
-                {m.displayName.charAt(0).toUpperCase()}
-              </span>
-              <span className="truncate">{m.displayName}</span>
-            </button>
-          ))}
+          {(() => {
+            const ROLE_ORDER: { key: string; label: string }[] = [
+              { key: "admin", label: "Admin" },
+              { key: "co-chair", label: "Worker Co-Chair" },
+              { key: "worker-rep", label: "Worker Rep" },
+              { key: "member", label: "Member" },
+            ];
+            const grouped = ROLE_ORDER.map(({ key, label }) => ({
+              label,
+              items: members.filter((m) => m.role === key),
+            })).filter((g) => g.items.length > 0);
+
+            return grouped.map((group) => (
+              <div key={group.label} className="mb-3">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">
+                  {group.label}
+                </p>
+                {group.items.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => selectView({ type: "dm", member: m })}
+                    className={`w-full text-left px-2 py-2 rounded text-sm flex items-center gap-2 transition-colors ${
+                      isActiveDM(m.id)
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted text-muted-foreground text-xs shrink-0 font-medium">
+                      {m.displayName.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="truncate">{m.displayName}</span>
+                  </button>
+                ))}
+              </div>
+            ));
+          })()}
         </div>
       </div>
 
