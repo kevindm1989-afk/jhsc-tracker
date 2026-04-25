@@ -74,7 +74,12 @@ app.use(
 app.use(express.json({ limit: "50kb" }));
 app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 app.use((req, _res, next) => {
-  if (["POST", "PUT", "PATCH"].includes(req.method)) return blockedTerms(req, _res, next);
+  // Skip blocked-terms check on admin user-management routes so that
+  // email addresses (e.g. @saputo.com) stored in user profiles are not rejected.
+  const isAdminUserRoute = req.path.startsWith("/api/users") || req.path.startsWith("/api/auth");
+  if (["POST", "PUT", "PATCH"].includes(req.method) && !isAdminUserRoute) {
+    return blockedTerms(req, _res, next);
+  }
   next();
 });
 
