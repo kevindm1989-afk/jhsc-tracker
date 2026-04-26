@@ -29,6 +29,7 @@ export const NAV_CONFIGS: NavConfig[] = [
   { name: "Emergency Contacts", href: "/emergency-contacts", permission: "emergency-contacts" },
   { name: "Inspection Reminder", href: "/inspection-reminder", permission: null, adminOnly: true },
   { name: "Notification Settings", href: "/notification-settings", permission: null, adminOnly: true },
+  { name: "🛡️ Security Headers", href: "/security-health", permission: null, adminOnly: true },
 ];
 
 const seen = new Set<string>();

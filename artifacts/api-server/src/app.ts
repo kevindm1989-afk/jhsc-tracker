@@ -128,6 +128,16 @@ app.use(
   }),
 );
 
+// Permissions-Policy: restrict browser features not used by this app.
+// Helmet 8 does not set this header by default, so we add it explicitly.
+app.use((_req, res, next) => {
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()",
+  );
+  next();
+});
+
 app.use(securityLogger);
 
 app.use("/api", router);

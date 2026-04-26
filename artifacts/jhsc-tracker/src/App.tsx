@@ -53,6 +53,7 @@ import InspectionReminderPage from "@/pages/inspection-reminder";
 import NotificationSettingsPage from "@/pages/notification-settings";
 import ChatPage from "@/pages/chat";
 import NotificationRulesPage from "@/pages/notification-rules";
+import SecurityHealthPage from "@/pages/SecurityHealth";
 import NotFound from "@/pages/not-found";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import KnowYourRightsPage from "@/pages/public/KnowYourRights";
@@ -195,6 +196,9 @@ function Router() {
               </Route>
               <Route path="/notification-rules">
                 <ProtectedRoute component={NotificationRulesPage} />
+              </Route>
+              <Route path="/security-health">
+                <ProtectedRoute component={SecurityHealthPage} />
               </Route>
               <Route path="/change-password">
                 <ProtectedRoute component={ChangePasswordPage} />
