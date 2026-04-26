@@ -111,9 +111,14 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        // 'unsafe-inline' removed: Vite bundles all JS into external files.
+        // The @vitejs/plugin-legacy has been removed from the build to eliminate
+        // the inline polyfill scripts it previously injected into index.html.
+        scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        // data: is kept because Tailwind CSS generates data: URIs for form element
+        // backgrounds (checkboxes, selects, range inputs) in the compiled stylesheet.
         imgSrc: ["'self'", "data:", "blob:"],
         connectSrc: ["'self'", "https://api.assemblyai.com", "wss://*.ably.io", "https://*.ably.io"],
         frameSrc: ["'none'"],
