@@ -289,8 +289,8 @@ export default function KnowYourRightsPage() {
         <div className="max-w-3xl mx-auto px-4 pb-8 pt-4">
           <p className="text-blue-100 text-sm sm:text-base leading-relaxed max-w-2xl">
             As a worker in Ontario, the Occupational Health and Safety Act gives you three fundamental
-            rights. This page explains those rights in plain language — no jargon, no union or employer
-            branding. This information is provided by your Joint Health &amp; Safety Committee.
+            rights. This page explains those rights in plain language. This information is provided by
+            your Joint Health &amp; Safety Committee.
           </p>
           <div className="flex flex-wrap gap-2 mt-4">
             {["Right to Refuse", "Right to Participate", "Right to Know"].map((r) => (
