@@ -55,6 +55,7 @@ import ChatPage from "@/pages/chat";
 import NotificationRulesPage from "@/pages/notification-rules";
 import NotFound from "@/pages/not-found";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import KnowYourRightsPage from "@/pages/public/KnowYourRights";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -116,6 +117,10 @@ function Router() {
     <Switch>
       <Route path="/login">
         {user ? <Redirect to="/" /> : <LoginPage />}
+      </Route>
+
+      <Route path="/public/rights">
+        <KnowYourRightsPage />
       </Route>
 
       <Route path="/reset-password">

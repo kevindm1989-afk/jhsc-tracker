@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShieldCheck, Eye, EyeOff, UserPlus, CheckCircle2, KeyRound } from "lucide-react";
+import { ShieldCheck, Eye, EyeOff, UserPlus, CheckCircle2, KeyRound, Scale } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -165,6 +165,28 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">JHSC Advisor</h1>
           <p className="text-sm text-muted-foreground font-medium">Joint Health &amp; Safety Committee</p>
         </div>
+
+        {/* Know Your Rights banner */}
+        <button
+          type="button"
+          onClick={() => navigate("/public/rights")}
+          className="w-full flex items-center gap-3 bg-[#1a2744] hover:bg-[#243360] active:bg-[#0f1a30] transition-colors rounded-xl px-4 py-3.5 text-left group"
+        >
+          <span className="flex-shrink-0 w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">
+            <Scale className="w-5 h-5 text-white" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-bold text-sm leading-tight">
+              ⚖️ Know Your Rights as a Worker
+            </p>
+            <p className="text-blue-200 text-xs mt-0.5 leading-tight">
+              No login required — plain-language guide to OHSA ss.9, 25 &amp; 43
+            </p>
+          </div>
+          <span className="text-blue-300 group-hover:text-white transition-colors text-xs font-medium flex-shrink-0">
+            View →
+          </span>
+        </button>
 
         <Card className="border shadow-md">
           <CardHeader className="pb-2 pt-6 px-6">
